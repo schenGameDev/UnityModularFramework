@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 namespace ModularFramework.Commons {
     public struct Optional<T> {
-        public static readonly Optional<T> NoValue = new Optional<T>();
+        private static readonly Optional<T> NoValue = new Optional<T>();
 
         readonly bool hasValue;
         readonly T value;
@@ -14,9 +15,15 @@ namespace ModularFramework.Commons {
         }
 
         public T Get() => hasValue ? value : throw new InvalidOperationException("No value");
+
+        public void Do(Action<T> action) {
+            if(hasValue) action(value);
+        }
         public bool HasValue => hasValue;
-        public bool IsNull => !hasValue;
-        public T GetValueOrDefault(T defaultValue) => hasValue ? value : defaultValue;
+        public bool IsEmpty => !hasValue;
+        public T OrElse(T defaultValue) => hasValue ? value : defaultValue;
+
+        public T OrElseThrow(Exception e) => hasValue ? value : throw e;
 
         public TResult Match<TResult>(Func<T, TResult> onValue, Func<TResult> onNoValue) {
             return hasValue ? onValue(value) : onNoValue();

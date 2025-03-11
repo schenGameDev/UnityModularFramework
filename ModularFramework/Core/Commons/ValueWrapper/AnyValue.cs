@@ -13,6 +13,19 @@ namespace ModularFramework.Commons {
         public string stringValue;
         public Vector3 vector3Value;
 
+
+        public static AnyValue Create<T>(T value) {
+            ValueType tp = ValueTypeOf(typeof(T));
+            return tp switch {
+                ValueType.Bool => new AnyValue() {type=tp, boolValue=(bool)(object)value},
+                ValueType.Int => new AnyValue() {type=tp, intValue=(int)(object)value},
+                ValueType.Float => new AnyValue() {type=tp, floatValue=(float)(object)value},
+                ValueType.Vector3 => new AnyValue() {type=tp, vector3Value=(Vector3)(object)value},
+                ValueType.String => new AnyValue() {type=tp, stringValue=(string)(object)value},
+                _ => throw new InvalidCastException()
+            };
+        }
+
         // Implicit conversion operators to convert AnyValue to different types
         public static implicit operator bool(AnyValue value) => value.ConvertValue<bool>();
         public static implicit operator int(AnyValue value) => value.ConvertValue<int>();

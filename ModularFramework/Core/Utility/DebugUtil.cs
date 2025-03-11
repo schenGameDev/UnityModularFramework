@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace ModularFramework.Utility
 {
+    using static EnvironmentConstants;
     public static class DebugUtil {
 
         public enum DebugType {LOG,WARNING,ERROR}
@@ -11,7 +12,6 @@ namespace ModularFramework.Utility
             RUNTIME = 0,
             DEBUG = 1
         }
-        public static readonly int DebugLevel = 1;
 
         public static void Print(string callerName, DebugType type, LogLevel level, string message) {
             bool suppressed = (int)level > (int)DebugLevel;

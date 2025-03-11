@@ -7,6 +7,8 @@ using UnityEngine;
 
 namespace ModularFramework {
     using Commons;
+    using ModularFramework.Utility;
+
     public class GameRunner : Singleton<GameRunner>
     {
         [Header("Game Modules")]
@@ -36,6 +38,9 @@ namespace ModularFramework {
                     _framelyUpdatedModules.Add(module);
                 }
             }
+
+            // static class set up
+            SaveUtil.Initialize();
         }
 
         private void Start()
@@ -210,7 +215,7 @@ namespace ModularFramework {
 
             _references.RemoveWhere(k => !kw2.Contains(k));
 
-            Debug.Log("Module parameters refreshed");
+            DebugUtil.DebugLog("Module parameters refreshed");
         }
 
     #endregion
