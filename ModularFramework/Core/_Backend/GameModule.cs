@@ -63,6 +63,7 @@ namespace ModularFramework {
             InitializeRuntimeVars();
         }
 
+        // Handled in GameRunner
         public string[] Keywords {get;set;}
         public string[] RefKeywords {get;set;}
 
@@ -127,7 +128,7 @@ namespace ModularFramework {
                             (value as IResetable).Reset();
                         } else if(type.InheritsOrImplements(typeof(ICollection<>))) {
                             PurgeCollection(type, value);
-                        } else if(type.BaseType == typeof(object) || type.BaseType == typeof(Component)) {
+                        } else if(type.BaseType == typeof(UnityEngine.Object) || type.BaseType == typeof(object) || type.BaseType == typeof(Component)) {
                             field.SetValue(this, null);
                         } else {
                             throw new("Do not support " + field.Name);
