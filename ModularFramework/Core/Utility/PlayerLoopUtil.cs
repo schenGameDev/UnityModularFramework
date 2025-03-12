@@ -60,7 +60,7 @@ namespace ModularFramework.Utility {
             foreach (PlayerLoopSystem subSystem in loop.subSystemList) {
                 PrintSubsystem(subSystem, sb, 0);
             }
-            Debug.Log(sb.ToString());
+            DebugUtil.Log(sb.ToString());
         }
 
         static void PrintSubsystem(PlayerLoopSystem system, StringBuilder sb, int level) {

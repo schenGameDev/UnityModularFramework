@@ -17,6 +17,10 @@ public class SensorManagerSO : GameModule, IRegistrySO {
     [Header("Runtime")]
     [ReadOnly,SerializeField] private string[] _sensibleInScene;
 
+    public SensorManagerSO() {
+        updateMode = UpdateMode.NONE;
+    }
+
     private Dictionary<string,Sensible> _sensibleDict;
 
     protected override void Reset() {

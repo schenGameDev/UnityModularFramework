@@ -7,6 +7,8 @@ using UnityEngine;
 
 namespace ModularFramework {
     using Commons;
+    using ModularFramework.Utility;
+
     public class GameRunner : Singleton<GameRunner>
     {
         [Header("Game Modules")]
@@ -36,6 +38,9 @@ namespace ModularFramework {
                     _framelyUpdatedModules.Add(module);
                 }
             }
+
+            // static class set up
+            SaveUtil.Initialize();
         }
 
         private void Start()
@@ -79,7 +84,7 @@ namespace ModularFramework {
             if(module != null) {
                 return (T) module;
             }
-            Debug.LogError("Module of type " + typeof(T).ToString() + " not found");
+            DebugUtil.Error("Module of type " + typeof(T).ToString() + " not found");
             return null;
         }
 
@@ -105,7 +110,7 @@ namespace ModularFramework {
             if(_registrySODict.TryGetValue(registryType, out var registry)) {
                 return registry;
             }
-            Debug.LogError("Registry of type " + registryType.ToString() + " not found");
+            DebugUtil.Error("Registry of type " + registryType.ToString() + " not found");
             return null;
         }
 
@@ -113,7 +118,7 @@ namespace ModularFramework {
             if(_registrySODict.TryGetValue(typeof(T), out var registry)) {
                 return (T) registry;
             }
-            Debug.LogError("Registry of type " + typeof(T).ToString() + " not found");
+            DebugUtil.Error("Registry of type " + typeof(T).ToString() + " not found");
             return null;
         }
 
@@ -210,7 +215,7 @@ namespace ModularFramework {
 
             _references.RemoveWhere(k => !kw2.Contains(k));
 
-            Debug.Log("Module parameters refreshed");
+            DebugUtil.DebugLog("Module parameters refreshed");
         }
 
     #endregion

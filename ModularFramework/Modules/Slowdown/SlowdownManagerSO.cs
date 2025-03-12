@@ -18,6 +18,10 @@ public class SlowdownManagerSO : GameModule, ILive
     public float TimeFreezeSpeedModifier = 0.1f;
     private float _endTime = 0;
 
+    public SlowdownManagerSO() {
+        updateMode = UpdateMode.EVERY_N_FRAME;
+    }
+
     public void TimeFreeze(float time) {
         SlowDown(0, time);
     }

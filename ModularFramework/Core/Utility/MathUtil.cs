@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ModularFramework.Utility {
@@ -104,6 +105,21 @@ namespace ModularFramework.Utility {
 
         public static void Repeat(int count, Action action) {
             for (int i = 0;i<count;i++) action();
+        }
+
+        public static IEnumerable<int> Repeat(int count)
+        {
+            if (count < 0) throw new ArgumentOutOfRangeException(count.ToString());
+
+            return Iterator();
+
+            IEnumerable<int> Iterator() // C# 7 Local Function
+            {
+            for(int i = 0; i<count; i++)
+            {
+                yield return i;
+            }
+            }
         }
     }
 }

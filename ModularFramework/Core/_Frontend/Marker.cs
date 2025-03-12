@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-/// <summary>
-/// Marker is in-game object that auto-registers itself to GameRunner's resgistry at Start, and is monitored by Game Module
-/// </summary>
+
 namespace ModularFramework {
     using Commons;
+    using ModularFramework.Utility;
+    /// <summary>
+    /// Marker is in-game object that auto-registers itself to GameRunner's resgistry at Start, and is monitored by Game Module
+    /// </summary>
     public abstract class Marker : MonoBehaviour {
         /// <summary>
         /// (type : group_id). If one type in the same group is found, no warning will be logged
@@ -50,13 +52,13 @@ namespace ModularFramework {
             }
             unfoundTypeIndex.Select(i => registryTypes[i])
                             .Where(t => !foundGroups.Contains(t.Item2))
-                            .ForEach(t => Debug.LogWarning("Registry of type " + t.Item1 + " not found"));
+                            .ForEach(t => DebugUtil.Warn("Registry of type " + t.Item1 + " not found"));
         }
 
         private void UnregisterAll() {
             foreach (Type t in _registeredTypes) {
                 bool found = GameRunner.Instance.Unregister(t, transform);
-                if(!found) Debug.LogWarning("Registry of type " + t + " not found");
+                if(!found) DebugUtil.Warn("Registry of type " + t + " not found");
             }
 
             _registeredTypes.Clear();
