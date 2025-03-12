@@ -44,14 +44,16 @@ namespace ModularFramework.Utility
         /// <returns></returns>
         public static bool LoadFromSlot(int slot) {
             if(slot < 0 || slot>MAX_MANUAL_SAVE_SLOT) return false;
-            _saveFile = SaveGame.Load(slot.ToString(), new SaveFile());
+            _saveFile = SaveGame.Load(slot.ToString(), _defaultSaveFile);
             return true;
         }
 
 
         public static void Load() {
-            _saveFile = SaveGame.Load(CurrentSlot.ToString(), new SaveFile());
+            _saveFile = SaveGame.Load(CurrentSlot.ToString(), _defaultSaveFile);
         }
+
+        private static SaveFile _defaultSaveFile => new SaveFile() { SaveTime = DateTime.UtcNow };
 
         public static Optional<AnyValue> Get(string key) {
             if(_saveFile == null) Load();
@@ -89,6 +91,10 @@ namespace ModularFramework.Utility
         }
         public void Add<T>(string key, T value) {
             Values[key] = AnyValue.Create(value);
+        }
+
+        public string GetSaveTime() {
+            return SaveTime.ToLocalTime().ToString(DATE_FORMAT);
         }
     }
 }

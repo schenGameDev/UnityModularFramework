@@ -84,7 +84,7 @@ namespace ModularFramework {
             if(module != null) {
                 return (T) module;
             }
-            Debug.LogError("Module of type " + typeof(T).ToString() + " not found");
+            DebugUtil.Error("Module of type " + typeof(T).ToString() + " not found");
             return null;
         }
 
@@ -110,7 +110,7 @@ namespace ModularFramework {
             if(_registrySODict.TryGetValue(registryType, out var registry)) {
                 return registry;
             }
-            Debug.LogError("Registry of type " + registryType.ToString() + " not found");
+            DebugUtil.Error("Registry of type " + registryType.ToString() + " not found");
             return null;
         }
 
@@ -118,7 +118,7 @@ namespace ModularFramework {
             if(_registrySODict.TryGetValue(typeof(T), out var registry)) {
                 return (T) registry;
             }
-            Debug.LogError("Registry of type " + typeof(T).ToString() + " not found");
+            DebugUtil.Error("Registry of type " + typeof(T).ToString() + " not found");
             return null;
         }
 

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+
 namespace ModularFramework.Commons {
     public struct Optional<T> {
         private static readonly Optional<T> NoValue = new Optional<T>();

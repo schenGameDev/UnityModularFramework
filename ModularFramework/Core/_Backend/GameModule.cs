@@ -6,10 +6,10 @@ using ModularFramework.Utility;
 using UnityEngine;
 using UnityTimer;
 
-/// <summary>
-/// Life cycle: OnAwake(Reset) -> OnUpdate -> OnDestroy
-/// </summary>
 namespace ModularFramework {
+    /// <summary>
+    /// Life cycle: OnAwake(Reset,Load Ref Keywords) -> OnUpdate -> OnDestroy
+    /// </summary>
     public abstract class GameModule : ScriptableObject {
         /// <summary>
         /// Trigger in <c>GameRunner</c> Awake method for sequencial boot-up
@@ -22,8 +22,8 @@ namespace ModularFramework {
         /// Trigger in <c>GameRunner</c> Start method
         /// </summary>
         public virtual void OnStart(){
-            if(OperateEveryFrame) return;
-            if(_updateMode == UpdateMode.EVERY_N_FRAME)
+            if(updateMode == UpdateMode.NONE || OperateEveryFrame) return;
+            if(updateMode == UpdateMode.EVERY_N_FRAME)
             {
                 var timer = new RepeatFrameCountdownTimer(_everyNFrame, 2);
                 timer.OnTick += () =>  {
@@ -58,7 +58,7 @@ namespace ModularFramework {
         public virtual void OnGizmos() {}
 
         protected virtual void Reset() {
-            OperateEveryFrame = (_updateMode == UpdateMode.EVERY_N_FRAME && _everyNFrame == 1) || (_updateMode == UpdateMode.EVERY_N_SECOND && _everyNSecond == 0);
+            OperateEveryFrame = (updateMode == UpdateMode.EVERY_N_FRAME && _everyNFrame == 1) || (updateMode == UpdateMode.EVERY_N_SECOND && _everyNSecond == 0);
 
             InitializeRuntimeVars();
         }
@@ -70,17 +70,17 @@ namespace ModularFramework {
         public Timer Timer {get; private set;}
 
         [Header("Execution")]
-        [SerializeField] private UpdateMode _updateMode;
-        [SerializeField,ShowField(nameof(_updateMode), UpdateMode.EVERY_N_FRAME)] private int _everyNFrame = 1;
-        [SerializeField,ShowField(nameof(_updateMode), UpdateMode.EVERY_N_SECOND)] private float _everyNSecond = 0;
+        [SerializeField] protected UpdateMode updateMode;
+        [SerializeField,ShowField(nameof(updateMode), UpdateMode.EVERY_N_FRAME)] private int _everyNFrame = 1;
+        [SerializeField,ShowField(nameof(updateMode), UpdateMode.EVERY_N_SECOND)] private float _everyNSecond = 0;
         /// <summary>
         /// only one of centerally managed modules will be executed at one frame
         /// </summary>
-        [SerializeField] public bool CentrallyManaged;
+        [SerializeField,HideField(nameof(updateMode), UpdateMode.NONE)] public bool CentrallyManaged;
         public bool OperateEveryFrame {get; private set;}
 
-        enum UpdateMode {
-            EVERY_N_FRAME,EVERY_N_SECOND
+        protected enum UpdateMode {
+            NONE,EVERY_N_FRAME,EVERY_N_SECOND
         }
 
     #region Runtime Variable

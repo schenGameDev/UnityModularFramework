@@ -7,5 +7,6 @@ namespace ModularFramework {
 
         public static readonly int MAX_MANUAL_SAVE_SLOT = 3;
         public static readonly int DEFAULT_AUTO_SAVE_SLOT = 0;
+        public readonly static string DATE_FORMAT = "yyyy-MM-dd hh:ss";
     }
 }
