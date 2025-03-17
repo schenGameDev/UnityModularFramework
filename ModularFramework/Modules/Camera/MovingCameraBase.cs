@@ -42,6 +42,11 @@ public abstract class MovingCameraBase : CameraBase {
         delayTimer = followDelay;
     }
 
+    protected override void OnDestroy() {
+        base.OnDestroy();
+        _cts?.Cancel();
+    }
+
     protected override void CinemachineSetUp()
     {
         base.CinemachineSetUp();

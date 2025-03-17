@@ -1,10 +1,11 @@
-using System.Collections;
 using Unity.Cinemachine;
 using EditorAttributes;
 using Random = UnityEngine.Random;
 using ModularFramework;
 using UnityEngine;
 using System;
+using Cysharp.Threading.Tasks;
+using System.Threading;
 
 [RequireComponent(typeof(CinemachineCamera))]
 public abstract class CameraBase : Marker
@@ -52,9 +53,15 @@ public abstract class CameraBase : Marker
     protected virtual void Update() {
         UpdatePOV();
     }
-#endregion
 
-#region Last State
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        _cts?.Cancel();
+    }
+    #endregion
+
+    #region Last State
     public Vector3 LastCamPos {get; private set;}
     public Quaternion LastCamRot {get; private set;}
     public Quaternion LastFocusRot {get; private set;}
@@ -103,23 +110,26 @@ public abstract class CameraBase : Marker
 #endregion
 
 #region Shake
-    private Coroutine _shakeCoroutine = null;
+    private CancellationTokenSource _cts;
     public void Shake(Vector2 positionOffsetStrength, float rotationOffsetStrength, float seconds) {
-        if(_shakeCoroutine!=null) {
-            StopCoroutine(_shakeCoroutine);
-            _shakeCoroutine = null;
+        Transform core = focusPoint == null? transform : focusPoint.GetChild(0);
+        if(_cts!=null) {
+            _cts.Cancel();
+            _cts.Dispose();
+            ResetCore(core);
         }
-        _shakeCoroutine = StartCoroutine(CameraShakeCoroutine(focusPoint == null? transform : focusPoint.GetChild(0),
-                                                              positionOffsetStrength, rotationOffsetStrength, seconds));
+        _cts = new CancellationTokenSource();
+        CameraShakeCoroutine(core, positionOffsetStrength, rotationOffsetStrength, seconds, _cts.Token).Forget();
     }
 
-    private IEnumerator CameraShakeCoroutine(Transform core, Vector2 positionOffsetStrength, float rotationOffsetStrength,float duration)
+    async UniTaskVoid CameraShakeCoroutine(Transform core, Vector2 positionOffsetStrength, float rotationOffsetStrength,float duration, CancellationToken token)
     {
         float elapsed = 0f;
         float currentMagnitude = 1f;
 
         while (elapsed < duration)
         {
+            token.ThrowIfCancellationRequested();
             float x = (Random.value - 0.5f) * currentMagnitude * positionOffsetStrength.x;
             float y = (Random.value - 0.5f) * currentMagnitude * positionOffsetStrength.y;
 
@@ -132,12 +142,15 @@ public abstract class CameraBase : Marker
             elapsed += Time.deltaTime;
             currentMagnitude = (1 - (elapsed / duration)) * (1 - (elapsed / duration));
 
-            yield return null;
+            await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
         }
 
+        ResetCore(core);
+    }
+
+    void ResetCore(Transform core) {
         core.localPosition = Vector3.zero;
         core.localRotation = Quaternion.identity;
-        _shakeCoroutine = null;
     }
 #endregion
 

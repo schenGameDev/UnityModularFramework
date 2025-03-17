@@ -16,8 +16,16 @@ namespace ModularFramework.Commons {
 
         public T Get() => hasValue ? value : throw new InvalidOperationException("No value");
 
-        public void Do(Action<T> action) {
-            if(hasValue) action(value);
+        public Optional<T> Do(Action<T> action) {
+            if(hasValue) {
+                action(value);
+            }
+            return this;
+        }
+        public void OrElseDo(Action action) {
+            if(!hasValue) {
+                action();
+            }
         }
         public bool HasValue => hasValue;
         public bool IsEmpty => !hasValue;

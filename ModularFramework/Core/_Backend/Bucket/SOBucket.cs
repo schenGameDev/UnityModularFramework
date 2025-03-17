@@ -23,6 +23,7 @@ namespace ModularFramework {
             return Optional<T>.None();
         }
 
+        void OnEnable() => Clear();
         void OnDisable() => Clear();
 
         void Clear() =>  _dictionary.Clear();

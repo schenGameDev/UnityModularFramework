@@ -22,13 +22,13 @@ public class LockTargetCamera : MovingCameraBase
     [HideInInspector,SerializeField,Rename("View Angle Low Limit X Outside Y m"), Suffix("(Horizon 0 deg)")] private Vector2 _minViewAngleOutOfDistance;
 
 
-    [FoldoutGroup("Closeup",nameof(_closeUpDistance),nameof(_closeUpNoRollAngle))]
+    [FoldoutGroup("Closeup",nameof(_closeUpNoRollAngle))]
     [SerializeField] private Void cameraCloseupGroup;
 
     [HideInInspector,SerializeField] private float _playerOffCenter=2;
     [HideInInspector,SerializeField,ReadOnly] private bool _rightSide;
 
-    [HideInInspector,SerializeField,Rename("Don't Switch Side Within"),Suffix("m")]  private float _closeUpDistance = 3f;
+    // [HideInInspector,SerializeField,Rename("Don't Switch Side Within"),Suffix("m")]  private float _closeUpDistance = 3f;
     [HideInInspector,SerializeField,Rename("Roll Slow Within"),Suffix("deg")]  private float _closeUpNoRollAngle = 5;
 
 
