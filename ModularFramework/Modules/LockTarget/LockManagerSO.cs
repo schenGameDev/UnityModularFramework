@@ -20,7 +20,9 @@ public class LockManagerSO : GameModule, IRegistrySO
     [HideInInspector,SerializeField] private EventChannel<bool> _switchLockTargetEvent;
 
     [Header("Runtime")]
+#if UNITY_EDITOR
     [ReadOnly,SerializeField,RuntimeObject] private string[] _lockableInScene;
+#endif
     [ReadOnly,RuntimeObject] public bool IsLock;
     [ReadOnly,RuntimeObject] public Transform LockTarget;
 
@@ -110,7 +112,9 @@ public class LockManagerSO : GameModule, IRegistrySO
     }
 
     private void DisplayLockableNames() {
+#if UNITY_EDITOR
         _lockableInScene = _lockableSet.Select(x => x.name).ToArray();
+#endif
     }
 
     public void TargetLost() {

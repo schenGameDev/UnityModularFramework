@@ -1,6 +1,7 @@
 using UnityEngine;
 
 namespace ModularFramework {
+    using System.Collections.Generic;
     using Commons;
     using Utility;
 
@@ -43,5 +44,9 @@ namespace ModularFramework {
         }
         protected Optional<T> NoMatchType<T>(string fieldName)
             => NoValue<T>(fieldName + " is not " + typeof(T));
+
+        public Dictionary<string,string> GetDictionary() {
+            return dictionary;
+        }
     }
 }

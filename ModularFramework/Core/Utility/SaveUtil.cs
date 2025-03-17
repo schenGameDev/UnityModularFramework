@@ -90,7 +90,7 @@ namespace ModularFramework.Utility
             return Optional<AnyValue>.None();
         }
         public void Add<T>(string key, T value) {
-            Values[key] = AnyValue.Create(value);
+            Values[key] = AnyValue.Of(value);
         }
 
         public string GetSaveTime() {

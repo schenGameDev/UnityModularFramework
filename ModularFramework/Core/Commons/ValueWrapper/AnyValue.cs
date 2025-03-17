@@ -1,6 +1,6 @@
 using System;
 using UnityEngine;
-public enum ValueType { Int, Float, Bool, String, Vector3 }
+
 namespace ModularFramework.Commons {
     [Serializable]
     public struct AnyValue {
@@ -14,7 +14,7 @@ namespace ModularFramework.Commons {
         public Vector3 vector3Value;
 
 
-        public static AnyValue Create<T>(T value) {
+        public static AnyValue Of<T>(T value) {
             ValueType tp = ValueTypeOf(typeof(T));
             return tp switch {
                 ValueType.Bool => new AnyValue() {type=tp, boolValue=(bool)(object)value},
@@ -84,4 +84,6 @@ namespace ModularFramework.Commons {
             };
         }
     }
+
+    public enum ValueType { Int, Float, Bool, String, Vector3 }
 }

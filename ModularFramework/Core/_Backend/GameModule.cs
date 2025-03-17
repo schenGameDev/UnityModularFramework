@@ -237,11 +237,11 @@ namespace ModularFramework {
 
             public RuntimeObject(string initializer) => this.initializer = initializer;
 
-            public RuntimeObject(string initializer, string cleaner) {
+            public RuntimeObject(string initializer = "", string cleaner = "") {
                 this.initializer = initializer;
                 this.cleaner = cleaner;
             }
-            public RuntimeObject(bool notInitialize = false) {
+            public RuntimeObject(bool notInitialize) {
                 this.notInitialize = notInitialize;
             }
         }

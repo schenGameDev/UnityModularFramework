@@ -3,7 +3,7 @@ using UnityEngine.Events;
 using ModularFramework.Utility;
 
 namespace ModularFramework {
-    public abstract class TransmissionEventChannel<T> : EventChannel<T> {
+    public abstract class TransferEventChannel<T> : EventChannel<T> {
         [SerializeField] EventChannel<T>[] _receivers;
         protected override void Invoke(T param)
         {
@@ -18,13 +18,13 @@ namespace ModularFramework {
             }
             return true;
         }
-        static readonly string WARNING = "TransmissionEventChannel does not support Listener.";
+        static readonly string WARNING = "TransferEventChannel does not support Listener.";
         public override void AddListener(UnityAction<T> action) => DebugUtil.Warn(WARNING);
         public override void RemoveListener(UnityAction<T> action) => DebugUtil.Warn(WARNING);
     }
 
-    [CreateAssetMenu(menuName = "Event Channel/Transmission Channel",fileName = "Channel")]
-    public class TransmissionEventChannel : EventChannel {
+    [CreateAssetMenu(menuName = "Event Channel/Transfer Channel",fileName = "Channel")]
+    public class TransferEventChannel : EventChannel {
         [SerializeField] EventChannel[] _receivers;
         protected override void Invoke()
         {
@@ -33,13 +33,13 @@ namespace ModularFramework {
 
         protected override bool IsEventSubscribed() {
             if(_receivers==null || _receivers.IsEmpty()) {
-                DebugUtil.DebugWarn("no event reader registered.");
+                DebugUtil.DebugWarn(NO_EVENT_READER);
                 return false;
             }
             return true;
         }
 
-        static readonly string WARNING = "TransmissionEventChannel does not support Listener.";
+        static readonly string WARNING = "TransferEventChannel does not support Listener.";
         public override void AddListener(UnityAction action) => DebugUtil.Warn(WARNING);
         public override void RemoveListener(UnityAction action) => DebugUtil.Warn(WARNING);
     }

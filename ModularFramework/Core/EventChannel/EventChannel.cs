@@ -15,11 +15,12 @@ namespace ModularFramework {
 
     public abstract class EventChannel<T> : ScriptableObject, IEventChannel, IResetable
     {
+        protected static string NO_EVENT_READER = "no event reader registered.";
+
         protected UnityAction<T> action;
         private T _lastSend;
-        [SerializeField] private bool _live = true;
         [SerializeField] private bool _log;
-        public bool Live { get => _live; set => _live = value; }
+        [field: SerializeField] public bool Live { get; set; } = true; // can be used to pause channel while listener handles action, then unpause once done
 
         public void Raise(T param)
         {
@@ -48,7 +49,7 @@ namespace ModularFramework {
 
         protected virtual bool IsEventSubscribed() {
             if(action==null) {
-                DebugUtil.DebugWarn("no event reader registered.");
+                DebugUtil.DebugWarn(NO_EVENT_READER);
                 return false;
             }
             return true;
@@ -74,10 +75,11 @@ namespace ModularFramework {
 
     [CreateAssetMenu(menuName = "Event Channel/Event Channel",fileName = "Channel")]
     public class EventChannel : ScriptableObject,IEventChannel {
+        protected static string NO_EVENT_READER = "no event reader registered.";
+
         protected UnityAction action;
-        [SerializeField] private bool _live = true;
         [SerializeField] private bool _log;
-        public bool Live { get => _live; set => _live = value; }
+        [field: SerializeField] public bool Live { get; set; } = true;
         public void Raise()
         {
             if(Live && IsEventSubscribed()) {
@@ -94,7 +96,7 @@ namespace ModularFramework {
 
         protected virtual bool IsEventSubscribed() {
             if(action==null) {
-                DebugUtil.DebugWarn("no event reader registered.");
+                DebugUtil.DebugWarn(NO_EVENT_READER);
                 return false;
             }
             return true;

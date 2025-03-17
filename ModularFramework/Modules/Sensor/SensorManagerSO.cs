@@ -15,16 +15,16 @@ public class SensorManagerSO : GameModule, IRegistrySO {
     //[SerializeField,SerializedDictionary("Code","parameter")] private SerializedDictionary<int,string[]> _parameters;
 
     [Header("Runtime")]
-    [ReadOnly,SerializeField] private string[] _sensibleInScene;
-
+#if UNITY_EDITOR
+    [ReadOnly,SerializeField,RuntimeObject] private string[] _sensibleInScene;
+#endif
     public SensorManagerSO() {
         updateMode = UpdateMode.NONE;
     }
 
-    private Dictionary<string,Sensible> _sensibleDict;
+    [RuntimeObject] private Dictionary<string,Sensible> _sensibleDict = new();
 
     protected override void Reset() {
-        _sensibleInScene= null;
         _sensibleDict = new();
     }
 
@@ -45,7 +45,9 @@ public class SensorManagerSO : GameModule, IRegistrySO {
     }
 
     private void DisplaySensibleNames() {
+#if UNITY_EDITOR
         _sensibleInScene = _sensibleDict.Keys.ToArray();
+#endif
     }
 
     public Transform GetTransform(string name, bool overrideTargetVisible) {

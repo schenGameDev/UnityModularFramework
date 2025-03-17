@@ -31,7 +31,7 @@ public class CircularList<T> : List<T>
         return index;
     }
 
-    public List<T> GetRangeBetween(int start, int end) {
+    public List<T> RangeBetween(int start, int end) {
         bool isLoop = start > end;
         List<T> list = this.GetRange(start, isLoop? (this.Count-start) : (end - start + 1));
         if(isLoop) {
