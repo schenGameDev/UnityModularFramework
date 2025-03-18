@@ -50,7 +50,8 @@ namespace ModularFramework.Utility
 
 
         public static void Load() {
-            _saveFile = SaveGame.Load(CurrentSlot.ToString(), _defaultSaveFile);
+            if(SaveGame.Exists(CurrentSlot.ToString())) _saveFile = SaveGame.Load(CurrentSlot.ToString(), _defaultSaveFile);
+            else _saveFile = _defaultSaveFile;
         }
 
         private static SaveFile _defaultSaveFile => new SaveFile() { SaveTime = DateTime.UtcNow };

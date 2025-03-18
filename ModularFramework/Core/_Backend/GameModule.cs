@@ -196,8 +196,17 @@ namespace ModularFramework {
             if(collectionType.InheritsOrImplements(typeof(System.Collections.IList))) {
                 (collection as System.Collections.IList).Clear();
                 return;
-            } else if(collectionType.InheritsOrImplements(typeof(System.Collections.IDictionary))) {
+            }
+            if(collectionType.InheritsOrImplements(typeof(System.Collections.IDictionary))) {
                 (collection as System.Collections.IDictionary).Clear();
+                return;
+            }
+            if(collectionType.InheritsOrImplements(typeof(System.Collections.Queue))) {
+                (collection as System.Collections.Queue).Clear();
+                return;
+            }
+            if(collectionType.InheritsOrImplements(typeof(System.Collections.Stack))) {
+                (collection as System.Collections.Stack).Clear();
                 return;
             }
 

@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b5b0fa78db7a45e9acb2d4f029d70cb, type: 3}
+  m_Name: SoundFxBucket_SO
+  m_EditorClassIdentifier: 
+  _items:
+  - {fileID: 11400000, guid: 009ddc3ae6d634f068912efdee6b368b, type: 2}
+  mixerGroup: {fileID: -2592916245730541905, guid: 1c4978043078c4485b1a2cdec1f0f9c2, type: 2}

@@ -3,6 +3,7 @@ using EditorAttributes;
 using UnityEngine;
 
 namespace ModularFramework {
+    using System;
     using Commons;
     using Utility;
     /// <summary>
@@ -19,5 +20,13 @@ namespace ModularFramework {
             DebugUtil.DebugError(name + " not found", this.name);
             return Optional<T>.None();
         }
+
+        public bool ContainsKey(string name) {
+            return dictionary.ContainsKey(name);
+        }
+
+        public void ForEach(Action<string, T> action) {
+        dictionary.ForEach(e=>action(e.Key, e.Value));
+    }
     }
 }

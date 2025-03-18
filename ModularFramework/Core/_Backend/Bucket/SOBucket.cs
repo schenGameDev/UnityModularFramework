@@ -4,6 +4,7 @@ using System.Linq;
 using EditorAttributes;
 
 namespace ModularFramework {
+    using System;
     using Commons;
     using Utility;
     /// <summary>
@@ -28,6 +29,21 @@ namespace ModularFramework {
 
         void Clear() =>  _dictionary.Clear();
 
-        void Reset() => _dictionary = _items.ToDictionary(x=>x.name, x=>x);
+        void Reset() {
+            if(_items == null) {
+                _dictionary = new();
+            } else {
+                _dictionary = _items.ToDictionary(x=>x.name, x=>x);
+            }
+        }
+
+        public bool ContainsKey(string name) {
+            if(_dictionary.IsEmpty()) Reset();
+            return _dictionary.ContainsKey(name);
+        }
+
+        public void ForEach(Action<T> action) {
+            _items.ForEach(i => action(i));
+        }
     }
 }
