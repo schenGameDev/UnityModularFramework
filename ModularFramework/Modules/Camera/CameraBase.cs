@@ -119,10 +119,10 @@ public abstract class CameraBase : Marker
             ResetCore(core);
         }
         _cts = new CancellationTokenSource();
-        CameraShakeCoroutine(core, positionOffsetStrength, rotationOffsetStrength, seconds, _cts.Token).Forget();
+        CameraShakeTask(core, positionOffsetStrength, rotationOffsetStrength, seconds, _cts.Token).Forget();
     }
 
-    async UniTaskVoid CameraShakeCoroutine(Transform core, Vector2 positionOffsetStrength, float rotationOffsetStrength,float duration, CancellationToken token)
+    async UniTaskVoid CameraShakeTask(Transform core, Vector2 positionOffsetStrength, float rotationOffsetStrength,float duration, CancellationToken token)
     {
         float elapsed = 0f;
         float currentMagnitude = 1f;

@@ -34,7 +34,7 @@ public class SoundManagerSO : GameModule
 
     [Header("Runtime")]
     [ReadOnly,SerializeField] string _currentTrack;
-    [ReadOnly] public SoundPlayer[] MusicPlayers = new SoundPlayer[2];
+    [HideInInspector] public SoundPlayer[] MusicPlayers = new SoundPlayer[2];
     //public int currentActiveMusicPlayer;
     public SoundProfile CurrentTrack {get; set;}
     public SoundProfile PrevTrack {get; set;}

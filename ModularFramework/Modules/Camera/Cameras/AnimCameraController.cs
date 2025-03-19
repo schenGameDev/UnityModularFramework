@@ -19,7 +19,7 @@ public class AnimCameraController : MonoBehaviour
         _cameraManager = GameRunner.Instance.GetModule<CameraManagerSO>().Get();
     }
 
-    public void UpdateExecCamFinishPos() {//Animation Event function
+    public void UpdateCamFinishPos() {//Animation Event function
         _camera.SaveCurrentPosAndRot();
     }
 
