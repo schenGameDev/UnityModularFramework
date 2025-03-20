@@ -8,6 +8,7 @@ using System;
 using ModularFramework.Utility;
 using ModularFramework.Commons;
 using AYellowpaper.SerializedCollections;
+using ValueType = ModularFramework.Commons.ValueType;
 
 /// <summary>
 /// load and save story, send and receive variables.
@@ -22,6 +23,7 @@ public class InkManagerSO : GameModule
     [SerializeField] private InkStoryBucket _stories;
     [SerializeField] private InkTagDefBucket[] _tagDefBuckets;
     [SerializeField] private Bucket _varNameBucket;
+    [SerializeField] private bool _saveLog;
 
     [FoldoutGroup("Event Channels", nameof(_inkTextChannel), nameof(_varChangeChannel), nameof(_chapterChangeEventChannel), nameof(_inkTaskChannel))]
     [SerializeField] private EditorAttributes.Void _eventChannelGroup;
@@ -47,23 +49,26 @@ public class InkManagerSO : GameModule
 
     public InkManagerSO() {
         updateMode = UpdateMode.NONE;
+        crossScene = true;
     }
 
-    public override void OnDestroy() {
-        base.OnDestroy();
+    public override void OnFinalDestroy() {
+        base.OnFinalDestroy();
         _stage = InkStage.END;
     }
 
     #region Story
     public void StartStory(string name)
     {
+        if(_currentStory != null) ClearStory();
+
         _stage = InkStage.READY;
         _currentStory = new Story(_stories.Get(name).Get().text);
 
 #if UNITY_EDITOR
         _currentStoryName = name;
 #endif
-        LoadStory(_currentStory);
+        LoadStory(name,_currentStory);
 
         _currentStory.ObserveVariables(new List<string>(_keeperDict.Keys),
             (string varName, object newValue) => {
@@ -97,10 +102,13 @@ public class InkManagerSO : GameModule
         return false;
     }
 
-
+    [RuntimeObject] int _lastChoiceIndex = -1;
     public bool Next(int choiceIndex = -1) { // next button clickable only at READY state
-        if(TaskRunning()) return true;
-
+        if(TaskRunning()) {
+            _lastChoiceIndex = choiceIndex;
+            return true;
+        }
+        _lastChoiceIndex = -1;
         if(_stage == InkStage.READY) {
             _currentChoice = null;
             _currentLine = null;
@@ -110,24 +118,15 @@ public class InkManagerSO : GameModule
                 if(_currentChoice == null) {
                     _stage = InkStage.END;
                     return false;
+                } else {
+                    _inkTextChannel.Raise(Either<InkLine,InkChoice>.FromRight(_currentChoice));
+                    _stage = InkStage.WAIT_CHOICE;
                 }
             } else {
                 string text = _currentStory.Continue();
                 List<InkTag> tags = _currentStory.currentTags==null? new() : _currentStory.currentTags.Select(t=>InkTag.Of(t,_tagDefBuckets,Get)).ToList();
                 _currentLine = new InkLine(text,tags);
-            }
-
-            if(CheckChapterChange(_currentStory)) { // render chapter change
-                _stage = InkStage.WAIT_CHAPTER_CHANGE;
-                return true;
-            }
-        }
-
-        if(_stage == InkStage.WAIT_CHAPTER_CHANGE || _stage == InkStage.READY) { // render text
-            if(_currentChoice == null) {
-                _inkTextChannel.Raise(Either<InkLine,InkChoice>.FromRight(_currentChoice));
-                _stage = InkStage.WAIT_CHOICE;
-            } else {
+                SaveLog(text);
                 _inkTextChannel.Raise(Either<InkLine,InkChoice>.FromLeft(_currentLine));
                 _stage = InkStage.READY;
             }
@@ -165,18 +164,19 @@ public class InkManagerSO : GameModule
         return new InkChoice(choices,ExplainCondition);
     }
 
-    private void LoadStory(Story story) {
-        SaveUtil.Get(EnvironmentConstants.STORY_STATE)
+    private void LoadStory(string storyName, Story story) {
+        SaveUtil.GetState(storyName)
             .Do(states => story.state.LoadJson(states))
             .OrElseDo(story.ResetState);
-
+        InjectVariables(story);
         story.variablesState.ForEach(varName => PutKeeper(varName,story.variablesState[varName]));
-        story.BindExternalFunction(INK_FUNCTION_DO_TASK, (string task, string parameter) => DoTask(name, parameter));
+        story.BindExternalFunction(INK_FUNCTION_DO_TASK, (string task, string parameter, bool isBlocking) => DoTask(name, parameter, isBlocking));
     }
 
-    public void SaveStory(Story story) {
+    public void SaveStory(string storyName, Story story) {
         string saveJson =story.state.ToJson();
-        SaveUtil.Save(EnvironmentConstants.STORY_STATE, saveJson);
+        SaveUtil.SaveState(storyName, saveJson);
+        SaveVariables();
     }
 
     private bool CheckChapterChange(Story story) {
@@ -196,15 +196,32 @@ public class InkManagerSO : GameModule
 #endregion
 #region Task
     [RuntimeObject] int _tasksRunning = 0;
-    private void DoTask(string taskHandler, string parameter) {
+    [RuntimeObject] List<(string,string)> _taskBuffer = new();
+    [RuntimeObject] bool _taskBlocked = false;
+    private void DoTask(string taskHandler, string parameter, bool isBlocking) {
         // wait till all tasks finish, then proceed to next
-        _tasksRunning ++;
+        if(_taskBlocked) {
+            _taskBuffer.Add((taskHandler, parameter));
+            return;
+        }
+        if(_taskBuffer.NonEmpty()) {
+            _taskBuffer.ForEach(task => _inkTaskChannel.Raise(task));
+            _taskBuffer.Clear();
+        }
+        _tasksRunning++;
         _inkTaskChannel.Raise((taskHandler, parameter));
         // effectprofile, name:effect(play anim, change BG, in-out style, wait time)
+        if(isBlocking) {
+            _taskBlocked = true;
+        }
     }
 
     public void TaskComplete() {
-        _tasksRunning --;
+        _tasksRunning--;
+        if(_tasksRunning == 0 && _taskBlocked) _taskBlocked = false;
+        if(_taskBuffer.IsEmpty() && _lastChoiceIndex!=-1) {
+            Next(_lastChoiceIndex);
+        }
     }
 
     public bool TaskRunning() => _tasksRunning > 0;
@@ -212,6 +229,51 @@ public class InkManagerSO : GameModule
 #endregion
 
 #region Variables
+    private void InjectVariables(Story story) {
+        if(_keeperDict.IsEmpty()) {
+            // first story, inject from save
+            var dict = SaveUtil.GetAllValues();
+            if(dict != null) {
+                dict.ForEach((varName, value) => {
+                    bool neededInStory = story.variablesState.GlobalVariableExistsWithName(varName);
+
+                    if(value.type == ValueType.Bool) {
+                        if(neededInStory) Put(varName, (bool)value);
+                        else PutKeeper(varName, (bool)value);
+                    } else if(value.type == ValueType.Int) {
+                        if(neededInStory) Put(varName, (int)value);
+                        else PutKeeper(varName, (int)value);
+                    } else if(value.type == ValueType.Float) {
+                        if(neededInStory) Put(varName, (float)value);
+                        else PutKeeper(varName, (float)value);
+                    } else if(value.type == ValueType.String) {
+                        if(neededInStory) Put(varName, (string)value);
+                        else PutKeeper(varName, (string)value);
+                    }
+                });
+            }
+        } else {
+            // else inject existing keeper
+            _keeperDict.ForEach((varName, value) => {
+                    bool neededInStory = story.variablesState.GlobalVariableExistsWithName(varName);
+                    if(!neededInStory) return;
+                    if(value.type == ValueType.Bool) {
+                        Put(varName, (bool)value);
+                    } else if(value.type == ValueType.Int) {
+                        Put(varName, (int)value);
+                    } else if(value.type == ValueType.Float) {
+                        Put(varName, (float)value);
+                    } else if(value.type == ValueType.String) {
+                        Put(varName, (string)value);
+                    }
+                });
+        }
+    }
+
+    private void SaveVariables() {
+        // dump all keeper to saveFile
+        _keeperDict.ForEach((varName, value) => SaveUtil.SaveValue(varName, value));
+    }
     private string ExplainCondition(string condition) {
         _varNameBucket?.GetDictionary().ForEach((varName, name) => {
             condition.Replace(varName, name);
@@ -262,9 +324,16 @@ public class InkManagerSO : GameModule
         throw new KeyNotFoundException(name + " not found, comparison error");
     }
 #endregion
+#region Log
+[RuntimeObject] public readonly List<string> log = new List<string>();
+    private void SaveLog(string line) {
+        if(_saveLog) log.Add(line);
+    }
+
+#endregion
 }
 
 public enum InkStage {
-    READY, WAIT_CHAPTER_CHANGE, WAIT_CHOICE, END
+    READY, WAIT_CHOICE, END
 }
 

@@ -8,7 +8,7 @@ using UnityTimer;
 
 namespace ModularFramework {
     /// <summary>
-    /// Life cycle: OnAwake(Reset,Load Ref Keywords) -> OnUpdate -> OnDestroy
+    /// Life cycle: OnAwake(Reset,Load Ref Keywords) -> OnStart (link to GameManager) -> OnUpdate -> OnDestroy
     /// </summary>
     public abstract class GameModule : ScriptableObject {
         /// <summary>
@@ -16,6 +16,19 @@ namespace ModularFramework {
         /// </summary>
         public virtual void OnAwake(Dictionary<string, string> flags, Dictionary<string,GameObject> references){
             Reset();
+        }
+
+        /// <summary>
+        /// Trigger only for cross scene modules
+        /// </summary>
+        public virtual void OnFirstStart() {
+            InitializeRuntimeVars(true);
+        }
+        /// <summary>
+        /// Trigger only for cross scene modules
+        /// </summary>
+        public virtual void OnFinalDestroy() {
+            CleanRuntimeVars(true);
         }
 
         /// <summary>
@@ -50,7 +63,7 @@ namespace ModularFramework {
         /// Trigger in <c>GameRunner</c> OnDestroy method
         /// </summary>
         public virtual void OnDestroy() {
-            CleanRuntimeVars();
+            CleanRuntimeVars(false);
         }
         /// <summary>
         /// Trigger in <c>GameRunner</c> OnDrawGizmos method
@@ -60,7 +73,7 @@ namespace ModularFramework {
         protected virtual void Reset() {
             OperateEveryFrame = (updateMode == UpdateMode.EVERY_N_FRAME && _everyNFrame == 1) || (updateMode == UpdateMode.EVERY_N_SECOND && _everyNSecond == 0);
 
-            InitializeRuntimeVars();
+            InitializeRuntimeVars(false);
         }
 
         // Handled in GameRunner
@@ -70,6 +83,10 @@ namespace ModularFramework {
         public Timer Timer {get; private set;}
 
         [Header("Execution")]
+        /// <summary>
+        /// Once checked, OnAwake() and OnDestroy() will be called only once throughout the game
+        /// </summary>
+        [HideInInspector] public bool crossScene;
         [SerializeField] protected UpdateMode updateMode;
         [SerializeField,ShowField(nameof(updateMode), UpdateMode.EVERY_N_FRAME)] private int _everyNFrame = 1;
         [SerializeField,ShowField(nameof(updateMode), UpdateMode.EVERY_N_SECOND)] private float _everyNSecond = 0;
@@ -84,9 +101,12 @@ namespace ModularFramework {
         }
 
     #region Runtime Variable
-        protected void CleanRuntimeVars() {
+        protected void CleanRuntimeVars(bool moduleFinalEnd) {
             foreach(FieldInfo field in GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
                 if (Attribute.GetCustomAttribute(field, typeof(RuntimeObject)) is not RuntimeObject attribute) continue;
+                bool isRightTime = (crossScene && moduleFinalEnd && attribute.lifetime==RuntimeObjectLifetime.MODULE) ||
+                                    (!crossScene && !moduleFinalEnd) || (attribute.lifetime==RuntimeObjectLifetime.SCENE && !moduleFinalEnd);
+                if(!isRightTime) continue;
                 Type type = field.FieldType;
                 object value = field.GetValue(this);
                 try {
@@ -113,9 +133,12 @@ namespace ModularFramework {
 
         }
 
-        protected void InitializeRuntimeVars() {
+        protected void InitializeRuntimeVars(bool moduleFirstStart) {
             foreach(FieldInfo field in GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
                 if (Attribute.GetCustomAttribute(field, typeof(RuntimeObject)) is not RuntimeObject attribute) continue;
+                bool isRightTime = (crossScene && moduleFirstStart && attribute.lifetime==RuntimeObjectLifetime.MODULE) ||
+                                    (!crossScene && !moduleFirstStart) || (attribute.lifetime==RuntimeObjectLifetime.SCENE && !moduleFirstStart);
+                if(!isRightTime) continue;
                 Type type = field.FieldType;
                 object value = field.GetValue(this);
                 try {
@@ -243,10 +266,11 @@ namespace ModularFramework {
             public readonly string initializer;
             public readonly string cleaner;
             public readonly bool notInitialize;
+            public readonly RuntimeObjectLifetime lifetime = RuntimeObjectLifetime.MODULE;
 
-            public RuntimeObject(string initializer) => this.initializer = initializer;
+            public RuntimeObject(RuntimeObjectLifetime lifetime) => this.lifetime = lifetime;
 
-            public RuntimeObject(string initializer = "", string cleaner = "") {
+            public RuntimeObject(string initializer = "", string cleaner = "",RuntimeObjectLifetime lifetime=RuntimeObjectLifetime.MODULE) {
                 this.initializer = initializer;
                 this.cleaner = cleaner;
             }
@@ -254,6 +278,8 @@ namespace ModularFramework {
                 this.notInitialize = notInitialize;
             }
         }
+
+        protected enum RuntimeObjectLifetime {MODULE, SCENE}
     #endregion
     }
 }

@@ -15,6 +15,11 @@ namespace ModularFramework.Commons {
 
 
         public static AnyValue Of<T>(T value) {
+            if(value is Keeper) {
+                var kp = value as Keeper;
+                return kp.ConvertToAnyValue();
+            }
+
             ValueType tp = ValueTypeOf(typeof(T));
             return tp switch {
                 ValueType.Bool => new AnyValue() {type=tp, boolValue=(bool)(object)value},

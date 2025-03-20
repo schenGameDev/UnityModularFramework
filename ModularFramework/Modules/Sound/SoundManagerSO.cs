@@ -33,24 +33,23 @@ public class SoundManagerSO : GameModule
 
 
     [Header("Runtime")]
-    [ReadOnly,SerializeField] string _currentTrack;
+    [ReadOnly,SerializeField,RuntimeObject] string _currentTrack;
     [HideInInspector] public SoundPlayer[] MusicPlayers = new SoundPlayer[2];
     //public int currentActiveMusicPlayer;
-    public SoundProfile CurrentTrack {get; set;}
-    public SoundProfile PrevTrack {get; set;}
-    [SerializeField, ReadOnly] List<string> _playlist = new();
-    public Transform SoundParent {get; private set;}
-    public Transform PersistentSoundParent {get; private set;}
+    [RuntimeObject] public SoundProfile CurrentTrack {get; set;}
+    [RuntimeObject] public SoundProfile PrevTrack {get; set;}
+    [SerializeField, ReadOnly,RuntimeObject] List<string> _playlist = new();
+    [RuntimeObject] public Transform SoundParent {get; private set;}
+    [RuntimeObject] public Transform PersistentSoundParent {get; private set;}
 
-    [RuntimeObject] readonly List<SoundPlayer> _activeSoundPlayers = new();
-    [HideInInspector,RuntimeObject(nameof(ResetFrequentSoundPlayer),nameof(ResetFrequentSoundPlayer))]
+    [RuntimeObject(RuntimeObjectLifetime.SCENE)] readonly List<SoundPlayer> _activeSoundPlayers = new();
+    [HideInInspector,RuntimeObject(nameof(ResetFrequentSoundPlayer),nameof(ResetFrequentSoundPlayer),RuntimeObjectLifetime.SCENE)]
     public readonly LinkedList<SoundPlayer> FrequentSoundPlayers = new();
-
-    bool _isStartedAlready => SoundParent;
 
 
     public SoundManagerSO() {
         updateMode = UpdateMode.NONE;
+        crossScene = true;
     }
 
     void ChangeUpdateMode() {
@@ -59,15 +58,17 @@ public class SoundManagerSO : GameModule
         } else updateMode = UpdateMode.NONE;
     }
 
+    public override void OnFirstStart()
+    {
+        base.OnFirstStart();
+        BuildPersistentParent();
+        InitializeMusic();
+    }
+
     public override void OnStart()
     {
         base.OnStart();
-        if(!_isStartedAlready) {
-            BuildParent();
-            BuildPersistentParent();
-            InitializeMusic();
-        }
-
+        BuildParent();
         InitializePool();
     }
 
@@ -219,7 +220,7 @@ public class SoundManagerSO : GameModule
     public void StopAll() {
         _activeSoundPlayers.ForEach(x=>x.Stop());
     }
-    [RuntimeObject] ObjectPool<SoundPlayer> _soundPlayerPool;
+    [RuntimeObject(RuntimeObjectLifetime.SCENE)] ObjectPool<SoundPlayer> _soundPlayerPool;
     void InitializePool() {
         _soundPlayerPool = new ObjectPool<SoundPlayer>(
             () => {

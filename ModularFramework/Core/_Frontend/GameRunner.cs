@@ -11,6 +11,8 @@ namespace ModularFramework {
 
     public class GameRunner : Singleton<GameRunner>
     {
+        static List<GameModule> _crossSceneModules = new();
+
         [Header("Game Modules")]
         [SerializeField,HideLabel,HelpBox("In boot-up order", MessageMode.None)]
         [OnValueChanged(nameof(AddBootupParameter))] private GameModule[] _modules;
@@ -47,6 +49,10 @@ namespace ModularFramework {
         {
             if(_modules!=null) {
                 foreach(var module in _modules) {
+                    if(module.crossScene && !_crossSceneModules.Contains(module)) {
+                        _crossSceneModules.Add(module);
+                        module.OnFirstStart();
+                    }
                     module.OnStart();
                 }
             }
@@ -64,7 +70,7 @@ namespace ModularFramework {
         private void OnDestroy() {
             if(_modules!=null) {
                 foreach(var module in _modules) {
-                    module.OnDestroy();
+                    if(!module.crossScene) module.OnDestroy();
                 }
             }
         }
@@ -75,6 +81,23 @@ namespace ModularFramework {
                     module.OnGizmos();
                 }
             }
+        }
+
+        [Button]
+        public void EndGame() {
+            OnDestroy();
+            if(_crossSceneModules!=null) {
+                foreach(var module in _crossSceneModules) {
+                    module.OnFinalDestroy();
+                }
+            }
+            #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+            #elif UNITY_WEBPLAYER
+            Application.OpenURL("http://google.com");
+            #else
+            Application.Quit();
+            #endif
         }
     #endregion
 

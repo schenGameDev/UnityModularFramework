@@ -33,6 +33,10 @@ namespace ModularFramework.Commons {
         public static implicit operator float(Keeper value) => value.ConvertValue<float>();
         public static implicit operator string(Keeper value) => value.ConvertValue<string>();
 
+        public AnyValue ConvertToAnyValue() {
+            return new AnyValue() {type=this.type, boolValue = _boolValue, stringValue = _stringValue, floatValue = _floatValue, intValue=_intValue};
+        }
+
         public T ConvertValue<T>() {
             if (typeof(T) == typeof(object)) return CastToObject<T>();
             return type switch {
