@@ -8,6 +8,7 @@ using System;
 using ModularFramework.Utility;
 using ModularFramework.Commons;
 using AYellowpaper.SerializedCollections;
+using UnityEngine.Serialization;
 using ValueType = ModularFramework.Commons.ValueType;
 
 /// <summary>
@@ -20,29 +21,29 @@ public class InkManagerSO : GameModule
     static readonly string INK_FUNCTION_DO_TASK = "doTask";
 
     [Header("Config")]
-    [SerializeField] private InkStoryBucket _stories;
-    [SerializeField] private InkTagDefBucket[] _tagDefBuckets;
-    [SerializeField] private Bucket _varNameBucket;
-    [SerializeField] private bool _saveLog;
+    [SerializeField] private InkStoryBucket stories;
+    [SerializeField] private InkTagDefBucket[] tagDefBuckets;
+    [SerializeField] private Bucket varNameBucket;
+    [SerializeField] private bool saveLog;
 
-    [FoldoutGroup("Event Channels", nameof(_inkTextChannel), nameof(_varChangeChannel), nameof(_chapterChangeEventChannel), nameof(_inkTaskChannel))]
-    [SerializeField] private EditorAttributes.Void _eventChannelGroup;
-    [HideInInspector,SerializeField] EventChannel<string>  _chapterChangeEventChannel;
-    [HideInInspector,SerializeField] EventChannel<(string,Keeper)> _varChangeChannel;
-    [HideInInspector,SerializeField] EventChannel<Either<InkLine,InkChoice>> _inkTextChannel;
-    [HideInInspector,SerializeField] EventChannel<(string,string)> _inkTaskChannel;
+    [FoldoutGroup("Event Channels", nameof(inkTextChannel), nameof(varChangeChannel), nameof(chapterChangeEventChannel), nameof(inkTaskChannel))]
+    [SerializeField] private EditorAttributes.Void eventChannelGroup;
+    [HideInInspector,SerializeField] EventChannel<string>  chapterChangeEventChannel;
+    [HideInInspector,SerializeField] EventChannel<(string,Keeper)> varChangeChannel;
+    [HideInInspector,SerializeField] EventChannel<Either<InkLine,InkChoice>> inkTextChannel;
+    [HideInInspector,SerializeField] EventChannel<(string,string)> inkTaskChannel;
 
     [Header("Runtime")]
-    [Rename("Current Story"),ReadOnly,SerializeField,RuntimeObject] string _currentStoryName;
-    [ReadOnly,SerializeField,RuntimeObject] private string _currentChapter;
+    [Rename("Current Story"),ReadOnly,SerializeField,RuntimeObject] string currentStoryName;
+    [ReadOnly,SerializeField,RuntimeObject] private string currentChapter;
 
 #if UNITY_EDITOR
-    [ReadOnly,SerializeField,SerializedDictionary,RuntimeObject] private SerializedDictionary<string,string> _stats;
+    [ReadOnly,SerializeField,SerializedDictionary,RuntimeObject] private SerializedDictionary<string,string> stats;
 #endif
     // variable first save to story, then populate keeper through delegete, then alert unity through event channel
     [RuntimeObject] private Dictionary<string,Keeper> _keeperDict = new();
     [RuntimeObject(cleaner:nameof(ClearStory))] private Story _currentStory;
-    [SerializeField,ReadOnly] InkStage _stage;
+    [SerializeField,ReadOnly] InkStage stage;
     [RuntimeObject] InkLine _currentLine;
     [RuntimeObject] InkChoice _currentChoice;
 
@@ -54,27 +55,27 @@ public class InkManagerSO : GameModule
 
     public override void OnFinalDestroy() {
         base.OnFinalDestroy();
-        _stage = InkStage.END;
+        stage = InkStage.END;
     }
 
     #region Story
-    public void StartStory(string name)
+    public void StartStory(string storyName)
     {
         if(_currentStory != null) ClearStory();
 
-        _stage = InkStage.READY;
-        _currentStory = new Story(_stories.Get(name).Get().text);
+        stage = InkStage.READY;
+        _currentStory = new Story(stories.Get(storyName).Get().text);
 
 #if UNITY_EDITOR
-        _currentStoryName = name;
+        currentStoryName = storyName;
 #endif
-        LoadStory(name,_currentStory);
+        LoadStory(storyName,_currentStory);
 
         _currentStory.ObserveVariables(new List<string>(_keeperDict.Keys),
             (string varName, object newValue) => {
                 if(newValue == _keeperDict[varName]) return;
                 PutKeeper(varName, newValue);
-                _varChangeChannel?.Raise((varName, PutKeeper(varName, newValue)));
+                varChangeChannel?.Raise((varName, PutKeeper(varName, newValue)));
             });
 
         _currentStory.onError += (msg, type) => {
@@ -109,37 +110,37 @@ public class InkManagerSO : GameModule
             return true;
         }
         _lastChoiceIndex = -1;
-        if(_stage == InkStage.READY) {
+        if(stage == InkStage.READY) {
             _currentChoice = null;
             _currentLine = null;
             // check if story end or choice ahead
             if(!CanContinue()) {
                 _currentChoice = NextChoice();
                 if(_currentChoice == null) {
-                    _stage = InkStage.END;
+                    stage = InkStage.END;
                     return false;
                 } else {
-                    _inkTextChannel.Raise(Either<InkLine,InkChoice>.FromRight(_currentChoice));
-                    _stage = InkStage.WAIT_CHOICE;
+                    inkTextChannel.Raise(Either<InkLine,InkChoice>.FromRight(_currentChoice));
+                    stage = InkStage.WAIT_CHOICE;
                 }
             } else {
                 string text = _currentStory.Continue();
-                List<InkTag> tags = _currentStory.currentTags==null? new() : _currentStory.currentTags.Select(t=>InkTag.Of(t,_tagDefBuckets,Get)).ToList();
+                List<InkTag> tags = _currentStory.currentTags==null? new() : _currentStory.currentTags.Select(t=>InkTag.Of(t,tagDefBuckets,Get)).ToList();
                 _currentLine = new InkLine(text,tags);
                 SaveLog(text);
-                _inkTextChannel.Raise(Either<InkLine,InkChoice>.FromLeft(_currentLine));
-                _stage = InkStage.READY;
+                inkTextChannel.Raise(Either<InkLine,InkChoice>.FromLeft(_currentLine));
+                stage = InkStage.READY;
             }
             return true;
         }
 
-        if(_stage == InkStage.WAIT_CHOICE) {
+        if(stage == InkStage.WAIT_CHOICE) {
             if(choiceIndex<0 || choiceIndex>=_currentChoice.choices.Count) {
                 throw new ArgumentOutOfRangeException("");
             }
             _currentChoice = null;
             _currentStory.ChooseChoiceIndex(choiceIndex);
-            _stage = InkStage.READY;
+            stage = InkStage.READY;
             return true;
         }
 
@@ -158,7 +159,7 @@ public class InkManagerSO : GameModule
         for(int i=0;i<_currentStory.currentChoices.Count;i++) {
             var choice = _currentStory.currentChoices[i];
             string text = choice.text;
-            List<InkTag> tags =choice.tags==null? new() : choice.tags.Select(t=>InkTag.Of(t,_tagDefBuckets,Get)).ToList();
+            List<InkTag> tags =choice.tags==null? new() : choice.tags.Select(t=>InkTag.Of(t,tagDefBuckets,Get)).ToList();
             choices.Add(new(text,tags));
         }
         return new InkChoice(choices,ExplainCondition);
@@ -184,9 +185,9 @@ public class InkManagerSO : GameModule
         var arr =story.state.currentPathString.Split('.',3);
         if(arr.Length==3) {
             string newChapter = arr[0] + "." + arr[1];
-            if(_currentChapter != newChapter) {
-                _currentChapter = newChapter;
-                _chapterChangeEventChannel.Raise(newChapter);
+            if(currentChapter != newChapter) {
+                currentChapter = newChapter;
+                chapterChangeEventChannel.Raise(newChapter);
                 return true;
             }
         }
@@ -196,7 +197,7 @@ public class InkManagerSO : GameModule
 #endregion
 #region Task
     [RuntimeObject] int _tasksRunning = 0;
-    [RuntimeObject] List<(string,string)> _taskBuffer = new();
+    [RuntimeObject] readonly List<(string,string)> _taskBuffer = new();
     [RuntimeObject] bool _taskBlocked = false;
     private void DoTask(string taskHandler, string parameter, bool isBlocking) {
         // wait till all tasks finish, then proceed to next
@@ -205,11 +206,11 @@ public class InkManagerSO : GameModule
             return;
         }
         if(_taskBuffer.NonEmpty()) {
-            _taskBuffer.ForEach(task => _inkTaskChannel.Raise(task));
+            _taskBuffer.ForEach(task => inkTaskChannel.Raise(task));
             _taskBuffer.Clear();
         }
         _tasksRunning++;
-        _inkTaskChannel.Raise((taskHandler, parameter));
+        inkTaskChannel.Raise((taskHandler, parameter));
         // effectprofile, name:effect(play anim, change BG, in-out style, wait time)
         if(isBlocking) {
             _taskBlocked = true;
@@ -266,7 +267,7 @@ public class InkManagerSO : GameModule
                     } else if(value.type == ValueType.String) {
                         Put(varName, (string)value);
                     }
-                });
+            });
         }
     }
 
@@ -275,8 +276,8 @@ public class InkManagerSO : GameModule
         _keeperDict.ForEach((varName, value) => SaveUtil.SaveValue(varName, value));
     }
     private string ExplainCondition(string condition) {
-        _varNameBucket?.GetDictionary().ForEach((varName, name) => {
-            condition.Replace(varName, name);
+        varNameBucket?.GetDictionary().ForEach((varName, newName) => {
+            condition = condition.Replace(varName, newName);
         });
         return condition;
     }
@@ -296,7 +297,7 @@ public class InkManagerSO : GameModule
             var keeper = Keeper.Of(value);
             _keeperDict.Add(name, keeper);
 #if UNITY_EDITOR
-            _stats[name] = keeper.ToString();
+            stats[name] = keeper.ToString();
 #endif
             return keeper;
         }
@@ -310,7 +311,7 @@ public class InkManagerSO : GameModule
             T newValue = existing.Compute(operatorStr,value);
             Put(name, newValue);
 #if UNITY_EDITOR
-            _stats[name] = existing.ToString();
+            stats[name] = existing.ToString();
 #endif
             return;
         }
@@ -325,9 +326,9 @@ public class InkManagerSO : GameModule
     }
 #endregion
 #region Log
-[RuntimeObject] public readonly List<string> log = new List<string>();
+    [RuntimeObject] public readonly List<string> log = new ();
     private void SaveLog(string line) {
-        if(_saveLog) log.Add(line);
+        if(saveLog) log.Add(line);
     }
 
 #endregion

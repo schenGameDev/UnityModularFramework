@@ -14,7 +14,7 @@ namespace ModularFramework.Utility
         }
 
         public static void Print(string callerName, DebugType type, LogLevel level, string message) {
-            bool suppressed = (int)level > (int)DebugLevel;
+            bool suppressed = (int)level > DebugLevel;
             if(suppressed) return;
             message = callerName + "::" + message;
             switch(type) {

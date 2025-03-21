@@ -39,7 +39,7 @@ namespace ModularFramework.Utility {
             int res = except;
             if(maxExclusive !=1) {
                 while(res==except) {
-                res = UnityEngine.Random.Range(0,maxExclusive);
+                    res = UnityEngine.Random.Range(0,maxExclusive);
                 }
             }
             return res;
