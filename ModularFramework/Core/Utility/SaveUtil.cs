@@ -5,22 +5,19 @@ using System;
 using System.Collections.Generic;
 using ModularFramework.Commons;
 using System.Linq;
+using UnityEngine;
 
 namespace ModularFramework.Utility
 {
     using static EnvironmentConstants;
     public static class SaveUtil
     {
-        public static int currentSlot = DEFAULT_AUTO_SAVE_SLOT;
         private static SaveFile _saveFile;
-
-        private static bool _isInitialized = false;
-
-        public static void Initialize() {
-            if(_isInitialized) return;
+        
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void Initialize() {
             SaveGame.Encode = true;
-            Load();
-            _isInitialized = true;
+            //Load();
         }
 
         public static void SaveValue<T>(string key, T value) {
@@ -36,7 +33,7 @@ namespace ModularFramework.Utility
         public static void Flush() {
             if(_saveFile == null) return;
             _saveFile.saveTime = DateTime.UtcNow;
-            SaveGame.Save(currentSlot.ToString(), _saveFile);
+            SaveGame.Save(DEFAULT_AUTO_SAVE_SLOT.ToString(), _saveFile);
         }
 
         public static bool FlushToSlot(int slot) {
@@ -59,7 +56,7 @@ namespace ModularFramework.Utility
 
 
         public static void Load() {
-            if(SaveGame.Exists(currentSlot.ToString())) _saveFile = SaveGame.Load(currentSlot.ToString(), _defaultSaveFile);
+            if(SaveGame.Exists(DEFAULT_AUTO_SAVE_SLOT.ToString())) _saveFile = SaveGame.Load(DEFAULT_AUTO_SAVE_SLOT.ToString(), _defaultSaveFile);
             else _saveFile = _defaultSaveFile;
         }
 
@@ -92,7 +89,8 @@ namespace ModularFramework.Utility
         }
     }
 
-    public class SaveFile {
+    public class SaveFile
+    {
         public Dictionary<string,string> states;
         public Dictionary<string,AnyValue> values;
         public DateTime saveTime;

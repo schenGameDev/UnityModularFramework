@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,6 +15,12 @@ public class SceneLoader : Singleton<SceneLoader> {
     void Start()
     {
         LoadStartScene();
+    }
+
+    private void OnDestroy()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     public void LoadStartScene() => LoadScene(_startingScene);
@@ -77,7 +84,7 @@ public class SceneLoader : Singleton<SceneLoader> {
         while(t<=_fadeDuration) {
             transitionImage.color = Color.Lerp(from, to, t / _fadeDuration);
             t += Time.deltaTime;
-            await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
+            await UniTask.NextFrame(cancellationToken: token);
         }
         transitionImage.color = to;
     }

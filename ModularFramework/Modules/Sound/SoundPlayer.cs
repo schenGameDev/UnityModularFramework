@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -25,7 +26,6 @@ public class SoundPlayer : MonoBehaviour {
         Profile = soundProfile;
         _audio.clip = soundProfile.clip;
         _audio.outputAudioMixerGroup = mixerGroup;
-        _audio.loop = soundProfile.loop;
 
         _audio.volume = soundProfile.volume;
         _audio.pitch = soundProfile.pitch;
@@ -47,10 +47,13 @@ public class SoundPlayer : MonoBehaviour {
 
     }
 
-    async UniTaskVoid WaitForSoundToEnd(CancellationToken token, float delay) {
-        if(delay>0) await UniTask.WaitForSeconds(delay + 0.001f, cancellationToken: token);
-        await UniTask.WaitWhile(()=>_audio!=null && _audio.isPlaying, cancellationToken: token);
-        Stop();
+    async UniTaskVoid WaitForSoundToEnd(CancellationToken token, float delay)
+    {
+        bool isCancelled = false;
+        if(delay>0) isCancelled= await UniTask.WaitForSeconds(delay + 0.001f, cancellationToken: token).SuppressCancellationThrow();
+        if(!isCancelled)
+            await UniTask.WaitWhile(()=>_audio && _audio.isPlaying, cancellationToken: token).SuppressCancellationThrow();
+        _soundManager.ReturnToPool(this);
     }
 
     public void Stop() {
@@ -58,13 +61,14 @@ public class SoundPlayer : MonoBehaviour {
             _cts.Cancel();
             _cts.Dispose();
         }
-        if(_audio==null) return;
+        if(!_audio) return;
         _audio.Stop();
-        if(!Profile.isBGM) _soundManager.ReturnToPool(this);
-        else _soundManager.PlayNextTrack();
+        _soundManager.ReturnToPool(this);
     }
 
-    public void SetVolume(float volume) => _audio.volume = volume;
-
-    public bool IsPlaying() => _audio.isPlaying;
+    private void OnDestroy()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
 }

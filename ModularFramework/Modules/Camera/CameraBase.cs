@@ -58,6 +58,8 @@ public abstract class CameraBase : Marker
     {
         base.OnDestroy();
         _cts?.Cancel();
+        _cts?.Dispose();
+        
     }
     #endregion
 
@@ -126,8 +128,8 @@ public abstract class CameraBase : Marker
     {
         float elapsed = 0f;
         float currentMagnitude = 1f;
-
-        while (elapsed < duration)
+        bool isCancelled = false;
+        while (elapsed < duration && !isCancelled)
         {
             token.ThrowIfCancellationRequested();
             float x = (Random.value - 0.5f) * currentMagnitude * positionOffsetStrength.x;
@@ -142,7 +144,7 @@ public abstract class CameraBase : Marker
             elapsed += Time.deltaTime;
             currentMagnitude = (1 - (elapsed / duration)) * (1 - (elapsed / duration));
 
-            await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
+            isCancelled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
         }
 
         ResetCore(core);

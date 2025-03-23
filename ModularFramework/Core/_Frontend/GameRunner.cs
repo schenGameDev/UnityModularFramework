@@ -4,62 +4,73 @@ using System.Linq;
 using AYellowpaper.SerializedCollections;
 using EditorAttributes;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace ModularFramework {
     using Commons;
-    using ModularFramework.Utility;
+    using Utility;
 
     public class GameRunner : Singleton<GameRunner>
     {
-        static List<GameModule> _crossSceneModules = new();
+        static readonly List<GameSystem> Systems = new();
+        /// <summary>
+        /// each system only needs to register in the first scene it is used
+        /// </summary>
+        [Header("Game Systems")]
+        [SerializeField,HideLabel]
+        private GameSystem[] systems;
 
         [Header("Game Modules")]
         [SerializeField,HideLabel,HelpBox("In boot-up order", MessageMode.None)]
-        [OnValueChanged(nameof(AddBootupParameter))] private GameModule[] _modules;
-        [SerializeField,SerializedDictionary("Name","Value")] private SerializedDictionary<string,string> _flags = new();
-        [SerializeField,SerializedDictionary("Name","Ref Object")] private SerializedDictionary<string,GameObject> _references = new();
+        [OnValueChanged(nameof(AddBootupParameter))] private GameModule[] modules;
+        [SerializeField,SerializedDictionary("Name","Value")] private SerializedDictionary<string,string> flags = new();
+        [SerializeField,SerializedDictionary("Name","Ref Object")] private SerializedDictionary<string,GameObject> references = new();
+
         [Header("Event System")]
         [SerializeField,SerializedDictionary("Channel","Live"),HideLabel,ReadOnly]
-        private SerializedDictionary<ScriptableObject,bool> _eventChannels = new();
+        private SerializedDictionary<ScriptableObject,bool> eventChannels = new();
         [Header("Runtime")]
-        public bool IsPause = true;
-        public Transform Player => _references["PLAYER"].transform;
+        public bool IsPause = false;
+        public Transform Player => references["PLAYER"].transform;
 
-        List<GameModule> _framelyUpdatedModules = new();
+        readonly List<GameModule> _framelyUpdatedModules = new();
 
     #region Runtime
         protected override void Awake() {
             base.Awake();
+
+            if (systems != null)
+            {
+                foreach (var sys in systems)
+                {
+                    if (Systems.Contains(sys)) continue;
+                    sys.OnStart();
+                    Systems.Add(sys);
+                }
+            }
             _registrySODict = new();
-            foreach(var module in _modules) {
+            foreach(var module in modules) {
                 if(module is IRegistrySO) {
                     _registrySODict.Add(module.GetType(), module as IRegistrySO);
                 }
-                module.OnAwake(_flags,_references);
+                module.OnAwake(flags,references);
                 if(!module.CentrallyManaged && module.OperateEveryFrame) {
                     _framelyUpdatedModules.Add(module);
                 }
             }
-
-            // static class set up
-            SaveUtil.Initialize();
         }
 
         private void Start()
         {
-            if(_modules!=null) {
-                foreach(var module in _modules) {
-                    if(module.crossScene && !_crossSceneModules.Contains(module)) {
-                        _crossSceneModules.Add(module);
-                        module.OnFirstStart();
-                    }
+            if(modules!=null) {
+                foreach(var module in modules) {
                     module.OnStart();
                 }
             }
         }
 
         private void Update() {
-            if(_modules!=null) {
+            if(modules!=null) {
                 UpdateModuleFrame();
                 foreach(var module in _framelyUpdatedModules) {
                     module.OnUpdate(Time.deltaTime);
@@ -68,16 +79,16 @@ namespace ModularFramework {
         }
 
         private void OnDestroy() {
-            if(_modules!=null) {
-                foreach(var module in _modules) {
-                    if(!module.crossScene) module.OnDestroy();
+            if(modules!=null) {
+                foreach(var module in modules) {
+                    module.OnDestroy();
                 }
             }
         }
 
         private void OnDrawGizmos() {
-            if(Application.isPlaying && _modules!=null) {
-                foreach(var module in _modules) {
+            if(Application.isPlaying && modules!=null) {
+                foreach(var module in modules) {
                     module.OnGizmos();
                 }
             }
@@ -86,10 +97,8 @@ namespace ModularFramework {
         [Button]
         public void EndGame() {
             OnDestroy();
-            if(_crossSceneModules!=null) {
-                foreach(var module in _crossSceneModules) {
-                    module.OnFinalDestroy();
-                }
+            foreach(var sys in Systems) {
+                sys.OnDestroy();
             }
             #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
@@ -103,7 +112,7 @@ namespace ModularFramework {
 
     #region Module
         public Optional<T> GetModule<T>() where T : GameModule {
-            GameModule module = _modules.Where(m=>(m as T) != null).First();
+            GameModule module = modules.Where(m=>(m as T) != null).First();
             if(module != null) {
                 return (T) module;
             }
@@ -149,26 +158,26 @@ namespace ModularFramework {
 
     #region Event Channel
         public void RegisterEventChannel(IEventChannel channel) {
-            if(_eventChannels.AddIfAbsent(channel as ScriptableObject, channel.Live)) {
+            if(eventChannels.AddIfAbsent(channel as ScriptableObject, channel.Live)) {
                 (channel as IResetable)?.Reset();
             }
         }
 
         public void UnregisterEventChannel(IEventChannel channel) {
-            _eventChannels.Remove(channel as ScriptableObject);
+            eventChannels.Remove(channel as ScriptableObject);
         }
 
         public void PauseEventChannel(IEventChannel channel) {
             channel.Live = false;
-            if(Application.isEditor) _eventChannels.TrySetValue(channel as ScriptableObject, false);
+            if(Application.isEditor) eventChannels.TrySetValue(channel as ScriptableObject, false);
         }
 
         public void ResumeEventChannel(IEventChannel channel) {
             channel.Live = true;
-            if(Application.isEditor) _eventChannels.TrySetValue(channel as ScriptableObject, true);
+            if(Application.isEditor) eventChannels.TrySetValue(channel as ScriptableObject, true);
         }
 
-        public bool IsEventChannelRegistered(IEventChannel channel) => _eventChannels.ContainsKey(channel as ScriptableObject);
+        public bool IsEventChannelRegistered(IEventChannel channel) => eventChannels.ContainsKey(channel as ScriptableObject);
     #endregion
 
     #region Exec Management
@@ -218,25 +227,25 @@ namespace ModularFramework {
         [Button("Refresh Modules")]
         void AddBootupParameter() {
             HashSet<string> kw = new(), kw2 = new();
-            foreach(var m in _modules) {
+            foreach(var m in modules) {
                 if(m==null) continue;
 
                 if(m.Keywords != null) {
                     foreach (var k in m.Keywords) {
                         kw.Add(k);
-                        _flags.AddIfAbsent(k,"");
+                        flags.AddIfAbsent(k,"");
                     }
                 }
                 if(m.RefKeywords != null) {
                     foreach (var k in m.RefKeywords) {
                         kw2.Add(k);
-                        _references.AddIfAbsent(k,null);
+                        references.AddIfAbsent(k,null);
                     }
                 }
             }
-            _flags.RemoveWhere(k => !kw.Contains(k));
+            flags.RemoveWhere(k => !kw.Contains(k));
 
-            _references.RemoveWhere(k => !kw2.Contains(k));
+            references.RemoveWhere(k => !kw2.Contains(k));
 
             DebugUtil.DebugLog("Module parameters refreshed");
         }

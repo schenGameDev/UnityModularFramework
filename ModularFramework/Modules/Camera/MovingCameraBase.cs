@@ -45,6 +45,7 @@ public abstract class MovingCameraBase : CameraBase {
     protected override void OnDestroy() {
         base.OnDestroy();
         _cts?.Cancel();
+        _cts?.Dispose();
     }
 
     protected override void CinemachineSetUp()
@@ -95,6 +96,7 @@ public abstract class MovingCameraBase : CameraBase {
     }
 
     async UniTaskVoid ChangeAcceleration(float tempAccelerationModifier, CancellationToken token) {
+        
         followAcceleration =  _ogFollowAcc * tempAccelerationModifier;
         rollAcceleration = _ogRollAcc * tempAccelerationModifier;
         followMaxSpeed = 1000;

@@ -5,16 +5,15 @@ using UnityEngine.Audio;
 [CreateAssetMenu(fileName = "SoundProfile_SO", menuName = "Game Module/Sound/Sound Profile")]
 public class SoundProfile : ScriptableObject {
     public AudioClip clip;
-    [HideInInspector] public bool loop;
+    //public bool loop;
     //public bool playOnAwake = true;
-    public bool isBGM;
     public float delay;
     public bool frequentSound;
 
 
     // public bool mute;
     // public bool bypassEffects;
-    [HideInInspector] public bool bypassListenerEffects;
+    public bool bypassListenerEffects; // BGM true
     // public bool bypassReverbZones;
 
     // public int priority = 128;

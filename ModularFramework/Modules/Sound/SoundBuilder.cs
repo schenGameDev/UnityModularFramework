@@ -20,8 +20,7 @@ public class SoundBuilder {
                 DebugUtil.Error("Sound is null");
                 return;
             }
-            if(soundManager.soundFxs.ContainsKey(profileName)) PlaySound(profileName);
-            else PlayMusic(profileName);
+            PlaySound(profileName);
         }
 
         public void PlaySound(string profileName) {
@@ -31,7 +30,6 @@ public class SoundBuilder {
             }
 
             SoundProfile profile = soundManager.soundFxs.Get(profileName).OrElseThrow(new KeyNotFoundException(profileName));
-            profile.isBGM = false;
 
             if (!soundManager.CanPlaySound(profile)) return;
 
@@ -48,21 +46,5 @@ public class SoundBuilder {
             soundPlayer.Play();
         }
 
-        public void PlayMusic(string profileName) {
-            if (profileName == null) {
-                DebugUtil.Error("Sound is null");
-                return;
-            }
-
-            SoundProfile profile = soundManager.tracks.Get(profileName).OrElseThrow(new KeyNotFoundException(profileName));
-            profile.isBGM = true;
-            profile.loop = soundManager.repeat; // For playlist functionality, we want tracks to play once
-            profile.bypassListenerEffects = true;
-
-            SoundPlayer soundPlayer = soundManager.MusicPlayers[0];
-            soundPlayer.Initialize(profile, soundManager.tracks.mixerGroup,soundManager);
-            soundPlayer.SetVolume(0);
-
-            soundPlayer.Play();
-        }
+        
     }

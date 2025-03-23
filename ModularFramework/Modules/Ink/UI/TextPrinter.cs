@@ -5,17 +5,23 @@ using ModularFramework;
 using TMPro;
 using UnityEngine;
 
-public class TextPrinter : MonoBehaviour
+[RequireComponent(typeof(TextMeshProUGUI))]
+public class TextPrinter : Marker
 {
     [SerializeField] private float timeGapBetweenLetters = 0.05f;
     [SerializeField] private int maxTextLength = 300;
     [SerializeField] private EventChannel<string> eventChannel;
         
-    private TMP_Text _text;
+    private TextMeshProUGUI _textbox;
 
+    public TextPrinter()
+    {
+        registryTypes = new[] { (typeof(InkUIIntegration),1)};
+    }
+    
     private void Awake()
     {
-        _text = GetComponent<TMP_Text>();
+        _textbox = GetComponent<TextMeshProUGUI>();
     }
 
     private void OnEnable()
@@ -28,11 +34,22 @@ public class TextPrinter : MonoBehaviour
         eventChannel?.RemoveListener(Print);
     }
 
+    private void OnDestroy()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    public void Skip()
+    {
+        _cts?.Cancel();
+    }
+
     private CancellationTokenSource _cts;
         
     public void Print(string text)
     {
-        _text.text = string.Empty;
+        _textbox.text = string.Empty;
         if (_cts != null)
         {
             _cts.Cancel();
@@ -49,13 +66,19 @@ public class TextPrinter : MonoBehaviour
         {
             if (i > 0)
             {
-                _text.text = string.Empty;
+                _textbox.text = string.Empty;
             }
             var page = text.Substring(i, maxLen);
+            bool isCanceled = false;
             foreach (var ch in page)
             {
-                await UniTask.WaitForSeconds(timeGap, cancellationToken:token);
-                _text.text += ch;
+                isCanceled = await UniTask.WaitForSeconds(timeGap, cancellationToken:token).SuppressCancellationThrow();
+                if (isCanceled)
+                {
+                    _textbox.text = text;
+                    break;
+                }
+                _textbox.text += ch;
             }
         }
     }

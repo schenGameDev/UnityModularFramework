@@ -7,7 +7,9 @@ namespace ModularFramework.Utility
     using static EnvironmentConstants;
     public static class DebugUtil {
 
-        public enum DebugType {LOG,WARNING,ERROR}
+        public enum DebugType {LOG,
+            WARNING,
+            ERROR}
         public enum LogLevel {
             RUNTIME = 0,
             DEBUG = 1

@@ -1,10 +1,10 @@
 using UnityEngine;
 using ModularFramework;
-using UnityEngine.Audio;
 using EditorAttributes;
 using UnityEngine.Pool;
 using System.Collections.Generic;
 using ModularFramework.Utility;
+
 /// <summary>
 /// Manage all one-shot sound in game. <br/>
 /// 1. Must bootup before any module that calls it.<br/>
@@ -13,75 +13,47 @@ using ModularFramework.Utility;
 [CreateAssetMenu(fileName = "SoundManager_SO", menuName = "Game Module/Sound/Sound Manager")]
 public class SoundManagerSO : GameModule
 {
-    const float crossFadeTime = 1.0f;
-
     [Header("Config")]
-    [SerializeField] public AudioMixerGroup _masterGroup;
-    [SerializeField] SoundPlayer _soundPlayerPrefab;
-    [Header("Sound")]
+    [SerializeField] SoundPlayer soundPlayerPrefab;
     public SoundProfileBucket soundFxs;
-    [SerializeField] bool _collectionCheck = true;
-    [SerializeField] int _defaultCapacity = 5;
-    [SerializeField] int _maxPoolSize = 100;
-    [SerializeField] int _maxSoundInstances = 15;
-
-    [Header("Music")]
-    [OnValueChanged(nameof(ChangeUpdateMode))] public SoundProfileBucket tracks;
-    [SerializeField] public bool repeat = true;
-    [SerializeField, ShowField(nameof(repeat)), Suffix("repeat the first track")] public bool repeatOnAwake = true;
-    [SerializeField] List<string> _defaultPlaylist = new();
-
-
+    [SerializeField] bool collectionCheck = true;
+    [SerializeField] int defaultCapacity = 5;
+    [SerializeField] int maxPoolSize = 100;
+    [SerializeField] int maxSoundInstances = 15;
+    
+    
+    [FoldoutGroup("Event Channels", nameof(sfxChannel))]
+    [SerializeField] private EditorAttributes.Void eventChannelGroup;
+    [HideInInspector,SerializeField] EventChannel<string> sfxChannel;
+    
     [Header("Runtime")]
-    [ReadOnly,SerializeField,RuntimeObject] string _currentTrack;
-    [HideInInspector] public SoundPlayer[] MusicPlayers = new SoundPlayer[2];
-    //public int currentActiveMusicPlayer;
-    [RuntimeObject] public SoundProfile CurrentTrack {get; set;}
-    [RuntimeObject] public SoundProfile PrevTrack {get; set;}
-    [SerializeField, ReadOnly,RuntimeObject] List<string> _playlist = new();
     [RuntimeObject] public Transform SoundParent {get; private set;}
-    [RuntimeObject] public Transform PersistentSoundParent {get; private set;}
-
-    [RuntimeObject(RuntimeObjectLifetime.SCENE)] readonly List<SoundPlayer> _activeSoundPlayers = new();
-    [HideInInspector,RuntimeObject(nameof(ResetFrequentSoundPlayer),nameof(ResetFrequentSoundPlayer),RuntimeObjectLifetime.SCENE)]
+    [RuntimeObject] readonly List<SoundPlayer> _activeSoundPlayers = new();
+    [RuntimeObject(nameof(ResetFrequentSoundPlayer),nameof(ResetFrequentSoundPlayer))]
     public readonly LinkedList<SoundPlayer> FrequentSoundPlayers = new();
 
 
     public SoundManagerSO() {
         updateMode = UpdateMode.NONE;
-        crossScene = true;
     }
 
-    void ChangeUpdateMode() {
-        if(_playMusic) {
-            updateMode = UpdateMode.EVERY_N_FRAME;
-        } else updateMode = UpdateMode.NONE;
-    }
-
-    public override void OnFirstStart()
+    private void OnEnable()
     {
-        base.OnFirstStart();
-        BuildPersistentParent();
-        InitializeMusic();
+        sfxChannel?.AddListener(PlaySound);
     }
-
+    
+    private void OnDisable()
+    {
+        sfxChannel?.RemoveListener(PlaySound);
+    }
+    
     public override void OnStart()
     {
         base.OnStart();
         BuildParent();
         InitializePool();
     }
-
-    public override void OnUpdate(float deltaTime)
-    {
-        base.OnUpdate(deltaTime);
-        if(!_playMusic) return;
-        CrossFade(deltaTime);
-        if(!repeat && !MusicPlayers[0].IsPlaying() && _playlist.Count > 0) {
-            PlayNextTrack();
-        }
-    }
-
+    
     public SoundBuilder CreateSoundBuilder() => new SoundBuilder(this);
 
     void BuildParent() {
@@ -89,115 +61,14 @@ public class SoundManagerSO : GameModule
         SoundParent.position = Vector3.zero;
     }
 
-    void BuildPersistentParent() {
-        PersistentSoundParent = new GameObject("=== Sounds (Permisstent) ===").transform;
-        PersistentSoundParent.position = Vector3.zero;
-        DontDestroyOnLoad(PersistentSoundParent.gameObject);
-
-    }
-
-#region Looping Music
-    bool _playMusic => tracks;
-    void InitializeMusic() {
-        if(!_playMusic) return;
-        CurrentTrack = null;
-        PrevTrack = null;
-        _playlist.Clear();
-
-        MusicPlayers[0] = Instantiate(_soundPlayerPrefab);
-        MusicPlayers[0].transform.parent = PersistentSoundParent;
-        //MusicPlayers[0].gameObject.SetActive(false);
-        MusicPlayers[0].name = "MusicPlayerA";
-
-        MusicPlayers[1] = Instantiate(_soundPlayerPrefab);
-        MusicPlayers[1].transform.parent = PersistentSoundParent;
-        //MusicPlayers[1].gameObject.SetActive(false);
-        MusicPlayers[1].name = "MusicPlayerB";
-
-        if(_defaultPlaylist==null) return;
-        if(!repeat) {
-            foreach (var p in _defaultPlaylist) {
-                AddToPlaylist(p);
-            }
-        } else if(repeatOnAwake) {
-            PlayTrack(_defaultPlaylist[0]);
-        }
-    }
-
-    public void ShufflePlaylist() {
-        _playlist.Shuffle();
-        _defaultPlaylist.Shuffle();
-    }
-
-    public void PlayTrackNext(string trackName) {
-        _playlist.Remove(trackName);
-        _playlist.Insert(0, trackName);
-    }
-
-    public void AddToPlaylist(string profileName) {
-        _playlist.Add(profileName);
-        if (CurrentTrack == null && PrevTrack == null) {
-            PlayNextTrack();
-        }
-    }
-
-    public void PlayTrack(string trackName) {
-        if(CurrentTrack) {
-            if (CurrentTrack.name == trackName) return;
-
-            PrevTrack = CurrentTrack;
-            var temp = MusicPlayers[0];
-            MusicPlayers[0] = MusicPlayers[1];
-            MusicPlayers[1] = temp;
-        }
-
-        CurrentTrack = tracks.Get(trackName).Get();
-
-        CreateSoundBuilder().PlayMusic(trackName);
-        _currentTrack = trackName;
-        _fading = 0.001f;
-    }
-
-    public void PlayNextTrack() {
-        if (_playlist.NonEmpty()) {
-            PlayTrack(_playlist.RemoveAtAndReturn(0));
-        } else if(_defaultPlaylist!=null) {
-            foreach (var p in _defaultPlaylist) {
-                AddToPlaylist(p);
-            }
-        }
-    }
-
-    [RuntimeObject] float _fading;// starting volume?
-    void CrossFade(float deltaTime) {
-        if(_fading <= 0f) return;
-
-        _fading += deltaTime;
-
-        float fraction = Mathf.Clamp01(_fading / crossFadeTime);
-
-        // Logarithmic fade
-        float logFraction = Mathf.Log10(1 + 9 * fraction) / Mathf.Log10(10);
-
-        if (PrevTrack && MusicPlayers[1].Profile) MusicPlayers[1].SetVolume(Mathf.Min(MusicPlayers[1].Profile.volume, 1 - logFraction));
-        if (CurrentTrack && MusicPlayers[0].Profile) MusicPlayers[0].SetVolume(Mathf.Max(MusicPlayers[0].Profile.volume, logFraction));
-
-        if (fraction >= 1) {
-            _fading = 0.0f;
-            if (PrevTrack) {
-                MusicPlayers[1].Stop();
-                PrevTrack = null;
-            }
-        }
-    }
-
-    #endregion
-
     #region Play SoundFx
+
+    public void PlaySound(string soundName) => CreateSoundBuilder().PlaySound(soundName);
+
     public bool CanPlaySound(SoundProfile data) {
         if (!data.frequentSound) return true;
 
-        if (FrequentSoundPlayers.Count >= _maxSoundInstances) {
+        if (FrequentSoundPlayers.Count >= maxSoundInstances) {
             try {
                 FrequentSoundPlayers.First.Value.Stop();
                 return true;
@@ -220,11 +91,11 @@ public class SoundManagerSO : GameModule
     public void StopAll() {
         _activeSoundPlayers.ForEach(x=>x.Stop());
     }
-    [RuntimeObject(RuntimeObjectLifetime.SCENE)] ObjectPool<SoundPlayer> _soundPlayerPool;
+    [RuntimeObject] ObjectPool<SoundPlayer> _soundPlayerPool;
     void InitializePool() {
         _soundPlayerPool = new ObjectPool<SoundPlayer>(
             () => {
-                var soundPlayer = Instantiate(_soundPlayerPrefab);
+                var soundPlayer = Instantiate(soundPlayerPrefab);
                 soundPlayer.gameObject.SetActive(false);
                 return soundPlayer;
             },
@@ -243,30 +114,11 @@ public class SoundManagerSO : GameModule
                 }
                 Destroy(sp.gameObject);
             },
-            _collectionCheck,
-            _defaultCapacity,
-            _maxPoolSize);
+            collectionCheck,
+            defaultCapacity,
+            maxPoolSize);
     }
 
     public void ResetFrequentSoundPlayer() => FrequentSoundPlayers.Clear();
-#endregion
-
-#region Volume
-    public void SetVolume(AudioMixerGroup mixerGroup, float volume) {
-        mixerGroup.audioMixer.SetFloat(mixerGroup.name, Mathf.Log10(volume) * 20f);
-    }
-
-    public void SetMasterVolume(float volume) => SetVolume(_masterGroup, volume);
-    public void SetMusicVolume(float volume) => SetVolume(tracks.mixerGroup, volume);
-    public void SetSoundFxVolume(float volume) => SetVolume(soundFxs.mixerGroup, volume);
-#endregion
-#region Editor
-    [Button]
-    void PopulateDefaultPlaylist() {
-        if(tracks != null) {
-            _defaultPlaylist.Clear();
-            tracks.ForEach(track => _defaultPlaylist.Add(track.name));
-        }
-    }
 #endregion
 }

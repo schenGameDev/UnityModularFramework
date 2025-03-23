@@ -8,27 +8,24 @@ using System;
 using ModularFramework.Utility;
 using ModularFramework.Commons;
 using AYellowpaper.SerializedCollections;
-using UnityEngine.Serialization;
+using ModularFramework;
 using ValueType = ModularFramework.Commons.ValueType;
 
 /// <summary>
 /// load and save story, send and receive variables.
 /// read var from story into memory -> any update go in story -> save story state -> clean all memory
 /// </summary>
-[CreateAssetMenu(fileName = "InkManager_SO", menuName = "Game Module/Ink")]
-public class InkManagerSO : GameModule
+[CreateAssetMenu(fileName = "InkSystem_SO", menuName = "Game Module/Ink System")]
+public class InkSystemSO : GameSystem
 {
-    static readonly string INK_FUNCTION_DO_TASK = "doTask";
-
     [Header("Config")]
     [SerializeField] private InkStoryBucket stories;
     [SerializeField] private InkTagDefBucket[] tagDefBuckets;
     [SerializeField] private Bucket varNameBucket;
     [SerializeField] private bool saveLog;
 
-    [FoldoutGroup("Event Channels", nameof(inkTextChannel), nameof(varChangeChannel), nameof(chapterChangeEventChannel), nameof(inkTaskChannel))]
+    [FoldoutGroup("Event Channels", nameof(inkTextChannel), nameof(varChangeChannel), nameof(inkTaskChannel))]
     [SerializeField] private EditorAttributes.Void eventChannelGroup;
-    [HideInInspector,SerializeField] EventChannel<string>  chapterChangeEventChannel;
     [HideInInspector,SerializeField] EventChannel<(string,Keeper)> varChangeChannel;
     [HideInInspector,SerializeField] EventChannel<Either<InkLine,InkChoice>> inkTextChannel;
     [HideInInspector,SerializeField] EventChannel<(string,string)> inkTaskChannel;
@@ -40,21 +37,15 @@ public class InkManagerSO : GameModule
 #if UNITY_EDITOR
     [ReadOnly,SerializeField,SerializedDictionary,RuntimeObject] private SerializedDictionary<string,string> stats;
 #endif
-    // variable first save to story, then populate keeper through delegete, then alert unity through event channel
-    [RuntimeObject] private Dictionary<string,Keeper> _keeperDict = new();
+    // variable first save to story, then populate keeper through delegate, then alert unity through event channel
+    [RuntimeObject] private readonly Dictionary<string,Keeper> _keeperDict = new();
     [RuntimeObject(cleaner:nameof(ClearStory))] private Story _currentStory;
     [SerializeField,ReadOnly] InkStage stage;
     [RuntimeObject] InkLine _currentLine;
     [RuntimeObject] InkChoice _currentChoice;
+    
 
-
-    public InkManagerSO() {
-        updateMode = UpdateMode.NONE;
-        crossScene = true;
-    }
-
-    public override void OnFinalDestroy() {
-        base.OnFinalDestroy();
+    public override void OnDestroy() {
         stage = InkStage.END;
     }
 
@@ -104,10 +95,10 @@ public class InkManagerSO : GameModule
     }
 
     [RuntimeObject] int _lastChoiceIndex = -1;
-    public bool Next(int choiceIndex = -1) { // next button clickable only at READY state
+    public InkStage Next(int choiceIndex = -1) { // next button clickable only at READY state
         if(TaskRunning()) {
             _lastChoiceIndex = choiceIndex;
-            return true;
+            return InkStage.WAIT_TASK;
         }
         _lastChoiceIndex = -1;
         if(stage == InkStage.READY) {
@@ -118,11 +109,10 @@ public class InkManagerSO : GameModule
                 _currentChoice = NextChoice();
                 if(_currentChoice == null) {
                     stage = InkStage.END;
-                    return false;
-                } else {
-                    inkTextChannel.Raise(Either<InkLine,InkChoice>.FromRight(_currentChoice));
-                    stage = InkStage.WAIT_CHOICE;
-                }
+                    return stage;
+                } 
+                inkTextChannel.Raise(Either<InkLine,InkChoice>.FromRight(_currentChoice));
+                stage = InkStage.WAIT_CHOICE;
             } else {
                 string text = _currentStory.Continue();
                 List<InkTag> tags = _currentStory.currentTags==null? new() : _currentStory.currentTags.Select(t=>InkTag.Of(t,tagDefBuckets,Get)).ToList();
@@ -131,7 +121,7 @@ public class InkManagerSO : GameModule
                 inkTextChannel.Raise(Either<InkLine,InkChoice>.FromLeft(_currentLine));
                 stage = InkStage.READY;
             }
-            return true;
+            return stage;
         }
 
         if(stage == InkStage.WAIT_CHOICE) {
@@ -141,15 +131,12 @@ public class InkManagerSO : GameModule
             _currentChoice = null;
             _currentStory.ChooseChoiceIndex(choiceIndex);
             stage = InkStage.READY;
-            return true;
+            return stage;
         }
 
         throw new Exception("Wrong place to be");
     }
 
-    // public string NextChunk() { // load all until meeting a choice or end
-    //     return _currentStory.ContinueMaximally();
-    // }
 
     private InkChoice NextChoice() {
         if(_currentStory.currentChoices == null) return null;
@@ -171,27 +158,13 @@ public class InkManagerSO : GameModule
             .OrElseDo(story.ResetState);
         InjectVariables(story);
         story.variablesState.ForEach(varName => PutKeeper(varName,story.variablesState[varName]));
-        story.BindExternalFunction(INK_FUNCTION_DO_TASK, (string task, string parameter, bool isBlocking) => DoTask(name, parameter, isBlocking));
+        story.BindExternalFunction(EnvironmentConstants.INK_FUNCTION_DO_TASK, (string task, string parameter, bool isBlocking) => DoTask(name, parameter, isBlocking));
     }
 
     public void SaveStory(string storyName, Story story) {
         string saveJson =story.state.ToJson();
         SaveUtil.SaveState(storyName, saveJson);
         SaveVariables();
-    }
-
-    private bool CheckChapterChange(Story story) {
-        if(story.state.currentPathString == null) return false;
-        var arr =story.state.currentPathString.Split('.',3);
-        if(arr.Length==3) {
-            string newChapter = arr[0] + "." + arr[1];
-            if(currentChapter != newChapter) {
-                currentChapter = newChapter;
-                chapterChangeEventChannel.Raise(newChapter);
-                return true;
-            }
-        }
-        return false;
     }
 
 #endregion
@@ -335,6 +308,7 @@ public class InkManagerSO : GameModule
 }
 
 public enum InkStage {
-    READY, WAIT_CHOICE, END
+    READY, WAIT_CHOICE, END, 
+    WAIT_TASK// won't show in this inspector
 }
 

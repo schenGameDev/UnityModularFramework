@@ -22,12 +22,7 @@ public class SensorManagerSO : GameModule, IRegistrySO {
         updateMode = UpdateMode.NONE;
     }
 
-    [RuntimeObject] private Dictionary<string,Sensible> _sensibleDict = new();
-
-    protected override void Reset() {
-        _sensibleDict = new();
-    }
-
+    [RuntimeObject] private readonly Dictionary<string,Sensible> _sensibleDict = new();
 
     public void Register(Transform sensible) {
         if(_sensibleDict.ContainsKey(sensible.name)) {
@@ -52,7 +47,7 @@ public class SensorManagerSO : GameModule, IRegistrySO {
 
     public Transform GetTransform(string name, bool overrideTargetVisible) {
         var found = _sensibleDict[name];
-        if(found == null || (!overrideTargetVisible && !found.IsVisible)) return null;
+        if(found == null || (!overrideTargetVisible && !found.isVisible)) return null;
         return found.transform;
     }
     public Transform GetTransformAbsoluteInRange(string targetName, Transform self, Vector2 minMaxRange) {
@@ -82,7 +77,7 @@ public class SensorManagerSO : GameModule, IRegistrySO {
     public List<Tuple<Transform, float>> GetTagAbsoluteInRange(Transform self, string tag, Vector2 minMaxRange,
                                                float halfConeAngle, bool overrideTargetVisible) {
         return _sensibleDict.Values
-                    .Where(x=>(overrideTargetVisible || x.IsVisible) && x.CompareTag(tag))
+                    .Where(x=>(overrideTargetVisible || x.isVisible) && x.CompareTag(tag))
                     .Where(x => WithinViewCone(x.transform, self, halfConeAngle))
                     .Select(x => new Tuple<Transform, float> (x.transform, Vector3.SqrMagnitude(self.position - x.transform.position)))
                     .Where(tup => WithinRange(tup.Item2, math.pow(minMaxRange.x,2), math.pow(minMaxRange.y,2)))
@@ -96,7 +91,7 @@ public class SensorManagerSO : GameModule, IRegistrySO {
     public List<Tuple<Transform, float>> GetTagRaycastInRange(Transform self, string tag, Vector2 minMaxRange,
                                                float halfConeAngle, bool overrideTargetVisible) {
         return _sensibleDict.Values
-                    .Where(x=>(overrideTargetVisible || x.IsVisible) && x.CompareTag(tag))
+                    .Where(x=>(overrideTargetVisible || x.isVisible) && x.CompareTag(tag))
                     .Where(x => WithinViewCone(x.transform, self, halfConeAngle))
                     .Select(x => {
                         if(IsRaycastHit(x.transform, self, minMaxRange, ~0, out float distance)) {
