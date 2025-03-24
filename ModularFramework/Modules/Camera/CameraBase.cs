@@ -144,10 +144,10 @@ public abstract class CameraBase : Marker
             elapsed += Time.deltaTime;
             currentMagnitude = (1 - (elapsed / duration)) * (1 - (elapsed / duration));
 
-            isCancelled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
+            await UniTask.NextFrame(cancellationToken: token);
         }
 
-        ResetCore(core);
+        ResetCore(core); // no need to reset if canceled
     }
 
     void ResetCore(Transform core) {

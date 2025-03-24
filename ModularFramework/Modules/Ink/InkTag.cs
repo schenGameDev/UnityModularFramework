@@ -28,9 +28,9 @@ public class InkTag {
 
             int right;
             do {
-                right = expression.IndexOf(")");
+                right = expression.IndexOf(")", StringComparison.Ordinal);
                 if(right!=-1) {
-                    int left = expression.LastIndexOf("(",0,right);
+                    int left = expression.LastIndexOf("(",0,right, StringComparison.Ordinal);
                     if(left == -1) {
                         throw new ArgumentException("Wrong format expression: " + expression);
                     }
@@ -57,10 +57,10 @@ public class InkTag {
         }
 
         if(tagText.StartsWith(CHOICE_GROUP_TAG_PREFIX)) {
-            return new InkTag(InkTagType.CHOICE_GROUP, tagText[CHOICE_GROUP_TAG_PREFIX.Length..]);
+            return new InkTag(InkTagType.GROUP, tagText[CHOICE_GROUP_TAG_PREFIX.Length..]);
         }
 
-        return tagDefBuckets.Select(x => x.Get(tagText)).Where(op=>op.HasValue).First().Get();
+        return tagDefBuckets.Select(x=>x.Get(tagText)).First(op => op.HasValue).Get();
     }
 
     private static string SimpleMathEvaluator(string expression, Func<string,Optional<Keeper>> getKeeperFunc) {
@@ -236,5 +236,6 @@ public class InkTag {
 public enum InkTagType {
     CHARACTER, // {character_name}
     CONDITION, // in-text format: COND_{expression}${explanation_id} e.g. COND_player_health>1$12
-    CHOICE_GROUP// in-text format: GRP_{id} e.g. GRP_12 If not set, the choices will display at default button group
+    GROUP, // in-text format: GRP_{id} e.g. GRP_12 If not set, the line will display at default dialog box, the choices will display at default button group
+    EFFECT // word effect, font size change, print speed, color
 }

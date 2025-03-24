@@ -3,20 +3,26 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using ModularFramework;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
+using UnityUtils;
 
 [RequireComponent(typeof(TextMeshProUGUI))]
 public class TextPrinter : Marker
 {
+    public enum WordEffect {NONE, TYPE, FADE_IN}
+    
+    [SerializeField] private WordEffect wordEffect;
     [SerializeField] private float timeGapBetweenLetters = 0.05f;
-    [SerializeField] private int maxTextLength = 300;
+    [SerializeField] private float fadeInDuration = 0.5f;
+    [SerializeField] private bool hideWhenNotUsed;
     [SerializeField] private EventChannel<string> eventChannel;
         
     private TextMeshProUGUI _textbox;
 
     public TextPrinter()
     {
-        registryTypes = new[] { (typeof(InkUIIntegration),1)};
+        registryTypes = new[] { (typeof(InkUIIntegrationSO),1)};
     }
     
     private void Awake()
@@ -24,32 +30,56 @@ public class TextPrinter : Marker
         _textbox = GetComponent<TextMeshProUGUI>();
     }
 
-    private void OnEnable()
+    protected override void OnEnable()
     {
+        base.OnEnable();
         eventChannel?.AddListener(Print);
     }
 
-    private void OnDisable()
+    protected override void OnDisable()
     {
+        base.OnDisable();
         eventChannel?.RemoveListener(Print);
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         _cts?.Cancel();
         _cts?.Dispose();
     }
 
     public void Skip()
     {
-        _cts?.Cancel();
+        _cts.Cancel();
     }
 
-    private CancellationTokenSource _cts;
-        
-    public void Print(string text)
+    public void Clean() // click again to hide
     {
-        _textbox.text = string.Empty;
+        if(hideWhenNotUsed) gameObject.SetActive(false);
+        else _textbox.text = "";
+    }
+    
+    public bool Done { get; private set; }
+
+    private CancellationTokenSource _cts;
+    
+    /// <summary>
+    /// override preset parameters when print text
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="effect"></param>
+    /// <param name="parameter"></param>
+    public void Print(string text, WordEffect effect, string parameter)
+    {
+        Done = false;
+        if (effect == WordEffect.NONE)
+        {
+            _textbox.text = text;
+            Done = true;
+            return;
+        }
+        
         if (_cts != null)
         {
             _cts.Cancel();
@@ -57,29 +87,52 @@ public class TextPrinter : Marker
             _cts = null;
         }
         _cts = new CancellationTokenSource();
-        PrintTask(text, timeGapBetweenLetters, maxTextLength, _cts.Token).Forget();
+        
+        if (effect == WordEffect.FADE_IN)
+        {
+            _textbox.text = text;
+            FadeIn(_cts.Token).Forget();
+        } 
+        else if (effect == WordEffect.TYPE)
+        {
+            _textbox.text = string.Empty;
+            PrintTask(text, timeGapBetweenLetters, _cts.Token).Forget();
+        }
+    }
+    
+    public void Print(string text) => Print(text, wordEffect, "");
+
+    private async UniTaskVoid PrintTask(string text, float timeGap, CancellationToken token)
+    {
+        gameObject.SetActive(true);
+        foreach (var ch in text)
+        {
+            var isCanceled = await UniTask.WaitForSeconds(timeGap, cancellationToken:token).SuppressCancellationThrow();
+            if (isCanceled)
+            {
+                if(_cts==null) {
+                    _textbox.text = text; // canceled and no new print task
+                    Done = true;
+                }
+                return;
+            }
+            _textbox.text += ch;
+        }
+        Done = true;
     }
 
-    async UniTaskVoid PrintTask(string text, float timeGap, int maxLen, CancellationToken token)
+    private async UniTaskVoid FadeIn(CancellationToken token)
     {
-        for (int i = 0; i < text.Length; i += maxLen)
+        float t = 0;
+        bool isCancelled = false;
+        while(t< fadeInDuration && !isCancelled) 
         {
-            if (i > 0)
-            {
-                _textbox.text = string.Empty;
-            }
-            var page = text.Substring(i, maxLen);
-            bool isCanceled = false;
-            foreach (var ch in page)
-            {
-                isCanceled = await UniTask.WaitForSeconds(timeGap, cancellationToken:token).SuppressCancellationThrow();
-                if (isCanceled)
-                {
-                    _textbox.text = text;
-                    break;
-                }
-                _textbox.text += ch;
-            }
+            _textbox.color.SetAlpha(math.min(1,t/fadeInDuration));
+            t+=Time.deltaTime;
+            isCancelled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
         }
+        
+        _textbox.color.SetAlpha(1);
+        Done = true;
     }
 }

@@ -3,23 +3,29 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using ModularFramework;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SpriteController : MonoBehaviour
+public class SpriteController : Marker
 {
     public enum TransitionStyle
     {
         HARD,
         FADE
     };
-    [SerializeField] private int index;
+    //[SerializeField] private int index;
     [SerializeField] private float fadeTime = 0.3f;
 
     private SpriteRenderer _sr;
     private Image _img;
     private bool _isSpriteRenderer;
+
+    public SpriteController()
+    {
+        registryTypes = new[] { (typeof(InkUIIntegrationSO),1)};
+    }
 
     private void Awake() {
         _sr = GetComponent<SpriteRenderer>();

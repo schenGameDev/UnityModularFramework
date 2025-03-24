@@ -8,7 +8,6 @@ using System;
 using ModularFramework.Utility;
 using ModularFramework.Commons;
 using AYellowpaper.SerializedCollections;
-using ModularFramework;
 using ValueType = ModularFramework.Commons.ValueType;
 
 /// <summary>
@@ -97,7 +96,7 @@ public class InkSystemSO : GameSystem
     [RuntimeObject] int _lastChoiceIndex = -1;
     public InkStage Next(int choiceIndex = -1) { // next button clickable only at READY state
         if(TaskRunning()) {
-            _lastChoiceIndex = choiceIndex;
+            if(stage == InkStage.WAIT_CHOICE) _lastChoiceIndex = choiceIndex;
             return InkStage.WAIT_TASK;
         }
         _lastChoiceIndex = -1;
@@ -131,7 +130,7 @@ public class InkSystemSO : GameSystem
             _currentChoice = null;
             _currentStory.ChooseChoiceIndex(choiceIndex);
             stage = InkStage.READY;
-            return stage;
+            return Next();
         }
 
         throw new Exception("Wrong place to be");
@@ -147,7 +146,7 @@ public class InkSystemSO : GameSystem
             var choice = _currentStory.currentChoices[i];
             string text = choice.text;
             List<InkTag> tags =choice.tags==null? new() : choice.tags.Select(t=>InkTag.Of(t,tagDefBuckets,Get)).ToList();
-            choices.Add(new(text,tags));
+            choices.Add(new(text,tags, true));
         }
         return new InkChoice(choices,ExplainCondition);
     }

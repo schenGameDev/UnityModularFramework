@@ -6,6 +6,7 @@ using ModularFramework.Utility;
 [Serializable]
 public class InkLine {
     public List<string> characters = new();
+    public string dialogBoxId;
     public string text;
     public string subText;
     public List<InkTag> tags;
@@ -13,23 +14,34 @@ public class InkLine {
 
 
 
-    public InkLine(string text, List<InkTag> tags) {
+    public InkLine(string text, List<InkTag> tags, bool inChoice = false) {
         this.text = text;
         if(tags == null) this.tags =  new();
         else {
             bool isConditionSet = false;
+            bool isDialogBoxSet = false;
             this.tags = tags.Where(t => {
                 if(t.type == InkTagType.CONDITION) {
                     if(isConditionSet) {
                         DebugUtil.Error("Can not have more than one condition in " + text);
+                        return false;
                     }
                     hide = !bool.Parse(t.codes[0]);
-                    subText = t.codes[1];
+                    subText = t.codes[1]; // true condition expression
                     isConditionSet = true;
                     return false;
                 }
                 if(t.type == InkTagType.CHARACTER) {
                     characters.Add(t.codes[0]);
+                    return false;
+                }
+                if(!inChoice && t.type == InkTagType.GROUP) {
+                    if(isDialogBoxSet) {
+                        DebugUtil.Error("Can not have more than one group in " + text);
+                        return false;
+                    }
+                    dialogBoxId = t.codes[0];
+                    isDialogBoxSet = true;
                     return false;
                 }
                 return true;

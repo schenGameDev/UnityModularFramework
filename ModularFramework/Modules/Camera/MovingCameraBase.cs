@@ -102,8 +102,8 @@ public abstract class MovingCameraBase : CameraBase {
         followMaxSpeed = 1000;
         rollMaxSpeed = 1000;
         rollSpeed = 0;
-        await UniTask.Delay(1, cancellationToken: token).SuppressCancellationThrow();
-        ResetAcceleration();
+        await UniTask.Delay(1, cancellationToken: token);
+        ResetAcceleration(); // no need to reset if cancelled
     }
 
     void ResetAcceleration() {
