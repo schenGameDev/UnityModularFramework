@@ -1,0 +1,11 @@
+{
+  "name": "com.schengamedev.modularframework",
+  "version": "1.0.0",
+  "displayName": "Unity Modular Framework",
+  "description": "Unity modular framework realized through ScriptableObject",
+  "unity": "6000.0",
+  "author": {
+    "name": "schenGameDev",
+    "url": "https://github.com/schenGameDev"
+  }
+}

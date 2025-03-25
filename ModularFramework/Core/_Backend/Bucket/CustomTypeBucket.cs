@@ -26,7 +26,7 @@ namespace ModularFramework {
         }
 
         public void ForEach(Action<string, T> action) {
-        dictionary.ForEach(e=>action(e.Key, e.Value));
-    }
+            dictionary.ForEach(e=>action(e.Key, e.Value));
+        }
     }
 }

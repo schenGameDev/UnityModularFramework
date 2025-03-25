@@ -7,14 +7,16 @@ namespace ModularFramework.Utility
     using static EnvironmentConstants;
     public static class DebugUtil {
 
-        public enum DebugType {LOG,WARNING,ERROR}
+        public enum DebugType {LOG,
+            WARNING,
+            ERROR}
         public enum LogLevel {
             RUNTIME = 0,
             DEBUG = 1
         }
 
         public static void Print(string callerName, DebugType type, LogLevel level, string message) {
-            bool suppressed = (int)level > (int)DebugLevel;
+            bool suppressed = (int)level > DebugLevel;
             if(suppressed) return;
             message = callerName + "::" + message;
             switch(type) {
