@@ -27,7 +27,7 @@ public class InkSystemSO : GameSystem
     [SerializeField] private EditorAttributes.Void eventChannelGroup;
     [HideInInspector,SerializeField] EventChannel<(string,Keeper)> varChangeChannel;
     [HideInInspector,SerializeField] EventChannel<Either<InkLine,InkChoice>> inkTextChannel;
-    [HideInInspector,SerializeField] EventChannel<(string,string)> inkTaskChannel;
+    [HideInInspector,SerializeField] EventChannel<(string,string,Action<string>)> inkTaskChannel;
 
     [Header("Runtime")]
     [Rename("Current Story"),ReadOnly,SerializeField,RuntimeObject] string currentStoryName;
@@ -157,7 +157,7 @@ public class InkSystemSO : GameSystem
             .OrElseDo(story.ResetState);
         InjectVariables(story);
         story.variablesState.ForEach(varName => PutKeeper(varName,story.variablesState[varName]));
-        story.BindExternalFunction(EnvironmentConstants.INK_FUNCTION_DO_TASK, (string task, string parameter, bool isBlocking) => DoTask(name, parameter, isBlocking));
+        story.BindExternalFunction(EnvironmentConstants.INK_FUNCTION_DO_TASK, (string task, string parameter, bool isBlocking) => DoTask(task, parameter, isBlocking));
     }
 
     public void SaveStory(string storyName, Story story) {
@@ -178,18 +178,18 @@ public class InkSystemSO : GameSystem
             return;
         }
         if(_taskBuffer.NonEmpty()) {
-            _taskBuffer.ForEach(task => inkTaskChannel.Raise(task));
+            _taskBuffer.ForEach(task => inkTaskChannel.Raise((task.Item1,task.Item2,TaskComplete)));
             _taskBuffer.Clear();
         }
         _tasksRunning++;
-        inkTaskChannel.Raise((taskHandler, parameter));
+        inkTaskChannel.Raise((taskHandler, parameter, TaskComplete));
         // effectprofile, name:effect(play anim, change BG, in-out style, wait time)
         if(isBlocking) {
             _taskBlocked = true;
         }
     }
 
-    public void TaskComplete() {
+    public void TaskComplete(string taskName) {
         _tasksRunning--;
         if(_tasksRunning == 0 && _taskBlocked) _taskBlocked = false;
         if(_taskBuffer.IsEmpty() && _lastChoiceIndex!=-1) {
@@ -254,47 +254,47 @@ public class InkSystemSO : GameSystem
         return condition;
     }
 
-    private Optional<Keeper> Get(string name) {
-            if(_keeperDict.TryGetValue(name, out Keeper value)) {
+    private Optional<Keeper> Get(string varName) {
+            if(_keeperDict.TryGetValue(varName, out Keeper value)) {
                 return value;
             }
-            DebugUtil.DebugError(name + " not found", this.name);
+            DebugUtil.DebugError(varName + " not found", name);
             return Optional<Keeper>.None();
     }
-    private Keeper PutKeeper<T>(string name, T value) {
-            if(_keeperDict.TryGetValue(name, out Keeper existing)) {
+    private Keeper PutKeeper<T>(string varName, T value) {
+            if(_keeperDict.TryGetValue(varName, out Keeper existing)) {
                 existing.Set(value);
                 return existing;
             }
             var keeper = Keeper.Of(value);
-            _keeperDict.Add(name, keeper);
+            _keeperDict.Add(varName, keeper);
 #if UNITY_EDITOR
-            stats[name] = keeper.ToString();
+            stats[varName] = keeper.ToString();
 #endif
             return keeper;
         }
 
-    public void Put<T>(string name, T value) {
-        _currentStory.variablesState[name] = value;
+    public void Put<T>(string varName, T value) {
+        _currentStory.variablesState[varName] = value;
     }
 
-    public void Compute<T>(string name, string operatorStr, T value) {
-        if(_keeperDict.TryGetValue(name, out Keeper existing)) {
+    public void Compute<T>(string varName, string operatorStr, T value) {
+        if(_keeperDict.TryGetValue(varName, out Keeper existing)) {
             T newValue = existing.Compute(operatorStr,value);
-            Put(name, newValue);
+            Put(varName, newValue);
 #if UNITY_EDITOR
-            stats[name] = existing.ToString();
+            stats[varName] = existing.ToString();
 #endif
             return;
         }
-        throw new KeyNotFoundException(name + " not found, compute error");
+        throw new KeyNotFoundException(varName + " not found, compute error");
     }
 
-    public bool Compare<T>(string name, string logicOperator, T value) {
-        if(_keeperDict.TryGetValue(name, out Keeper existing)) {
+    public bool Compare<T>(string varName, string logicOperator, T value) {
+        if(_keeperDict.TryGetValue(varName, out Keeper existing)) {
             return existing.Is(logicOperator,value);
         }
-        throw new KeyNotFoundException(name + " not found, comparison error");
+        throw new KeyNotFoundException(varName + " not found, comparison error");
     }
 #endregion
 #region Log

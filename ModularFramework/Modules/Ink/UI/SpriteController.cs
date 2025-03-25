@@ -125,7 +125,7 @@ public class SpriteController : Marker
         }
     }
 
-    public void FadeOut(TransitionStyle outStyle)
+    public void Clear(TransitionStyle outStyle = TransitionStyle.FADE)
     {
         if (_cts != null)
         {

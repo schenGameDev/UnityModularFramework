@@ -12,6 +12,8 @@ public class InkLine {
     public List<InkTag> tags;
     public bool hide; // In line, it means disguise character info. In Choice, it means choice unselecteable. Not preset at definition
 
+    public string portraitId;
+    public string portraitPosition;
 
 
     public InkLine(string text, List<InkTag> tags, bool inChoice = false) {
@@ -42,6 +44,11 @@ public class InkLine {
                     }
                     dialogBoxId = t.codes[0];
                     isDialogBoxSet = true;
+                    return false;
+                }
+                if(!inChoice && t.type == InkTagType.PORTRAIT) {
+                    portraitId = t.codes[0];
+                    portraitPosition = t.codes[1];
                     return false;
                 }
                 return true;

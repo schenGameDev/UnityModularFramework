@@ -5,12 +5,13 @@ using UnityEngine.UI;
 using ModularFramework;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using UnityEngine.Serialization;
 
 public class SceneLoader : Singleton<SceneLoader> {
-    [SerializeField] private string _startingScene;
-    private string _currentScene;
+    [SerializeField] private string startingScene;
+    public string CurrentScene {get; private set;}
     public RawImage transitionImage;
-    [SerializeField] float _fadeDuration = 1;
+    [SerializeField] float duration = 1;
 
     void Start()
     {
@@ -23,13 +24,13 @@ public class SceneLoader : Singleton<SceneLoader> {
         _cts?.Dispose();
     }
 
-    public void LoadStartScene() => LoadScene(_startingScene);
+    private void LoadStartScene() => LoadScene(startingScene);
 
-    public void LoadScene(string sceneName) {
-        if(sceneName == _currentScene || sceneName.IsEmpty()) return;
+    public void LoadScene(string sceneName, Action<string> callback = null) {
+        if(sceneName == CurrentScene || sceneName.IsEmpty()) return;
 
-        if(_currentScene != null && _currentScene.NonEmpty()) {
-            Scene s = SceneManager.GetSceneByName(_currentScene);
+        if(CurrentScene != null && CurrentScene.NonEmpty()) {
+            Scene s = SceneManager.GetSceneByName(CurrentScene);
             if(s!=null && s.IsValid()) {
                 transitionImage.texture = GetCameraScreenshot();
                 SceneManager.UnloadSceneAsync(s);
@@ -47,7 +48,8 @@ public class SceneLoader : Singleton<SceneLoader> {
         op.completed += (_) => {
             Scene newScene = SceneManager.GetSceneByName(sceneName);
             SceneManager.SetActiveScene(newScene);
-            _currentScene = sceneName;
+            CurrentScene = sceneName;
+            callback?.Invoke("changeScene");
         };
 
     }
@@ -81,8 +83,8 @@ public class SceneLoader : Singleton<SceneLoader> {
         Color from = Color.white;
         Color to = new Color(1,1,1,0);
         float t = 0;
-        while(t<=_fadeDuration) {
-            transitionImage.color = Color.Lerp(from, to, t / _fadeDuration);
+        while(t<=duration) {
+            transitionImage.color = Color.Lerp(from, to, t / duration);
             t += Time.deltaTime;
             await UniTask.NextFrame(cancellationToken: token);
         }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using EditorAttributes;
@@ -27,14 +28,18 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
     [SerializeField] private string storyName;
     [SerializeField] private bool showHiddenChoice = true;
     
+    [Header("Bucket")]
+    [SerializeField] private SpriteBucket spriteBucket;
     
-    [FoldoutGroup("Event Channels", nameof(inkTextChannel), nameof(inkTaskChannel), nameof(choiceEventChannel))]
+    
+    [FoldoutGroup("Event Channels", nameof(inkTextChannel), nameof(inkTaskChannel), nameof(choiceEventChannel), nameof(sfxChannel), nameof(bgmChannel))]
     [SerializeField] private EditorAttributes.Void eventChannelGroup;
     // [HideInInspector,SerializeField] EventChannel<(string,Keeper)> varChangeChannel;
     [HideInInspector,SerializeField] EventChannel<Either<InkLine,InkChoice>> inkTextChannel;
-    [HideInInspector,SerializeField] EventChannel<(string,string)> inkTaskChannel;
+    [HideInInspector,SerializeField] EventChannel<(string,string,Action<string>)> inkTaskChannel;
     [HideInInspector, SerializeField] private EventChannel<int> choiceEventChannel;
-    
+    [HideInInspector, SerializeField] private EventChannel<string> sfxChannel;
+    [HideInInspector, SerializeField] private EventChannel<string> bgmChannel;
     [Header("Runtime")]
 
     [RuntimeObject] private Button _nextButton;
@@ -163,6 +168,9 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
         _dialogBox = _dialogBoxes[dialogBoxName];
         _dialogBox.Print($"{text} <color=\"red\">{subtext}</color>");
         _skipped.Reset();
+
+        SetupCharacterImage(line);
+
     }
 
     private readonly Flip _skipped = new();
@@ -177,8 +185,18 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
             }
         }
     }
-    
 
+    private string _lastPortraitPosition;
+    private void SetupCharacterImage(InkLine line)
+    {
+        if (_lastPortraitPosition != line.portraitPosition)
+        {
+            _sprites[_lastPortraitPosition].Clear();
+        }
+        _sprites[line.portraitPosition].SwapImage(spriteBucket.Get(line.portraitId).Get());
+        _lastPortraitPosition = line.portraitPosition;
+    }
+    
     #endregion
     #region Choice
     private string _choiceGroupName;
@@ -232,9 +250,25 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
     
     #region Task
 
-    private void HandleTask((string, string) task)
+    private void HandleTask((string, string, Action<string>) task)
     {
-        // chapter change task
+        string taskName = task.Item1;
+        string parameter = task.Item2;
+        Action<string> callback = task.Item3;
+
+        if (taskName == EnvironmentConstants.TASK_CHANGE_SCENE)
+        {
+            SceneLoader.Instance.LoadScene(parameter,callback);
+        } else if (taskName == EnvironmentConstants.TASK_PLAY_SOUND)
+        {
+            sfxChannel.Raise(parameter);
+            callback?.Invoke(taskName);
+        } else if (taskName == EnvironmentConstants.TASK_PLAY_BGM)
+        {
+            bgmChannel.Raise(parameter);
+            callback?.Invoke(taskName);
+        }
+        
         // character emotion change (fade inout)
         // character change (fade inout)
         // show image

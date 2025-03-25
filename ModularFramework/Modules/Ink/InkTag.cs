@@ -235,7 +235,8 @@ public class InkTag {
 
 public enum InkTagType {
     CHARACTER, // {character_name}
+    PORTRAIT, // character portrait [id, position_on_screen]
     CONDITION, // in-text format: COND_{expression}${explanation_id} e.g. COND_player_health>1$12
     GROUP, // in-text format: GRP_{id} e.g. GRP_12 If not set, the line will display at default dialog box, the choices will display at default button group
-    EFFECT // word effect, font size change, print speed, color
+    EFFECT, // word effect, font size change, print speed, color
 }
