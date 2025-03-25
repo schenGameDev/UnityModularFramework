@@ -66,9 +66,9 @@ public class MusicSystemSO : GameSystem
     }
 
 #region Looping Music
-    bool _playMusic => tracks;
+    bool PlayMusic => tracks;
     void InitializeMusic() {
-        if(!_playMusic) return;
+        if(!PlayMusic) return;
         CurrentTrack = null;
         PrevTrack = null;
         playlist.Clear();
@@ -184,7 +184,7 @@ public class MusicSystemSO : GameSystem
     
     private void TrackComplete()
     {
-        if(!_playMusic) return;
+        if(!PlayMusic) return;
         if(!repeat) PlayNextTrack();
     }
     

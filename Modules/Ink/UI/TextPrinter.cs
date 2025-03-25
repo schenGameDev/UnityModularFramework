@@ -5,6 +5,7 @@ using ModularFramework;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityUtils;
 
 [RequireComponent(typeof(TextMeshProUGUI))]
@@ -12,7 +13,7 @@ public class TextPrinter : Marker
 {
     public enum WordEffect {NONE, TYPE, FADE_IN}
     
-    [SerializeField] private WordEffect wordEffect;
+    [SerializeField] private WordEffect defaultWordEffect;
     [SerializeField] private float timeGapBetweenLetters = 0.05f;
     [SerializeField] private float fadeInDuration = 0.5f;
     [SerializeField] private bool hideWhenNotUsed;
@@ -100,14 +101,18 @@ public class TextPrinter : Marker
         }
     }
     
-    public void Print(string text) => Print(text, wordEffect, "");
+    public void Print(string text) => Print(text, defaultWordEffect, "");
 
     private async UniTaskVoid PrintTask(string text, float timeGap, CancellationToken token)
     {
         gameObject.SetActive(true);
+        bool lastCharIsPunctuation = false;
         foreach (var ch in text)
         {
-            var isCanceled = await UniTask.WaitForSeconds(timeGap, cancellationToken:token).SuppressCancellationThrow();
+            bool punctuation = char.IsPunctuation(ch);
+            float t = !lastCharIsPunctuation && punctuation? timeGap * 5 : timeGap;
+            lastCharIsPunctuation = punctuation;
+            var isCanceled = await UniTask.WaitForSeconds(t, cancellationToken:token).SuppressCancellationThrow();
             if (isCanceled)
             {
                 if(_cts==null) {
