@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using ModularFramework;
@@ -6,15 +7,17 @@ using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Serialization;
-using UnityUtils;
 
 [RequireComponent(typeof(TextMeshProUGUI))]
 public class TextPrinter : Marker
 {
-    public enum WordEffect {NONE, TYPE, FADE_IN}
+    public enum PrintEffect {NONE, TYPE, FADE_IN}
     
-    [SerializeField] private WordEffect defaultWordEffect;
+    [SerializeField] private PrintEffect defaultPrintEffect = PrintEffect.NONE;
+    [Header("Type out")]
     [SerializeField] private float timeGapBetweenLetters = 0.05f;
+    [SerializeField] private bool noise;
+    [Header("Fade In")]
     [SerializeField] private float fadeInDuration = 0.5f;
     [SerializeField] private bool hideWhenNotUsed;
     [SerializeField] private EventChannel<string> eventChannel;
@@ -71,10 +74,10 @@ public class TextPrinter : Marker
     /// <param name="text"></param>
     /// <param name="effect"></param>
     /// <param name="parameter"></param>
-    public void Print(string text, WordEffect effect, string parameter)
+    public void Print(string text, PrintEffect effect, string parameter)
     {
         Done = false;
-        if (effect == WordEffect.NONE)
+        if (effect == PrintEffect.NONE)
         {
             _textbox.text = text;
             Done = true;
@@ -89,19 +92,20 @@ public class TextPrinter : Marker
         }
         _cts = new CancellationTokenSource();
         
-        if (effect == WordEffect.FADE_IN)
+        if (effect == PrintEffect.FADE_IN)
         {
             _textbox.text = text;
             FadeIn(_cts.Token).Forget();
         } 
-        else if (effect == WordEffect.TYPE)
+        else if (effect == PrintEffect.TYPE)
         {
             _textbox.text = string.Empty;
-            PrintTask(text, timeGapBetweenLetters, _cts.Token).Forget();
+            if(noise) PrintTaskNoise(text, timeGapBetweenLetters, _cts.Token).Forget(); 
+            else PrintTask(text, timeGapBetweenLetters, _cts.Token).Forget();
         }
     }
     
-    public void Print(string text) => Print(text, defaultWordEffect, "");
+    public void Print(string text) => Print(text, defaultPrintEffect, "");
 
     private async UniTaskVoid PrintTask(string text, float timeGap, CancellationToken token)
     {
@@ -112,7 +116,8 @@ public class TextPrinter : Marker
             bool punctuation = char.IsPunctuation(ch);
             float t = !lastCharIsPunctuation && punctuation? timeGap * 5 : timeGap;
             lastCharIsPunctuation = punctuation;
-            var isCanceled = await UniTask.WaitForSeconds(t, cancellationToken:token).SuppressCancellationThrow();
+            bool isCanceled;
+            isCanceled= await UniTask.WaitForSeconds(t, cancellationToken:token).SuppressCancellationThrow();
             if (isCanceled)
             {
                 if(_cts==null) {
@@ -122,6 +127,33 @@ public class TextPrinter : Marker
                 return;
             }
             _textbox.text += ch;
+        }
+        Done = true;
+    }
+    
+    private async UniTaskVoid PrintTaskNoise(string text, float timeGap, CancellationToken token)
+    {
+        gameObject.SetActive(true);
+
+        foreach (var ch in text)
+        {
+            float t = timeGap;
+            string txt = _textbox.text;
+            while (t > 0)
+            {
+                _textbox.text = txt + RandomChar();
+                t-=Time.deltaTime;
+                bool isCanceled= await UniTask.NextFrame(cancellationToken:token).SuppressCancellationThrow();
+                if (isCanceled)
+                {
+                    if(_cts==null) {
+                        _textbox.text = text; // canceled and no new print task
+                        Done = true;
+                    }
+                    return;
+                }
+            }
+            _textbox.text = txt + ch;
         }
         Done = true;
     }
@@ -139,5 +171,15 @@ public class TextPrinter : Marker
         
         _textbox.color.SetAlpha(1);
         Done = true;
+    }
+    
+    private string RandomChar()
+    {
+        byte value = (byte)UnityEngine.Random.Range(41f,128f);
+
+        string c = Encoding.ASCII.GetString(new byte[]{value});
+
+        return c;
+
     }
 }

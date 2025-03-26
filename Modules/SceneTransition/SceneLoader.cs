@@ -3,15 +3,14 @@ using UnityEngine.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 using ModularFramework;
-using Cysharp.Threading.Tasks;
 using System.Threading;
-using UnityEngine.Serialization;
 
 public class SceneLoader : Singleton<SceneLoader> {
     [SerializeField] private string startingScene;
     public string CurrentScene {get; private set;}
     public RawImage transitionImage;
-    [SerializeField] float duration = 1;
+    [SerializeField] private SceneTransitionSO defaultTransition;
+    private CancellationTokenSource _cts;
 
     void Start()
     {
@@ -26,12 +25,12 @@ public class SceneLoader : Singleton<SceneLoader> {
 
     private void LoadStartScene() => LoadScene(startingScene);
 
-    public void LoadScene(string sceneName, Action<string> callback = null) {
+    public void LoadScene(string sceneName, SceneTransitionSO transitionProfile = null, Action<string> callback = null) {
         if(sceneName == CurrentScene || sceneName.IsEmpty()) return;
 
         if(CurrentScene != null && CurrentScene.NonEmpty()) {
             Scene s = SceneManager.GetSceneByName(CurrentScene);
-            if(s!=null && s.IsValid()) {
+            if(s.IsValid()) {
                 transitionImage.texture = GetCameraScreenshot();
                 SceneManager.UnloadSceneAsync(s);
 
@@ -40,7 +39,8 @@ public class SceneLoader : Singleton<SceneLoader> {
                     _cts.Dispose();
                 }
                 _cts = new CancellationTokenSource();
-                FadeOut(_cts.Token).Forget();
+                SceneTransitionSO transition = transitionProfile ?? defaultTransition;
+                transition.Transition(_cts.Token, transitionImage); 
             }
         }
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
@@ -76,18 +76,5 @@ public class SceneLoader : Singleton<SceneLoader> {
         rt.Release();
 
         return output;
-    }
-
-    private CancellationTokenSource _cts;
-    async UniTaskVoid FadeOut(CancellationToken token) {
-        Color from = Color.white;
-        Color to = new Color(1,1,1,0);
-        float t = 0;
-        while(t<=duration) {
-            transitionImage.color = Color.Lerp(from, to, t / duration);
-            t += Time.deltaTime;
-            await UniTask.NextFrame(cancellationToken: token);
-        }
-        transitionImage.color = to;
     }
 }
