@@ -15,23 +15,15 @@ public class SoundBuilder {
             return this;
         }
 
-        public void Play(string profileName) {
+        public SoundPlayer Play(string profileName, bool loop = false) {
             if (profileName == null) {
                 DebugUtil.Error("Sound is null");
-                return;
-            }
-            PlaySound(profileName);
-        }
-
-        public void PlaySound(string profileName) {
-            if (profileName == null) {
-                DebugUtil.Error("Sound is null");
-                return;
+                return null;
             }
 
             SoundProfile profile = soundManager.soundFxs.Get(profileName).OrElseThrow(new KeyNotFoundException(profileName));
 
-            if (!soundManager.CanPlaySound(profile)) return;
+            if (!soundManager.CanPlaySound(profile)) return null;
 
             SoundPlayer soundPlayer = soundManager.Get();
             soundPlayer.Initialize(profile, soundManager.soundFxs.mixerGroup,soundManager);
@@ -44,7 +36,7 @@ public class SoundBuilder {
             }
 
             soundPlayer.Play();
+            return soundPlayer;
         }
-
-        
+    
     }

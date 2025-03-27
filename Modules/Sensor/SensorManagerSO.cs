@@ -5,6 +5,7 @@ using EditorAttributes;
 using Unity.Mathematics;
 using UnityEngine;
 using ModularFramework;
+using UnityEngine.Serialization;
 using static ModularFramework.Utility.MathUtil;
 
 /// <summary>
@@ -16,7 +17,7 @@ public class SensorManagerSO : GameModule, IRegistrySO {
 
     [Header("Runtime")]
 #if UNITY_EDITOR
-    [ReadOnly,SerializeField,RuntimeObject] private string[] _sensibleInScene;
+    [ReadOnly,SerializeField,RuntimeObject] private string[] sensibleInScene;
 #endif
     public SensorManagerSO() {
         updateMode = UpdateMode.NONE;
@@ -41,7 +42,7 @@ public class SensorManagerSO : GameModule, IRegistrySO {
 
     private void DisplaySensibleNames() {
 #if UNITY_EDITOR
-        _sensibleInScene = _sensibleDict.Keys.ToArray();
+        sensibleInScene = _sensibleDict.Keys.ToArray();
 #endif
     }
 

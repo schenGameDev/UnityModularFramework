@@ -21,6 +21,9 @@ public class TextPrinter : Marker
     [SerializeField] private float fadeInDuration = 0.5f;
     [SerializeField] private bool hideWhenNotUsed;
     [SerializeField] private EventChannel<string> eventChannel;
+    [Header("Sound")]
+    [SerializeField] private string soundName;
+    private SoundManagerSO _soundManager;
         
     private TextMeshProUGUI _textbox;
 
@@ -32,6 +35,15 @@ public class TextPrinter : Marker
     private void Awake()
     {
         _textbox = GetComponent<TextMeshProUGUI>();
+    }
+
+    protected override void Start()
+    {
+        base.Start();
+        if (soundName.NonEmpty())
+        {
+            _soundManager = GameRunner.Instance.GetModule<SoundManagerSO>().OrElse(null);
+        }
     }
 
     protected override void OnEnable()
@@ -111,10 +123,23 @@ public class TextPrinter : Marker
     {
         gameObject.SetActive(true);
         bool lastCharIsPunctuation = false;
+        SoundPlayer soundPlayer = _soundManager?.PlayLoopSound(soundName);
         foreach (var ch in text)
         {
             bool punctuation = char.IsPunctuation(ch);
-            float t = !lastCharIsPunctuation && punctuation? timeGap * 5 : timeGap;
+            bool wait = !lastCharIsPunctuation && punctuation;
+            float t;
+            if (wait)
+            {
+                soundPlayer?.SetVolume(0);
+                t = timeGap * 5;
+            }
+            else
+            {
+                t = timeGap;
+                soundPlayer?.ResetVolume();
+            }
+
             lastCharIsPunctuation = punctuation;
             bool isCanceled;
             isCanceled= await UniTask.WaitForSeconds(t, cancellationToken:token).SuppressCancellationThrow();
@@ -122,19 +147,21 @@ public class TextPrinter : Marker
             {
                 if(_cts==null) {
                     _textbox.text = text; // canceled and no new print task
+                    soundPlayer?.Stop();
                     Done = true;
                 }
                 return;
             }
             _textbox.text += ch;
         }
+        soundPlayer?.Stop();
         Done = true;
     }
     
     private async UniTaskVoid PrintTaskNoise(string text, float timeGap, CancellationToken token)
     {
         gameObject.SetActive(true);
-
+        SoundPlayer soundPlayer = _soundManager?.PlayLoopSound(soundName);
         foreach (var ch in text)
         {
             float t = timeGap;
@@ -149,6 +176,7 @@ public class TextPrinter : Marker
                     if(_cts==null) {
                         _textbox.text = text; // canceled and no new print task
                         Done = true;
+                        soundPlayer?.Stop();
                     }
                     return;
                 }
@@ -156,6 +184,7 @@ public class TextPrinter : Marker
             _textbox.text = txt + ch;
         }
         Done = true;
+        soundPlayer?.Stop();
     }
 
     private async UniTaskVoid FadeIn(CancellationToken token)

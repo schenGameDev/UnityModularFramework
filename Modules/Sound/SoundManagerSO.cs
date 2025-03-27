@@ -54,7 +54,7 @@ public class SoundManagerSO : GameModule
         InitializePool();
     }
     
-    public SoundBuilder CreateSoundBuilder() => new SoundBuilder(this);
+    private SoundBuilder CreateSoundBuilder() => new SoundBuilder(this);
 
     void BuildParent() {
         SoundParent = new GameObject("=== Sounds ===").transform;
@@ -63,7 +63,9 @@ public class SoundManagerSO : GameModule
 
     #region Play SoundFx
 
-    public void PlaySound(string soundName) => CreateSoundBuilder().PlaySound(soundName);
+    public void PlaySound(string soundName) => CreateSoundBuilder().Play(soundName);
+
+    public SoundPlayer PlayLoopSound(string soundName) => CreateSoundBuilder().Play(soundName,true);
 
     public bool CanPlaySound(SoundProfile data) {
         if (!data.frequentSound) return true;

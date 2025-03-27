@@ -116,10 +116,20 @@ namespace ModularFramework {
             if(module != null) {
                 return (T) module;
             }
-            DebugUtil.Error("Module of type " + typeof(T).ToString() + " not found");
+            DebugUtil.Error("Module of type " + typeof(T) + " not found");
             return null;
         }
-
+    #endregion
+    
+    #region System
+        public Optional<T> GetSystem<T>() where T : GameSystem {
+            GameSystem sys = systems.Where(m=>(m as T) != null).First();
+            if(sys != null) {
+                return (T) sys;
+            }
+            DebugUtil.Error("System of type " + typeof(T) + " not found");
+            return null;
+        }
     #endregion
 
     #region Registry
@@ -142,7 +152,7 @@ namespace ModularFramework {
             if(_registrySODict.TryGetValue(registryType, out var registry)) {
                 return registry;
             }
-            DebugUtil.Error("Registry of type " + registryType.ToString() + " not found");
+            DebugUtil.Error("Registry of type " + registryType + " not found");
             return null;
         }
 
@@ -150,7 +160,7 @@ namespace ModularFramework {
             if(_registrySODict.TryGetValue(typeof(T), out var registry)) {
                 return (T) registry;
             }
-            DebugUtil.Error("Registry of type " + typeof(T).ToString() + " not found");
+            DebugUtil.Error("Registry of type " + typeof(T) + " not found");
             return null;
         }
 
@@ -177,7 +187,7 @@ namespace ModularFramework {
             if(Application.isEditor) eventChannels.TrySetValue(channel as ScriptableObject, true);
         }
 
-        public bool IsEventChannelRegistered(IEventChannel channel) => eventChannels.ContainsKey(channel as ScriptableObject);
+        public bool IsEventChannelRegistered(IEventChannel channel) => channel is ScriptableObject so && eventChannels.ContainsKey(so);
     #endregion
 
     #region Exec Management
