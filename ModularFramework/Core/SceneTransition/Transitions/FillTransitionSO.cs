@@ -1,38 +1,36 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using EditorAttributes;
-using ModularFramework.Utility;
-using Unity.Mathematics;
+using ModularFramework;
 using UnityEngine;
 using UnityEngine.UI;
 
-[CreateAssetMenu(fileName = "ExpandTransition_SO", menuName = "Game Module/Scene Transition/Expand")]
-public class ExpandTransitionSO : SceneTransitionSO
+[CreateAssetMenu(fileName = "FillTransition_SO", menuName = "Game Module/Scene Transition/Fill")]
+public class FillTransitionSO : SceneTransitionSO
 {
     [SerializeField] private Image maskPrefab;
+    [SerializeField] private Image.FillMethod fillMethod;
+    [SerializeField, Rename("Start From Left/Bottom/Clockwise")] private bool fromLeftBottomClockwise;
 
     public override void Transition(CancellationToken token, RawImage lastSceneSnapshot)
     {
-        Expand(token, lastSceneSnapshot).Forget();
+        Fill(token, lastSceneSnapshot).Forget();
     }
     
-    async UniTaskVoid Expand(CancellationToken token, RawImage lastSceneSnapshot) {
+    async UniTaskVoid Fill(CancellationToken token, RawImage lastSceneSnapshot) {
         Canvas parentCanvas = lastSceneSnapshot.canvas;
         
         var mask = Instantiate(maskPrefab, parentCanvas.transform);
+        mask.type = Image.Type.Filled;
+        mask.fillMethod = fillMethod;
+        mask.fillAmount = 0;
+        mask.fillClockwise = fromLeftBottomClockwise;
         mask.color.SetAlpha(1);
-        var rect = mask.rectTransform;
-        
-        rect.sizeDelta = Vector2.zero;
-        
-        float dist = math.sqrt(math.square(Screen.width) + math.square(Screen.height));
         
         // old scene out
         float t = 0;
-        while(t<=duration)
-        {
-            var d = t / duration * dist;
-            rect.sizeDelta = new Vector2(d, d);
+        while(t<=duration) {
+            mask.fillAmount = t / duration;
             t += Time.deltaTime;
             await UniTask.NextFrame(cancellationToken: token);
         }
@@ -40,9 +38,9 @@ public class ExpandTransitionSO : SceneTransitionSO
         
         // new scene in
         t = 0;
+        mask.fillClockwise = !fromLeftBottomClockwise;
         while(t<=duration) {
-            var d = (1 - t / duration) * dist;
-            rect.sizeDelta = new Vector2(d, d);
+            mask.fillAmount = 1 - t / duration;
             t += Time.deltaTime;
             await UniTask.NextFrame(cancellationToken: token);
         }

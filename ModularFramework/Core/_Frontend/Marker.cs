@@ -34,14 +34,16 @@ namespace ModularFramework {
             UnregisterAll();
         }
 
-        protected Optional<T> GetRegistry<T>() where T : ScriptableObject,IRegistrySO =>  GameRunner.Instance.GetRegistry<T>();
+        protected Optional<T> GetRegistry<T>() where T : ScriptableObject,IRegistrySO 
+            => typeof(T) == typeof(GameSystem)? GameRunner.GetSystemRegistry<T>() : GameRunner.Instance.GetRegistry<T>();
 
-        private void RegisterAll() {
+        private void RegisterAll()
+        {
             HashSet<int> foundGroups = new();
             List<int> unfoundTypeIndex = new();
             int count = 0;
             foreach (var t in registryTypes) {
-                bool found = GameRunner.Instance.Register(t.Item1, transform);
+                bool found = t.Item1 == typeof(GameSystem)? GameRunner.RegisterSystem(t.Item1, transform) : GameRunner.Instance.Register(t.Item1, transform);
                 if (found) {
                     foundGroups.Add(t.Item2);
                     _registeredTypes.Add(t.Item1);
@@ -57,7 +59,7 @@ namespace ModularFramework {
 
         private void UnregisterAll() {
             foreach (Type t in _registeredTypes) {
-                bool found = GameRunner.Instance.Unregister(t, transform);
+                bool found = t == typeof(GameSystem)? GameRunner.UnregisterSystem(t, transform) : GameRunner.Instance.Unregister(t, transform);
                 if(!found) DebugUtil.Warn("Registry of type " + t + " not found");
             }
 

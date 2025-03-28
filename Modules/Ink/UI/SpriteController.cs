@@ -34,8 +34,9 @@ public class SpriteController : Marker
         SetAlpha(0);
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         _cts?.Cancel();
         _cts?.Dispose();
     }

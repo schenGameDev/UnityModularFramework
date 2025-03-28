@@ -258,7 +258,7 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
 
         if (taskName == EnvironmentConstants.TASK_CHANGE_SCENE)
         {
-            SceneLoader.Instance.LoadScene(parameter,null,callback);
+            GameBuilder.Instance.LoadScene(parameter,null,callback);
         } else if (taskName == EnvironmentConstants.TASK_PLAY_SOUND)
         {
             sfxChannel.Raise(parameter);
