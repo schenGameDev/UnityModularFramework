@@ -13,16 +13,16 @@ namespace ModularFramework {
         [SerializeField,SerializedDictionary("Key","Value"),HideLabel]
         protected SerializedDictionary<string,T> dictionary = new();
 
-        public Optional<T> Get (string name) {
-            if(dictionary.TryGetValue(name, out T value)) {
+        public Optional<T> Get (string key) {
+            if(dictionary.TryGetValue(key, out T value)) {
                 return value;
             }
-            DebugUtil.DebugError(name + " not found", this.name);
+            DebugUtil.DebugError(key + " not found", this.name);
             return Optional<T>.None();
         }
 
-        public bool ContainsKey(string name) {
-            return dictionary.ContainsKey(name);
+        public bool ContainsKey(string key) {
+            return dictionary.ContainsKey(key);
         }
 
         public void ForEach(Action<string, T> action) {

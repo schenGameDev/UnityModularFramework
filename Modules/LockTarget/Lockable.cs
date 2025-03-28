@@ -6,7 +6,7 @@ public class Lockable : Sensible
 {
     [ReadOnly,SerializeField] private bool _locked;
 
-    private LockManagerSO _lockManager = null;
+    private LockManagerSO _lockManager;
 
     private bool _notLockable=false;
 
@@ -15,14 +15,13 @@ public class Lockable : Sensible
         registryTypes = new[] {(typeof(SensorManagerSO), 1), (typeof(LockManagerSO), 2)};
     }
 
-    private void OnBecameInvisible() {
-        if(_lockManager == null) {
-            _lockManager = GetRegistry<LockManagerSO>().Get();
-            if(_lockManager == null) {
-                return;
-            }
-        }
+    protected override void Start()
+    {
+        base.Start();
+        _lockManager = GetRegistry<LockManagerSO>().Get();
+    }
 
+    private void OnBecameInvisible() {
         if(_locked && DisToScreenCenter()>=1) {
             _lockManager.TargetLost();
         }

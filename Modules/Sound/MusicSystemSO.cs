@@ -34,7 +34,7 @@ public class MusicSystemSO : GameSystem
     [RuntimeObject] public SoundProfile CurrentTrack {get; set;}
     [RuntimeObject] public SoundProfile PrevTrack {get; set;}
     [SerializeField, ReadOnly,RuntimeObject] List<string> playlist = new();
-    [RuntimeObject] public Transform PersistentSoundParent {get; private set;}
+    [RuntimeObject] Transform PersistentSoundParent {get;set;}
     
     private void OnEnable()
     {

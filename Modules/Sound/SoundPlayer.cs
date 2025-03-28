@@ -10,6 +10,7 @@ using UnityEngine.Audio;
 public class SoundPlayer : MonoBehaviour {
     AudioSource _audio;
     float _delay;
+    private float _vol;
     SoundManagerSO _soundManager;
     CancellationTokenSource _cts;
     public SoundProfile Profile {get; private set;}
@@ -20,7 +21,7 @@ public class SoundPlayer : MonoBehaviour {
         _audio = gameObject.GetOrAdd<AudioSource>();
     }
 
-    public void Initialize(SoundProfile soundProfile, AudioMixerGroup mixerGroup, SoundManagerSO soundManager)
+    public void Initialize(SoundProfile soundProfile, AudioMixerGroup mixerGroup, SoundManagerSO soundManager, bool loop = false)
     {
         _soundManager = soundManager;
         Profile = soundProfile;
@@ -28,8 +29,10 @@ public class SoundPlayer : MonoBehaviour {
         _audio.outputAudioMixerGroup = mixerGroup;
 
         _audio.volume = soundProfile.volume;
+        _vol = soundProfile.volume;
         _audio.pitch = soundProfile.pitch;
         _audio.bypassListenerEffects = soundProfile.bypassListenerEffects;
+        _audio.loop = loop;
 
         _delay = soundProfile.delay;
     }
@@ -65,6 +68,9 @@ public class SoundPlayer : MonoBehaviour {
         _audio.Stop();
         _soundManager.ReturnToPool(this);
     }
+    
+    public void SetVolume(float volume) => _audio.volume = volume;
+    public void ResetVolume() => _audio.volume = _vol;
 
     private void OnDestroy()
     {

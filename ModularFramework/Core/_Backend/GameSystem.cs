@@ -5,8 +5,8 @@ namespace ModularFramework
     /// <summary>
     /// Backend system independent of unity lifecycle. <br/>
     /// If used on its own, OnStart(), OnDestroy() will not invoke.<br/>
-    /// OnStart() called first time it binds to GameRunner
-    /// OnDestroy() called when game exits via GameRunner
+    /// OnStart() called on GameBuilder
+    /// OnDestroy() called when game exits
     /// </summary>
     public abstract class GameSystem :ScriptableObject
     {

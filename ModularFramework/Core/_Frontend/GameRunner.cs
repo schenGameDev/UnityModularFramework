@@ -12,17 +12,11 @@ namespace ModularFramework {
 
     public class GameRunner : Singleton<GameRunner>
     {
-        static readonly List<GameSystem> Systems = new();
-        /// <summary>
-        /// each system only needs to register in the first scene it is used
-        /// </summary>
-        [Header("Game Systems")]
-        [SerializeField,HideLabel]
-        private GameSystem[] systems;
+        public static readonly List<GameSystem> SYSTEMS = new();
 
         [Header("Game Modules")]
         [SerializeField,HideLabel,HelpBox("In boot-up order", MessageMode.None)]
-        [OnValueChanged(nameof(AddBootupParameter))] private GameModule[] modules;
+        [OnValueChanged(nameof(AddBootUpParameter))] private GameModule[] modules;
         [SerializeField,SerializedDictionary("Name","Value")] private SerializedDictionary<string,string> flags = new();
         [SerializeField,SerializedDictionary("Name","Ref Object")] private SerializedDictionary<string,GameObject> references = new();
 
@@ -38,20 +32,9 @@ namespace ModularFramework {
     #region Runtime
         protected override void Awake() {
             base.Awake();
-
-            if (systems != null)
-            {
-                foreach (var sys in systems)
-                {
-                    if (Systems.Contains(sys)) continue;
-                    sys.OnStart();
-                    Systems.Add(sys);
-                }
-            }
-            _registrySODict = new();
             foreach(var module in modules) {
-                if(module is IRegistrySO) {
-                    _registrySODict.Add(module.GetType(), module as IRegistrySO);
+                if(module is IRegistrySO so) {
+                    _registryDict.Add(module.GetType(), so);
                 }
                 module.OnAwake(flags,references);
                 if(!module.CentrallyManaged && module.OperateEveryFrame) {
@@ -62,44 +45,39 @@ namespace ModularFramework {
 
         private void Start()
         {
-            if(modules!=null) {
-                foreach(var module in modules) {
-                    module.OnStart();
-                }
+            if (modules == null) return;
+            foreach(var module in modules) {
+                module.OnStart();
             }
         }
 
-        private void Update() {
-            if(modules!=null) {
-                UpdateModuleFrame();
-                foreach(var module in _framelyUpdatedModules) {
-                    module.OnUpdate(Time.deltaTime);
-                }
+        private void Update()
+        {
+            if (modules == null) return;
+            UpdateModuleFrame();
+            foreach(var module in _framelyUpdatedModules) {
+                module.OnUpdate(Time.deltaTime);
             }
         }
 
-        private void OnDestroy() {
-            if(modules!=null) {
-                foreach(var module in modules) {
-                    module.OnDestroy();
-                }
+        private void OnDestroy()
+        {
+            if (modules == null) return;
+            foreach(var module in modules) {
+                module.OnDestroy();
             }
         }
 
-        private void OnDrawGizmos() {
-            if(Application.isPlaying && modules!=null) {
-                foreach(var module in modules) {
-                    module.OnGizmos();
-                }
+        private void OnDrawGizmos()
+        {
+            if (!Application.isPlaying || modules == null) return;
+            foreach(var module in modules) {
+                module.OnGizmos();
             }
         }
 
         [Button]
         public void EndGame() {
-            OnDestroy();
-            foreach(var sys in Systems) {
-                sys.OnDestroy();
-            }
             #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
             #elif UNITY_WEBPLAYER
@@ -112,46 +90,86 @@ namespace ModularFramework {
 
     #region Module
         public Optional<T> GetModule<T>() where T : GameModule {
-            GameModule module = modules.Where(m=>(m as T) != null).First();
+            GameModule module = modules.First(m => (m as T) != null);
             if(module != null) {
                 return (T) module;
             }
-            DebugUtil.Error("Module of type " + typeof(T).ToString() + " not found");
+            DebugUtil.Error("Module of type " + typeof(T) + " not found");
+            return null;
+        }
+    #endregion
+    
+    #region System
+        public static Optional<T> GetSystem<T>() where T : GameSystem {
+            GameSystem sys = SYSTEMS.First(m => (m as T) != null);
+            if(sys != null) {
+                return (T) sys;
+            }
+            DebugUtil.Error("System of type " + typeof(T) + " not found");
             return null;
         }
 
+        public static void InjectSystem<T>(T sys) where T : GameSystem
+        {
+            if (SYSTEMS.Any(s=> s.GetType() == sys.GetType()))
+            {
+                DebugUtil.Error("System of type " + sys.GetType().Name + " already exists");
+                return;
+            }
+            if(sys is IRegistrySO so) {
+                STATIC_REGISTRY_DICT.Add(sys.GetType(), so);
+            }
+            sys.OnStart();
+            SYSTEMS.Add(sys);
+        }
     #endregion
 
     #region Registry
-        private Dictionary<Type,IRegistrySO> _registrySODict;
+        private readonly Dictionary<Type,IRegistrySO> _registryDict = new();
+        public static readonly Dictionary<Type,IRegistrySO> STATIC_REGISTRY_DICT = new();
         public bool Register(Type registryType, Transform marker) {
-            if(_registrySODict.TryGetValue(registryType, out var registry)) {
+            if(_registryDict.TryGetValue(registryType, out var registry)) {
                 registry.Register(marker);
                 return true;
             }
             return false;
         }
         public bool Unregister(Type registryType, Transform marker) {
-            if(_registrySODict.TryGetValue(registryType, out var registry)) {
+            if(_registryDict.TryGetValue(registryType, out var registry)) {
                 registry.Unregister(marker);
                 return true;
             }
             return false;
         }
-        public IRegistrySO GetRegistry(Type registryType) {
-            if(_registrySODict.TryGetValue(registryType, out var registry)) {
-                return registry;
-            }
-            DebugUtil.Error("Registry of type " + registryType.ToString() + " not found");
-            return null;
-        }
-
         public Optional<T> GetRegistry<T>() where T : ScriptableObject,IRegistrySO {
-            if(_registrySODict.TryGetValue(typeof(T), out var registry)) {
+            if(_registryDict.TryGetValue(typeof(T), out var registry)) {
                 return (T) registry;
             }
-            DebugUtil.Error("Registry of type " + typeof(T).ToString() + " not found");
+            DebugUtil.Error("Registry of type " + typeof(T) + " not found");
             return null;
+        }
+        
+        public static Optional<T> GetSystemRegistry<T>() where T : ScriptableObject,IRegistrySO
+        {
+            if(STATIC_REGISTRY_DICT.TryGetValue(typeof(T), out var registry)) {
+                return (T) registry;
+            }
+            DebugUtil.Error("Registry of type " + typeof(T) + " not found");
+            return null;
+        }
+        public static bool RegisterSystem(Type registryType, Transform marker) {
+            if(STATIC_REGISTRY_DICT.TryGetValue(registryType, out var registry)) {
+                registry.Register(marker);
+                return true;
+            }
+            return false;
+        }
+        public static bool UnregisterSystem(Type registryType, Transform marker) {
+            if(STATIC_REGISTRY_DICT.TryGetValue(registryType, out var registry)) {
+                registry.Unregister(marker);
+                return true;
+            }
+            return false;
         }
 
     #endregion
@@ -177,12 +195,12 @@ namespace ModularFramework {
             if(Application.isEditor) eventChannels.TrySetValue(channel as ScriptableObject, true);
         }
 
-        public bool IsEventChannelRegistered(IEventChannel channel) => eventChannels.ContainsKey(channel as ScriptableObject);
+        public bool IsEventChannelRegistered(IEventChannel channel) => channel is ScriptableObject so && eventChannels.ContainsKey(so);
     #endregion
 
     #region Exec Management
-        List<ExecQueueMember> _pendingToAddQueue = new();
-        Queue<ExecQueueMember> _execSignalQueue = new();
+        private readonly List<ExecQueueMember> _pendingToAddQueue = new();
+        private readonly Queue<ExecQueueMember> _execSignalQueue = new();
 
         class ExecQueueMember {
             public GameModule Module;
@@ -225,7 +243,7 @@ namespace ModularFramework {
 
     #region Editor
         [Button("Refresh Modules")]
-        void AddBootupParameter() {
+        private void AddBootUpParameter() {
             HashSet<string> kw = new(), kw2 = new();
             foreach(var m in modules) {
                 if(m==null) continue;
