@@ -10,6 +10,7 @@ public class InkLine {
     public string text;
     public string subText;
     public List<InkTag> tags;
+    public bool dialogue; // someone's speech
     public bool hide; // In line, it means disguise character info. In Choice, it means choice unselecteable. Not preset at definition
 
     public string portraitId;
@@ -33,7 +34,9 @@ public class InkLine {
                     isConditionSet = true;
                     return false;
                 }
-                if(t.type == InkTagType.CHARACTER) {
+                if(t.type == InkTagType.CHARACTER)
+                {
+                    dialogue = true;
                     characters.Add(t.codes[0]);
                     return false;
                 }

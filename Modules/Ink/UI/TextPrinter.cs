@@ -34,7 +34,7 @@ public class TextPrinter : Marker
     
     private void Awake()
     {
-        _textbox = GetComponent<TextMeshProUGUI>();
+        _textbox = GetComponentInChildren<TextMeshProUGUI>();
     }
 
     protected override void Start()

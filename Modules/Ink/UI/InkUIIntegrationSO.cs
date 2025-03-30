@@ -153,7 +153,7 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
     private TextPrinter _dialogBox;
     private void SetupLine(InkLine line)
     {
-        string characterName = line.hide? HIDDEN_CHARACTER_NAME : string.Join(", ",line.characters.Select(TranslationUtil.Translate));
+        
         var dialogBoxName = string.IsNullOrEmpty(line.dialogBoxId)? DEFAULT_DIALOG_BOX : line.dialogBoxId;
         
         if(_dialogBox && dialogBoxName != _dialogBox.name) _dialogBox.Clean();
@@ -164,13 +164,28 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
         subtext = $"(Character unknown because {line.subText})"; // true condition expression
 #endif
         
-        _dialogBoxes[CHARACTER_NAME].Print(characterName);
         _dialogBox = _dialogBoxes[dialogBoxName];
         _dialogBox.Print($"{text} <color=\"red\">{subtext}</color>");
         _skipped.Reset();
-
+        
+        SetupSpeaker(line);
         SetupCharacterImage(line);
 
+    }
+
+    private void SetupSpeaker(InkLine line)
+    {
+        if (line.dialogue)
+        {
+            string characterName = line.hide? HIDDEN_CHARACTER_NAME : string.Join(", ",line.characters.Select(TranslationUtil.Translate));
+            _dialogBoxes[CHARACTER_NAME].gameObject.SetActive(true);
+            _dialogBoxes[CHARACTER_NAME].Print(characterName);
+        }
+        else
+        {
+            _dialogBoxes[CHARACTER_NAME].gameObject.SetActive(false);
+        }
+        
     }
 
     private readonly Flip _skipped = new();
