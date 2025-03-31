@@ -116,8 +116,14 @@ namespace ModularFramework {
                 DebugUtil.Error("System of type " + sys.GetType().Name + " already exists");
                 return;
             }
-            if(sys is IRegistrySO so) {
+            if(sys is IRegistrySO so) 
+            {
                 STATIC_REGISTRY_DICT.Add(sys.GetType(), so);
+            }
+
+            if (sys is ILive l)
+            {
+                l.Live = true;
             }
             sys.OnStart();
             SYSTEMS.Add(sys);

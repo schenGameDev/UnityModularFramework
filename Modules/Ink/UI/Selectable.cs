@@ -3,12 +3,12 @@ using ModularFramework;
 using TMPro;
 using UnityEngine;
 
-public class Selectable : Marker
+public class Selectable : Marker, ILive
 {
 
     public string choiceGroupName;
     public int index;
-    public bool isActive;
+    [field: SerializeField] public bool Live { get; set; }
     public string text;
     [SerializeField] private EventChannel<int> choiceEventChannel;
     public bool hasSelected;
@@ -26,7 +26,7 @@ public class Selectable : Marker
     }
     
     public virtual void Select() {
-        if(isActive) {
+        if(Live) {
             choiceEventChannel?.Raise(index);
             hasSelected = true;
             //todo grey out selected option
@@ -34,7 +34,7 @@ public class Selectable : Marker
     }
 
     public virtual void Activate (string txt = null) {
-        isActive = true;
+        Live = true;
         if (txt != null)
         {
             text = txt;
@@ -45,7 +45,7 @@ public class Selectable : Marker
     }
 
     public virtual void Deactivate() {
-        isActive = false;
+        Live = false;
         gameObject.SetActive(false);
     }
     

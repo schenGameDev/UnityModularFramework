@@ -1,13 +1,14 @@
 using System.Collections.Generic;
+using EditorAttributes;
 using Unity.Mathematics;
 using UnityEngine;
 using ModularFramework;
 using ModularFramework.Utility;
 using UnityEngine.InputSystem;
 
-[CreateAssetMenu(fileName ="InputManager_SO",menuName ="Game Module/Input")]
-public class InputManagerSO : GameModule, PlayerActions.IInputActions, ILive {
-
+[CreateAssetMenu(fileName ="InpuSystem_SO",menuName ="Game Module/Input System")]
+public class InputSystemSO : GameSystem, PlayerActions.IInputActions, ILive {
+ 
     public EventChannel ActionInteract,OpenEyeEvent,ActionUse;
     public EventChannel ActionLock;
     public EventChannel<bool> ActionSwitchLockTarget;
@@ -15,43 +16,22 @@ public class InputManagerSO : GameModule, PlayerActions.IInputActions, ILive {
     public EventChannel<Vector3> MoveDirectionChannel;
     public EventChannel<Vector3> ViewDirectionChannel;
 
-    public Vector2 LookDeltaMovement {get; private set;}
-    public Vector2 PointerCameraPosition {get; private set;}
+    [RuntimeObject] public Vector2 LookDeltaMovement {get; private set;}
+    [RuntimeObject] public Vector2 PointerCameraPosition {get; private set;}
 
-    public bool IsController {get; private set;}
+    [RuntimeObject] public bool IsController {get; private set;}
 
-    public Vector3 PlayerWorldPosition {get; set;}
+    [RuntimeObject] public Vector3 PlayerWorldPosition {get; set;}
     private Vector2 PlayerCameraPosition => Camera.main.WorldToScreenPoint(PlayerWorldPosition);
-    public CameraAngle CameraMode {get; private set;}
-    public bool Live { get => _live; set => _live = Live; }
-
-    [SerializeField] private bool _live = true;
+    public CameraAngle CameraMode {get; set;}
+    [field: SerializeField,ReadOnly,RuntimeObject] public bool Live { get; set; }
 
 
     private PlayerActions _input;
-
-    public InputManagerSO() {
-        Keywords = new[] {"CAMERA_MODE"};
-        updateMode = UpdateMode.NONE;
-    }
-
-    public override void OnAwake(Dictionary<string, string> flags, Dictionary<string,GameObject> references)
-    {
-        base.OnAwake(flags, references);
-        CameraMode = EnumExtension.GetEnumValue<CameraAngle>(flags["CAMERA_MODE"]);
-    }
-
-    protected override void Reset()
-    {
-        base.Reset();
-        LookDeltaMovement = Vector2.zero;
-        PointerCameraPosition = Vector2.zero;
-        PlayerWorldPosition = Vector3.zero;
-        IsController = false;
-    }
+    
 
     private void OnEnable() {
-        if(!_live) return;
+        if(!Live) return;
 
         if(_input == null) {
             _input = new PlayerActions();
@@ -81,7 +61,7 @@ public class InputManagerSO : GameModule, PlayerActions.IInputActions, ILive {
 
     public void OnMove(InputAction.CallbackContext context)
     {
-        if(!_live) return;
+        if(!Live) return;
         CheckInputDevice(context);
 
         var moveDirection = CameraToWorldSpace(context.ReadValue<Vector2>());
@@ -93,7 +73,7 @@ public class InputManagerSO : GameModule, PlayerActions.IInputActions, ILive {
 
     public void OnOpenCloseEye(InputAction.CallbackContext context)
     {
-        if(!_live) return;
+        if(!Live) return;
         CheckInputDevice(context);
 
         if(context.started) OpenEyeEvent.Raise();
@@ -101,7 +81,7 @@ public class InputManagerSO : GameModule, PlayerActions.IInputActions, ILive {
 
     public void OnInteract(InputAction.CallbackContext context)
     {
-        if(!_live) return;
+        if(!Live) return;
         CheckInputDevice(context);
 
         if(context.started) ActionInteract.Raise();
@@ -109,7 +89,7 @@ public class InputManagerSO : GameModule, PlayerActions.IInputActions, ILive {
 
     public void OnUse(InputAction.CallbackContext context)
     {
-        if(!_live) return;
+        if(!Live) return;
         CheckInputDevice(context);
 
         if(context.started) ActionUse.Raise();
@@ -117,7 +97,7 @@ public class InputManagerSO : GameModule, PlayerActions.IInputActions, ILive {
 
     public void OnViewDirection(InputAction.CallbackContext context)
     {
-        if(!_live) return;
+        if(!Live) return;
 
         if(CameraMode == CameraAngle.FOLLOW) return;
 
