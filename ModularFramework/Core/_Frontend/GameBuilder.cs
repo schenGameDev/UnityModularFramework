@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using EditorAttributes;
+using ModularFramework.Utility;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -55,6 +56,7 @@ namespace ModularFramework
             }
         }
 
+        #region Scene
         private void LoadStartScene() => LoadScene(startingScene);
 
         public void LoadScene(string sceneName, SceneTransitionSO transitionProfile = null, Action<string> callback = null) {
@@ -109,5 +111,15 @@ namespace ModularFramework
 
             return output;
         }
+        #endregion
+        #region Language
+        public void ChangeLanguage(Language language)
+        {
+            TranslationUtil.Load(language);
+            TranslationUtil.SaveLanguagePref(language);
+            LoadStartScene();
+        }
+        
+        #endregion
     }
 }

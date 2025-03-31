@@ -3,7 +3,7 @@ using EditorAttributes;
 using TMPro;
 using UnityEngine;
 
-namespace ModularFramework.Utility.Translation
+namespace ModularFramework.Utility
 {
     public class TranslationText : MonoBehaviour
     {

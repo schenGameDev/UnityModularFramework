@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-namespace ModularFramework.Utility.Translation
+namespace ModularFramework.Utility
 {
     public static class TranslationUtil
     {
@@ -50,6 +50,11 @@ namespace ModularFramework.Utility.Translation
                 }
                 TRANSLATION_DICT.Add(fields[i], text);
             }
+        }
+
+        public static void SaveLanguagePref(Language language)
+        {
+            PlayerPrefs.SetString("Language", language.ToString());
         }
 
         public static string Translate(string key)

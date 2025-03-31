@@ -2,7 +2,7 @@ using System.IO;
 using EditorAttributes;
 using UnityEngine;
 
-namespace ModularFramework.Utility.Translation
+namespace ModularFramework.Utility
 {
     [CreateAssetMenu(fileName = "TranslationDraft_SO", menuName = "Game Module/Translation/Draft")]
     public class TranslationDraftBucket : Bucket
