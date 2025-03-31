@@ -5,10 +5,9 @@ using EditorAttributes;
 using ModularFramework;
 using ModularFramework.Commons;
 using ModularFramework.Utility;
-using ModularFramework.Utility.Translation;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityTimer;
 
 [CreateAssetMenu(fileName = "InkUIIntegration_SO", menuName = "Game Module/Ink UI Integration")]
 public class InkUIIntegrationSO : GameModule, IRegistrySO {
@@ -26,6 +25,8 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
     [Header("Config")]
     [SerializeField] private InkSystemSO inkSystem;
     [SerializeField] private string storyName;
+    [SerializeField] private bool autoPlay;
+    [SerializeField,ShowField(nameof(autoPlay))] private float autoPlayDelay = 3f;
     [SerializeField] private bool showHiddenChoice = true;
     
     [Header("Bucket")]
@@ -165,7 +166,7 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
 #endif
         
         _dialogBox = _dialogBoxes[dialogBoxName];
-        _dialogBox.Print($"{text} <color=\"red\">{subtext}</color>");
+        _dialogBox.Print($"{text} <color=\"red\">{subtext}</color>",AutoPlay);
         _skipped.Reset();
         
         SetupSpeaker(line);
@@ -187,6 +188,22 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
         }
         
     }
+    
+    Timer _autoPlayTimer;
+    private void AutoPlay()
+    {
+        if (autoPlay)
+        {
+            if (_autoPlayTimer == null)
+            {
+                _autoPlayTimer = new CountdownTimer(autoPlayDelay);
+                _autoPlayTimer.OnTimerStop += () => inkSystem.Next();
+            }
+            
+            _autoPlayTimer.Reset();
+            _autoPlayTimer.Start();
+        }
+    }
 
     private readonly Flip _skipped = new();
     public void SkipOrNext()
@@ -196,6 +213,7 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
             if( !_skipped && !_dialogBox.Done) _dialogBox.Skip();
             else
             {
+                _autoPlayTimer?.Stop();
                 inkSystem.Next();
             }
         }

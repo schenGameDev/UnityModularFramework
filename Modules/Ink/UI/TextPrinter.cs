@@ -2,21 +2,27 @@ using System;
 using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using EditorAttributes;
 using ModularFramework;
+using ModularFramework.Commons;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 [RequireComponent(typeof(TextMeshProUGUI))]
 public class TextPrinter : Marker
 {
     public enum PrintEffect {NONE, TYPE, FADE_IN}
+    private enum CursorEffect {NONE, NOISE, SYMBOL}
     
     [SerializeField] private PrintEffect defaultPrintEffect = PrintEffect.NONE;
+    [SerializeField] private GameObject endIndicator;
     [Header("Type out")]
     [SerializeField] private float timeGapBetweenLetters = 0.05f;
-    [SerializeField] private bool noise;
+
+    [SerializeField] private CursorEffect cursorEffect = CursorEffect.NONE;
+    [SerializeField, ShowField(nameof(cursorEffect), CursorEffect.SYMBOL)] private string cursorSymbol = "|";
+    [SerializeField, ShowField(nameof(cursorEffect), CursorEffect.SYMBOL)] private float blinkTime = 0.1f;
     [Header("Fade In")]
     [SerializeField] private float fadeInDuration = 0.5f;
     [SerializeField] private bool hideWhenNotUsed;
@@ -85,14 +91,16 @@ public class TextPrinter : Marker
     /// </summary>
     /// <param name="text"></param>
     /// <param name="effect"></param>
-    /// <param name="parameter"></param>
-    public void Print(string text, PrintEffect effect, string parameter)
+    /// <param name="callback"></param>
+    public void Print(string text, PrintEffect effect, Action callback = null)
     {
         Done = false;
+        endIndicator?.SetActive(false);
         if (effect == PrintEffect.NONE)
         {
             _textbox.text = text;
             Done = true;
+            callback?.Invoke();
             return;
         }
         
@@ -107,19 +115,23 @@ public class TextPrinter : Marker
         if (effect == PrintEffect.FADE_IN)
         {
             _textbox.text = text;
-            FadeIn(_cts.Token).Forget();
+            FadeIn(callback,_cts.Token).Forget();
         } 
         else if (effect == PrintEffect.TYPE)
         {
             _textbox.text = string.Empty;
-            if(noise) PrintTaskNoise(text, timeGapBetweenLetters, _cts.Token).Forget(); 
-            else PrintTask(text, timeGapBetweenLetters, _cts.Token).Forget();
+            if(cursorEffect == CursorEffect.NOISE) PrintTaskNoise(text, callback,_cts.Token).Forget(); 
+            else if(cursorEffect==CursorEffect.SYMBOL) PrintTaskCursor(text, callback, _cts.Token).Forget();
+            else  PrintTask(text, callback, _cts.Token).Forget();
+            
         }
     }
     
-    public void Print(string text) => Print(text, defaultPrintEffect, "");
+    public void Print(string text) => Print(text, defaultPrintEffect);
+    
+    public void Print(string text, Action callback) => Print(text, defaultPrintEffect, callback);
 
-    private async UniTaskVoid PrintTask(string text, float timeGap, CancellationToken token)
+    private async UniTaskVoid PrintTask(string text, Action callback,CancellationToken token)
     {
         gameObject.SetActive(true);
         bool lastCharIsPunctuation = false;
@@ -132,23 +144,24 @@ public class TextPrinter : Marker
             if (wait)
             {
                 soundPlayer?.SetVolume(0);
-                t = timeGap * 5;
+                t = timeGapBetweenLetters * 5;
             }
             else
             {
-                t = timeGap;
+                t = timeGapBetweenLetters;
                 soundPlayer?.ResetVolume();
             }
 
             lastCharIsPunctuation = punctuation;
-            bool isCanceled;
-            isCanceled= await UniTask.WaitForSeconds(t, cancellationToken:token).SuppressCancellationThrow();
+            bool isCanceled= await UniTask.WaitForSeconds(t, cancellationToken:token).SuppressCancellationThrow();
             if (isCanceled)
             {
                 if(_cts==null) {
                     _textbox.text = text; // canceled and no new print task
                     soundPlayer?.Stop();
                     Done = true;
+                    callback?.Invoke();
+                    endIndicator?.SetActive(true);
                 }
                 return;
             }
@@ -156,15 +169,83 @@ public class TextPrinter : Marker
         }
         soundPlayer?.Stop();
         Done = true;
+        callback?.Invoke();
+        endIndicator?.SetActive(true);
     }
     
-    private async UniTaskVoid PrintTaskNoise(string text, float timeGap, CancellationToken token)
+    private async UniTaskVoid PrintTaskCursor(string text, Action callback, CancellationToken token)
+    {
+        gameObject.SetActive(true);
+        bool lastCharIsPunctuation = false;
+        SoundPlayer soundPlayer = _soundManager?.PlayLoopSound(soundName);
+        Flip flip = new Flip();
+        bool printCursor = false;
+        float b = blinkTime;
+        
+        foreach (var ch in text)
+        {
+            bool punctuation = char.IsPunctuation(ch);
+            bool wait = !lastCharIsPunctuation && punctuation;
+            lastCharIsPunctuation = punctuation;
+            float gap;
+            if (wait)
+            {
+                soundPlayer?.SetVolume(0);
+                gap = timeGapBetweenLetters * 5;
+            }
+            else
+            {
+                gap = timeGapBetweenLetters;
+                soundPlayer?.ResetVolume();
+            }
+            
+            float t = gap;
+            string txt = _textbox.text;
+            
+            while (t > 0)
+            {
+                if (b >= blinkTime)
+                {
+                    printCursor = flip;
+                    b = 0;
+                }
+
+                b += Time.deltaTime;
+                
+                if(printCursor) _textbox.text = txt + cursorSymbol;
+                else _textbox.text = txt;
+                
+                t-=Time.deltaTime;
+                bool isCanceled = await UniTask.NextFrame(cancellationToken:token).SuppressCancellationThrow();
+                if (isCanceled)
+                {
+                    if(_cts==null) {
+                        _textbox.text = text; // canceled and no new print task
+                        Done = true;
+                        callback?.Invoke();
+                        endIndicator?.SetActive(true);
+                        soundPlayer?.Stop();
+                    }
+                    return;
+                }
+            }
+
+            _textbox.text = txt + ch;
+
+        }
+        soundPlayer?.Stop();
+        Done = true;
+        callback?.Invoke();
+        endIndicator?.SetActive(true);
+    }
+    
+    private async UniTaskVoid PrintTaskNoise(string text, Action callback, CancellationToken token)
     {
         gameObject.SetActive(true);
         SoundPlayer soundPlayer = _soundManager?.PlayLoopSound(soundName);
         foreach (var ch in text)
         {
-            float t = timeGap;
+            float t = timeGapBetweenLetters;
             string txt = _textbox.text;
             while (t > 0)
             {
@@ -176,6 +257,8 @@ public class TextPrinter : Marker
                     if(_cts==null) {
                         _textbox.text = text; // canceled and no new print task
                         Done = true;
+                        callback?.Invoke();
+                        endIndicator?.SetActive(true);
                         soundPlayer?.Stop();
                     }
                     return;
@@ -184,10 +267,12 @@ public class TextPrinter : Marker
             _textbox.text = txt + ch;
         }
         Done = true;
+        callback?.Invoke();
+        endIndicator?.SetActive(true);
         soundPlayer?.Stop();
     }
 
-    private async UniTaskVoid FadeIn(CancellationToken token)
+    private async UniTaskVoid FadeIn(Action callback, CancellationToken token)
     {
         float t = 0;
         bool isCancelled = false;
@@ -199,6 +284,7 @@ public class TextPrinter : Marker
         }
         
         _textbox.color.SetAlpha(1);
+        callback?.Invoke();
         Done = true;
     }
     

@@ -1,4 +1,4 @@
-using ModularFramework.Utility.Translation;
+using ModularFramework.Utility;
 using UnityEngine;
 
 /// <summary>
