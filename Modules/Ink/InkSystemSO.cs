@@ -62,7 +62,7 @@ public class InkSystemSO : GameSystem
         LoadStory(storyName,_currentStory);
 
         _currentStory.ObserveVariables(new List<string>(_keeperDict.Keys),
-            (string varName, object newValue) => {
+            (varName, newValue) => {
                 if(newValue == _keeperDict[varName]) return;
                 PutKeeper(varName, newValue);
                 varChangeChannel?.Raise((varName, PutKeeper(varName, newValue)));
@@ -157,12 +157,15 @@ public class InkSystemSO : GameSystem
             .OrElseDo(story.ResetState);
         InjectVariables(story);
         story.variablesState.ForEach(varName => PutKeeper(varName,story.variablesState[varName]));
-        story.BindExternalFunction(EnvironmentConstants.INK_FUNCTION_DO_TASK, (string task, string parameter, bool isBlocking) => DoTask(task, parameter, isBlocking));
+        story.BindExternalFunction(EnvironmentConstants.INK_FUNCTION_DO_TASK, 
+            (string task, string parameter, bool isBlocking) => DoTask(task, parameter, isBlocking),
+            false);
     }
 
     public void SaveStory(string storyName, Story story) {
         string saveJson =story.state.ToJson();
         SaveUtil.SaveState(storyName, saveJson);
+        SaveUtil.SaveState(EnvironmentConstants.KEY_CURRENT_STORY, storyName);
         SaveVariables();
     }
 
@@ -190,6 +193,7 @@ public class InkSystemSO : GameSystem
     }
 
     public void TaskComplete(string taskName) {
+        DebugUtil.DebugLog($"Task {taskName} is completed");
         _tasksRunning--;
         if(_tasksRunning == 0 && _taskBlocked) _taskBlocked = false;
         if(_taskBuffer.IsEmpty() && _lastChoiceIndex!=-1) {

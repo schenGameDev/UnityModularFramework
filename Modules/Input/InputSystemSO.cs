@@ -44,6 +44,12 @@ public class InputSystemSO : GameSystem, PlayerActions.IInputActions, ILive {
     private void OnDisable() {
         _input?.Input.Disable();
     }
+    
+    public override void OnStart()
+    {
+        base.OnStart();
+        Live = true;
+    }
 
     private void CheckInputDevice(InputAction.CallbackContext context) {
 

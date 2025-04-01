@@ -120,11 +120,7 @@ namespace ModularFramework {
             {
                 STATIC_REGISTRY_DICT.Add(sys.GetType(), so);
             }
-
-            if (sys is ILive l)
-            {
-                l.Live = true;
-            }
+            
             sys.OnStart();
             SYSTEMS.Add(sys);
         }

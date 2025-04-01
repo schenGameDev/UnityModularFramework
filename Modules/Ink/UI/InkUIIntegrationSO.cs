@@ -49,6 +49,9 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
     [RuntimeObject] private readonly Dictionary<string,List<Selectable>> _selectables = new();
     [RuntimeObject] private readonly Dictionary<string,TextPrinter> _dialogBoxes = new();
     [RuntimeObject] private readonly Dictionary<string,SpriteController> _sprites = new();
+    [RuntimeObject] private readonly Dictionary<string,Playable> _playables = new();
+    
+    [RuntimeObject] private OnetimeFlip _storyStarted;
     
     #region General
     public InkUIIntegrationSO() {
@@ -61,6 +64,16 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
         base.OnAwake(flags, references);
         _nextButton = references["NEXT_BUTTON"].GetComponent<Button>();
         _skipButton = references["SKIP_BUTTON"].GetComponent<Button>();
+    }
+
+    public override void OnStart()
+    {
+        base.OnStart();
+        if (!_storyStarted)
+        {
+            SaveUtil.GetState(EnvironmentConstants.KEY_CURRENT_STORY).Do(sn => storyName = sn);
+            inkSystem.StartStory(storyName);
+        }
     }
 
     private void OnEnable() {
@@ -114,8 +127,18 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
             }
             DebugUtil.Error("Duplicate gameObject " + transform.name, name);
         }
+        var playable = transform.GetComponent<Playable>();
+        if (playable)
+        {
+            if (_playables.TryAdd(transform.name, playable))
+            {
+                return;
+            }
+            DebugUtil.Error("Duplicate gameObject " + transform.name, name);
+        }
         
-        DebugUtil.Error("Selectable/TextPrinter/SpriteController is not found on gameObject " + transform.name, name);
+        
+        DebugUtil.Error("Selectable/TextPrinter/SpriteController/Playable is not found on gameObject " + transform.name, name);
     }
     
     public void Unregister(Transform transform)
@@ -136,6 +159,11 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
         if (spriteController)
         {
             _sprites.Remove(transform.name);
+        }
+        var playable = transform.GetComponent<Playable>();
+        if (playable)
+        {
+            _playables.Remove(transform.name);
         }
     }
     #endregion
@@ -292,6 +320,8 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
         if (taskName == EnvironmentConstants.TASK_CHANGE_SCENE)
         {
             GameBuilder.Instance.LoadScene(parameter,null,callback);
+            _dialogBoxes[CHAPTER_TITLE].gameObject.SetActive(true);
+            _dialogBoxes[CHAPTER_TITLE].Print(TranslationUtil.Translate(parameter));
         } else if (taskName == EnvironmentConstants.TASK_PLAY_SOUND)
         {
             sfxChannel.Raise(parameter);
@@ -300,13 +330,14 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
         {
             bgmChannel.Raise(parameter);
             callback?.Invoke(taskName);
+        } else if (taskName == EnvironmentConstants.TASK_PLAY_CG)
+        {
+            _playables[taskName].Play(callback);
         }
-        
-        // character emotion change (fade inout)
-        // character change (fade inout)
-        // show image
-        // play animation
-        // sprites (name, img name)?
+        else
+        {
+            throw new Exception("Unknown task type: " + taskName);
+        }
     }
     
     #endregion
