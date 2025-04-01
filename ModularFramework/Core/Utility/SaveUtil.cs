@@ -67,10 +67,15 @@ namespace ModularFramework.Utility
             if(_saveFile == null) Load();
             return _saveFile.values;
         }
-
-        public static Optional<AnyValue> GetState(string key) {
+        
+        public static Optional<AnyValue> GetValue(string key) {
             if(_saveFile == null) Load();
             return _saveFile.Get(key);
+        }
+        
+        public static Optional<string> GetState(string key) {
+            if(_saveFile == null) Load();
+            return _saveFile.GetState(key);
         }
 
         public static (int,SaveFile)[] GetOccupiedSlots() {
@@ -92,7 +97,7 @@ namespace ModularFramework.Utility
 
     public class SaveFile
     {
-        public Dictionary<string,string> states;
+        public Dictionary<string,string> states; // jsons, story state, note
         public Dictionary<string,AnyValue> values;
         public DateTime saveTime;
 

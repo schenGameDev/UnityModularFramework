@@ -59,7 +59,7 @@ namespace ModularFramework
         #region Scene
         private void LoadStartScene() => LoadScene(startingScene);
 
-        public void LoadScene(string sceneName, SceneTransitionSO transitionProfile = null, Action<string> callback = null) {
+        public void LoadScene(string sceneName, SceneTransitionSO transitionProfile = null, Action callback = null) {
             if(sceneName == CurrentScene || sceneName.IsEmpty()) return;
 
             if(CurrentScene != null && CurrentScene.NonEmpty()) {
@@ -83,7 +83,7 @@ namespace ModularFramework
                 Scene newScene = SceneManager.GetSceneByName(sceneName);
                 SceneManager.SetActiveScene(newScene);
                 CurrentScene = sceneName;
-                callback?.Invoke("changeScene");
+                callback?.Invoke();
             };
 
         }

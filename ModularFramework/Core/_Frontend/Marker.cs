@@ -37,7 +37,7 @@ namespace ModularFramework {
         protected Optional<T> GetRegistry<T>() where T : ScriptableObject,IRegistrySO 
             => typeof(T) == typeof(GameSystem)? GameRunner.GetSystemRegistry<T>() : GameRunner.Instance.GetRegistry<T>();
 
-        private void RegisterAll()
+        protected virtual void RegisterAll()
         {
             HashSet<int> foundGroups = new();
             List<int> unfoundTypeIndex = new();

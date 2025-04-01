@@ -8,6 +8,7 @@ using System;
 using ModularFramework.Utility;
 using ModularFramework.Commons;
 using AYellowpaper.SerializedCollections;
+using Newtonsoft.Json;
 using ValueType = ModularFramework.Commons.ValueType;
 
 /// <summary>
@@ -160,6 +161,7 @@ public class InkSystemSO : GameSystem
         story.BindExternalFunction(EnvironmentConstants.INK_FUNCTION_DO_TASK, 
             (string task, string parameter, bool isBlocking) => DoTask(task, parameter, isBlocking),
             false);
+        LoadNotes();
     }
 
     public void SaveStory(string storyName, Story story) {
@@ -167,6 +169,7 @@ public class InkSystemSO : GameSystem
         SaveUtil.SaveState(storyName, saveJson);
         SaveUtil.SaveState(EnvironmentConstants.KEY_CURRENT_STORY, storyName);
         SaveVariables();
+        SaveNotes();
     }
 
 #endregion
@@ -308,6 +311,24 @@ public class InkSystemSO : GameSystem
     }
 
 #endregion
+
+    #region Note
+    [RuntimeObject] public readonly List<string> notes = new ();
+    private void SaveNotes()
+    {
+        if (notes.IsEmpty()) return;
+        var json = JsonConvert.SerializeObject(notes);
+        SaveUtil.SaveState(EnvironmentConstants.KEY_NOTES, json);
+    }
+
+    private void LoadNotes()
+    {
+        notes.Clear();
+        SaveUtil.GetState(EnvironmentConstants.KEY_NOTES).Do(n => notes.AddRange(JsonConvert.DeserializeObject<List<string>>(n)));
+    }
+
+
+    #endregion
 }
 
 public enum InkStage {

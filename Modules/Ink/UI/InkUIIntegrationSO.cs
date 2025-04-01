@@ -71,7 +71,7 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
         base.OnStart();
         if (!_storyStarted)
         {
-            SaveUtil.GetState(EnvironmentConstants.KEY_CURRENT_STORY).Do(sn => storyName = sn);
+            SaveUtil.GetValue(EnvironmentConstants.KEY_CURRENT_STORY).Do(sn => storyName = sn);
             inkSystem.StartStory(storyName);
         }
     }
@@ -319,9 +319,9 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
 
         if (taskName == EnvironmentConstants.TASK_CHANGE_SCENE)
         {
-            GameBuilder.Instance.LoadScene(parameter,null,callback);
-            _dialogBoxes[CHAPTER_TITLE].gameObject.SetActive(true);
-            _dialogBoxes[CHAPTER_TITLE].Print(TranslationUtil.Translate(parameter));
+            GameBuilder.Instance.LoadScene(parameter,null,()=>SceneLoaded(parameter,callback));
+            // _dialogBoxes[CHAPTER_TITLE].gameObject.SetActive(true);
+            // _dialogBoxes[CHAPTER_TITLE].Print(TranslationUtil.Translate(parameter));
         } else if (taskName == EnvironmentConstants.TASK_PLAY_SOUND)
         {
             sfxChannel.Raise(parameter);
@@ -332,13 +332,30 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
             callback?.Invoke(taskName);
         } else if (taskName == EnvironmentConstants.TASK_PLAY_CG)
         {
-            _playables[taskName].Play(callback);
+            _playables[taskName]?.Play(callback);
+            inkTaskChannel.Raise((taskName, parameter, null));
+        } else if (taskName == EnvironmentConstants.TASK_ADD_NOTE)
+        {
+            if (!inkSystem.notes.Contains(parameter))
+            {
+                inkSystem.notes.Add(parameter);
+                inkTaskChannel.Raise((taskName, parameter, null));
+            }
+            callback?.Invoke(taskName);
         }
         else
         {
             throw new Exception("Unknown task type: " + taskName);
         }
     }
+
+    private void SceneLoaded(string sceneName,  Action<string> callback)
+    {
+        inkTaskChannel.Raise((EnvironmentConstants.TASK_CHANGE_SCENE, sceneName, null));
+        callback?.Invoke(EnvironmentConstants.TASK_CHANGE_SCENE);
+    }
+    
+    public List<string> ShowAllNotes() => inkSystem.notes;
     
     #endregion
 }

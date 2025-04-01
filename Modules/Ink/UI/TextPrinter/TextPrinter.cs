@@ -1,14 +1,19 @@
 using System;
+using EditorAttributes;
 using ModularFramework;
 using TMPro;
 using UnityEngine;
 
 public class TextPrinter : Marker
 {
-    
+    protected enum Type {NONE, EVENT_LISTENER, INK_TASK_LISTENER}
     [SerializeField] protected GameObject endIndicator;
     [SerializeField] private bool hideWhenNotUsed;
-    [SerializeField] private EventChannel<string> eventChannel;
+    [SerializeField] protected Type type;
+    [SerializeField, ShowField(nameof(type), Type.EVENT_LISTENER)] private EventChannel<string> eventChannel;
+    [SerializeField, ShowField(nameof(type), Type.INK_TASK_LISTENER)] private EventChannel<(string,string,Action<string>)> inkTaskChannel;
+
+    [SerializeField, ShowField(nameof(type), Type.INK_TASK_LISTENER)] private string taskName;
     [SerializeField] protected string soundName;
     
     protected SoundManagerSO SoundManager;
@@ -36,13 +41,20 @@ public class TextPrinter : Marker
     protected override void OnEnable()
     {
         base.OnEnable();
-        eventChannel?.AddListener(Print);
+        if(type == Type.EVENT_LISTENER) eventChannel?.AddListener(Print);
+        else if(type == Type.INK_TASK_LISTENER) inkTaskChannel?.AddListener(Print);
     }
 
     protected override void OnDisable()
     {
         base.OnDisable();
         eventChannel?.RemoveListener(Print);
+        inkTaskChannel?.RemoveListener(Print);
+    }
+
+    protected override void RegisterAll()
+    {
+        if(type == Type.NONE) base.RegisterAll();
     }
 
     public virtual void Skip() { }
@@ -72,6 +84,10 @@ public class TextPrinter : Marker
     }
 
     public void Print(string text) => Print(text, null);
-    
-    
+
+    public void Print((string,string,Action<string>) inkTask)
+    {
+        if(inkTask.Item1!=taskName) return;
+        Print(inkTask.Item2, () => inkTask.Item3(inkTask.Item1));
+    }
 }
