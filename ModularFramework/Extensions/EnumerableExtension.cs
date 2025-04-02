@@ -6,7 +6,17 @@ public static class EnumerableExtension {
     public static void ForEach<T>(this IEnumerable<T> sequence, Action<T> action) {
         foreach (var item in sequence) action(item);
     }
-
+    
+    public static void ForEachOrdered<T>(this IEnumerable<T> sequence, Action<int,T> action)
+    {
+        int index = 0;
+        foreach (var item in sequence)
+        {
+            int i = index++;
+            action(i,item);
+        }
+    }
+    
     public static IEnumerable<T> Peek<T>(this IEnumerable<T> source, Action<T> action)
     {
         if (source == null) throw new ArgumentNullException(nameof(source));

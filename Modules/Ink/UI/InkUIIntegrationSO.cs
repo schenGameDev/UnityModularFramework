@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityTimer;
 
-[CreateAssetMenu(fileName = "InkUIIntegration_SO", menuName = "Game Module/Ink UI Integration")]
+[CreateAssetMenu(fileName = "InkUIIntegration_SO", menuName = "Game Module/Ink/Ink UI Integration")]
 public class InkUIIntegrationSO : GameModule, IRegistrySO {
     // key selectable
     private static readonly string DEFAULT_CHOICE_GROUP = "DEFAULT";
@@ -71,7 +71,7 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
         base.OnStart();
         if (!_storyStarted)
         {
-            SaveUtil.GetValue(EnvironmentConstants.KEY_CURRENT_STORY).Do(sn => storyName = sn);
+            SaveUtil.GetValue(InkConstants.KEY_CURRENT_STORY).Do(sn => storyName = sn);
             inkSystem.StartStory(storyName);
         }
     }
@@ -317,24 +317,24 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
         string parameter = task.Item2;
         Action<string> callback = task.Item3;
 
-        if (taskName == EnvironmentConstants.TASK_CHANGE_SCENE)
+        if (taskName == InkConstants.TASK_CHANGE_SCENE)
         {
             GameBuilder.Instance.LoadScene(parameter,null,()=>SceneLoaded(parameter,callback));
             // _dialogBoxes[CHAPTER_TITLE].gameObject.SetActive(true);
             // _dialogBoxes[CHAPTER_TITLE].Print(TranslationUtil.Translate(parameter));
-        } else if (taskName == EnvironmentConstants.TASK_PLAY_SOUND)
+        } else if (taskName == InkConstants.TASK_PLAY_SOUND)
         {
             sfxChannel.Raise(parameter);
             callback?.Invoke(taskName);
-        } else if (taskName == EnvironmentConstants.TASK_PLAY_BGM)
+        } else if (taskName == InkConstants.TASK_PLAY_BGM)
         {
             bgmChannel.Raise(parameter);
             callback?.Invoke(taskName);
-        } else if (taskName == EnvironmentConstants.TASK_PLAY_CG)
+        } else if (taskName == InkConstants.TASK_PLAY_CG)
         {
             _playables[taskName]?.Play(callback);
             inkTaskChannel.Raise((taskName, parameter, null));
-        } else if (taskName == EnvironmentConstants.TASK_ADD_NOTE)
+        } else if (taskName == InkConstants.TASK_ADD_NOTE)
         {
             if (!inkSystem.notes.Contains(parameter))
             {
@@ -351,8 +351,8 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
 
     private void SceneLoaded(string sceneName,  Action<string> callback)
     {
-        inkTaskChannel.Raise((EnvironmentConstants.TASK_CHANGE_SCENE, sceneName, null));
-        callback?.Invoke(EnvironmentConstants.TASK_CHANGE_SCENE);
+        inkTaskChannel.Raise((InkConstants.TASK_CHANGE_SCENE, sceneName, null));
+        callback?.Invoke(InkConstants.TASK_CHANGE_SCENE);
     }
     
     public List<string> ShowAllNotes() => inkSystem.notes;

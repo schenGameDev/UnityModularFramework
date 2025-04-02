@@ -1,4 +1,4 @@
-internal static class EnvironmentConstants {
+public static class InkConstants {
     
     public static readonly string KEY_CURRENT_STORY = "CurrentStory";
     public static readonly string KEY_NOTES = "Notes";

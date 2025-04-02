@@ -21,6 +21,6 @@ public class Playable  : Marker, ILive
     public void End() {
         Live = false;
         gameObject.SetActive(false);
-        _onTaskComplete?.Invoke(EnvironmentConstants.TASK_PLAY_CG);
+        _onTaskComplete?.Invoke(InkConstants.TASK_PLAY_CG);
     }
 }

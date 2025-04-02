@@ -10,7 +10,22 @@ public static class CollectionsExtension {
             collection.Add(item);
         }
     }
-
+    
+    public static bool ContainsAll<T>(this ICollection<T> collection, IEnumerable<T> others) {
+        foreach (T i in others)
+        {
+            if(!collection.Contains(i)) return false;
+        }
+        return true;
+    }
+    
+    public static bool ContainsAny<T>(this ICollection<T> collection, IEnumerable<T> others) {
+        foreach (T i in others)
+        {
+            if(collection.Contains(i)) return true;
+        }
+        return false;
+    }
     public static void RetainAll<T>(this ICollection<T> collection, IEnumerable<T> others) {
         var toKeep = others is HashSet<T>? others : new HashSet<T>(others);
         collection.RemoveWhere(v => !toKeep.Contains(v));

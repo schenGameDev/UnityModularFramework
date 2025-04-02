@@ -1,8 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ModularFramework.Commons;
 
 public static class DictionaryExtension {
+    public static Optional<TValue> Get<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key)
+    {
+        if(dict.TryGetValue(key, out TValue v)) {
+            return v;
+        }
+        return Optional<TValue>.None();
+    }
+    
     public static TValue AddIfAbsent<TKey,TValue>(this IDictionary<TKey, TValue> dict,
                                                 TKey key, TValue value) {
         if(dict.TryGetValue(key, out TValue v)) {

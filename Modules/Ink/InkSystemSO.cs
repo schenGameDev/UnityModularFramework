@@ -8,14 +8,13 @@ using System;
 using ModularFramework.Utility;
 using ModularFramework.Commons;
 using AYellowpaper.SerializedCollections;
-using Newtonsoft.Json;
 using ValueType = ModularFramework.Commons.ValueType;
 
 /// <summary>
 /// load and save story, send and receive variables.
 /// read var from story into memory -> any update go in story -> save story state -> clean all memory
 /// </summary>
-[CreateAssetMenu(fileName = "InkSystem_SO", menuName = "Game Module/Ink System")]
+[CreateAssetMenu(fileName = "InkSystem_SO", menuName = "Game Module/Ink/Ink System")]
 public class InkSystemSO : GameSystem
 {
     [Header("Config")]
@@ -158,7 +157,7 @@ public class InkSystemSO : GameSystem
             .OrElseDo(story.ResetState);
         InjectVariables(story);
         story.variablesState.ForEach(varName => PutKeeper(varName,story.variablesState[varName]));
-        story.BindExternalFunction(EnvironmentConstants.INK_FUNCTION_DO_TASK, 
+        story.BindExternalFunction(InkConstants.INK_FUNCTION_DO_TASK, 
             (string task, string parameter, bool isBlocking) => DoTask(task, parameter, isBlocking),
             false);
         LoadNotes();
@@ -167,7 +166,7 @@ public class InkSystemSO : GameSystem
     public void SaveStory(string storyName, Story story) {
         string saveJson =story.state.ToJson();
         SaveUtil.SaveState(storyName, saveJson);
-        SaveUtil.SaveState(EnvironmentConstants.KEY_CURRENT_STORY, storyName);
+        SaveUtil.SaveState(InkConstants.KEY_CURRENT_STORY, storyName);
         SaveVariables();
         SaveNotes();
     }
@@ -317,14 +316,14 @@ public class InkSystemSO : GameSystem
     private void SaveNotes()
     {
         if (notes.IsEmpty()) return;
-        var json = JsonConvert.SerializeObject(notes);
-        SaveUtil.SaveState(EnvironmentConstants.KEY_NOTES, json);
+        var json = JsonUtility.ToJson(notes);
+        SaveUtil.SaveState(InkConstants.KEY_NOTES, json);
     }
 
     private void LoadNotes()
     {
         notes.Clear();
-        SaveUtil.GetState(EnvironmentConstants.KEY_NOTES).Do(n => notes.AddRange(JsonConvert.DeserializeObject<List<string>>(n)));
+        SaveUtil.GetState(InkConstants.KEY_NOTES).Do(n => notes.AddRange(JsonUtility.FromJson<List<string>>(n)));
     }
 
 
