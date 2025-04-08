@@ -2,38 +2,40 @@ using EditorAttributes;
 using Unity.Mathematics;
 using UnityEngine;
 using ModularFramework.Utility;
+using UnityEngine.Serialization;
 
 public class LockTargetCamera : MovingCameraBase
 {
     // Player forward direction is target, Player locate at left side of screen
 
-    [SerializeField] Transform _player;
+    [SerializeField] Transform player;
 
-
-    [FoldoutGroup("Player",nameof(_playerOffCenter), nameof(_rightSide),nameof(_focusRadius))]
+    
+    [FoldoutGroup("Player",nameof(playerOffCenter), nameof(rightSide),nameof(focusRadius), nameof(fasterWhenTargetAtScreenEdge), nameof(speedBoostExponential))]
     [SerializeField] private Void playerPlaceGroup;
 
-    [FoldoutGroup("Camera Height",nameof(_camHeightCurve),nameof(_camBackwardCurve),nameof(_offCenterCurve),nameof(_minViewAngleOutOfDistance))]
+    [FoldoutGroup("Camera Height",nameof(camHeightCurve),nameof(camBackwardCurve),nameof(offCenterCurve),nameof(minViewAngleOutOfDistance))]
     [SerializeField] private Void cameraHeightGroup;
 
-    [HideInInspector,SerializeField] private AnimationCurve _camHeightCurve;
-    [HideInInspector,SerializeField] private AnimationCurve _camBackwardCurve;
-    [HideInInspector,SerializeField,Suffix("[0,1]")] private AnimationCurve _offCenterCurve;
-    [HideInInspector,SerializeField,Rename("View Angle Low Limit X Outside Y m"), Suffix("(Horizon 0 deg)")] private Vector2 _minViewAngleOutOfDistance;
+    [HideInInspector,SerializeField] private AnimationCurve camHeightCurve;
+    [HideInInspector,SerializeField] private AnimationCurve camBackwardCurve;
+    [HideInInspector,SerializeField,Suffix("[0,1]")] private AnimationCurve offCenterCurve;
+    [HideInInspector,SerializeField,Rename("View Angle Low Limit X Outside Y m"), Suffix("(Horizon 0 deg)")] private Vector2 minViewAngleOutOfDistance;
 
 
-    [FoldoutGroup("Closeup",nameof(_closeUpNoRollAngle))]
+    [FoldoutGroup("Closeup",nameof(closeUpNoRollAngle))]
     [SerializeField] private Void cameraCloseupGroup;
 
-    [HideInInspector,SerializeField] private float _playerOffCenter=2;
-    [HideInInspector,SerializeField,ReadOnly] private bool _rightSide;
+    [HideInInspector,SerializeField] private float playerOffCenter=2;
+    [HideInInspector,SerializeField] private bool fasterWhenTargetAtScreenEdge;
+    [HideInInspector,SerializeField, Range(1,4),Rename("Roll Acc ^X"), ShowField(nameof( fasterWhenTargetAtScreenEdge))] 
+    private int speedBoostExponential = 3;
+    [HideInInspector,SerializeField,ReadOnly] private bool rightSide;
 
     // [HideInInspector,SerializeField,Rename("Don't Switch Side Within"),Suffix("m")]  private float _closeUpDistance = 3f;
-    [HideInInspector,SerializeField,Rename("Roll Slow Within"),Suffix("deg")]  private float _closeUpNoRollAngle = 5;
+    [HideInInspector,SerializeField,Rename("Roll Slow Within"),Suffix("deg")]  private float closeUpNoRollAngle = 5;
 
-
-
-    [HideInInspector,SerializeField,Range(0,1)] private float _focusRadius=0.3f;
+    [HideInInspector,SerializeField,Range(0,1)] private float focusRadius=0.3f;
     private LockManagerSO _lockManager;
 
     public LockTargetCamera() {
@@ -53,29 +55,35 @@ public class LockTargetCamera : MovingCameraBase
         base.Update();
         if(isLive) {
             MoveCamera();
-            if(_playerOffCenter==0) RollCamera();
+            if (fasterWhenTargetAtScreenEdge)
+            {
+                _targetOffCenterRatio = GetOffCenterRatio();
+                _rollAccModifier = _targetOffCenterRatio <= 0.5f ? 1 : (1 + math.pow((_targetOffCenterRatio - 0.5f) * 10, speedBoostExponential));
+            }
+            
+            if(playerOffCenter==0) RollCamera();
             else {
-                if(_isMovingToCenter) {
+                if(isMovingToCenter) {
                     RollCamera();
-                    _isMovingToCenter = !IsTargetInScreenCenter();
+                    isMovingToCenter = !IsTargetInScreenCenter();
                 } else {
-                    _isMovingToCenter = !IsTargetInFocusRadius();
+                    isMovingToCenter = !IsTargetInFocusRadius();
                 }
             }
         }
     }
 
-    [ReadOnly,SerializeField] private bool _isMovingToCenter = true;
-    public bool LostTarget() => _lockManager.LockTarget==null;
-    private bool IsTargetInFocusRadius() => IsTargetInScreenRadius(_focusRadius);
+    private float _targetOffCenterRatio;
+
+    [ReadOnly,SerializeField] private bool isMovingToCenter = true;
+    public bool LostTarget() => !_lockManager.LockTarget;
+    private bool IsTargetInFocusRadius() => IsTargetInScreenRadius(focusRadius);
     private bool IsTargetInScreenCenter() => IsTargetInScreenRadius(0.05f);
 
     private bool IsTargetInScreenRadius(float radius) {
         if(LostTarget()) return false;
-        Vector2 targetScreenPos = Camera.main.WorldToScreenPoint(_lockManager.LockTarget.position);
-        float maxR = math.min(Screen.width / 2, Screen.height / 2);
-        float offCenterDistanceSqr = Vector2.SqrMagnitude(targetScreenPos - new Vector2(Screen.width / 2, Screen.height / 2));
-        return offCenterDistanceSqr <  math.pow(radius * maxR,2);
+        var offcenterRatio = fasterWhenTargetAtScreenEdge ? _targetOffCenterRatio : GetOffCenterRatio(); 
+        return offcenterRatio < radius;
     }
 
     private void MoveCamera() {
@@ -87,18 +95,18 @@ public class LockTargetCamera : MovingCameraBase
             return;
         }
 
-        var targetToPlayer = _lockManager.LockTarget.position - _player.position;
+        var targetToPlayer = _lockManager.LockTarget.position - player.position;
         var dist = targetToPlayer.magnitude;
         var camHeight = GetCameraHeight(dist);
 
         float centerDist = 1;
         bool isCenter = dist < centerDist;
 
-        bool noOffCenter = _playerOffCenter == 0;
+        bool noOffCenter = playerOffCenter == 0;
 
         Vector3 focusRelativeToPlayer = Vector3.zero;
         if(!isCenter && !noOffCenter) {
-            float offCenterDist = _playerOffCenter * _offCenterCurve.Evaluate(dist);
+            float offCenterDist = playerOffCenter * offCenterCurve.Evaluate(dist);
             var targetToPlayerXZ = new Vector3(targetToPlayer.x, targetToPlayer.y - 1, targetToPlayer.z);
             focusRelativeToPlayer = Vector3.Cross(targetToPlayer,targetToPlayerXZ).normalized * offCenterDist;
         }
@@ -128,13 +136,13 @@ public class LockTargetCamera : MovingCameraBase
 
             float switchSideTolerance = 0.5f;
 
-            if(!_rightSide && distLeft - distRight > switchSideTolerance) {
-                _rightSide = true;
-            } else if(_rightSide && distRight - distLeft > switchSideTolerance) {
-                _rightSide = false;
+            if(!rightSide && distLeft - distRight > switchSideTolerance) {
+                rightSide = true;
+            } else if(rightSide && distRight - distLeft > switchSideTolerance) {
+                rightSide = false;
             }
 
-            camTarget = _rightSide ? rightCamTarget : leftCamTarget;
+            camTarget = rightSide ? rightCamTarget : leftCamTarget;
         }
 
         if(FocusPointChase(camTarget)) {
@@ -142,33 +150,42 @@ public class LockTargetCamera : MovingCameraBase
         }
 
     }
+    
+    private float GetOffCenterRatio()
+    {
+        Vector2 targetScreenPos = Camera.main.WorldToScreenPoint(_lockManager.LockTarget.position);
+        var screenCenter = new Vector2(Screen.width / 2, Screen.height / 2);
+        var screenEdgeDistance = math.min(screenCenter.x, screenCenter.y);
+        return Vector2.Distance(targetScreenPos, screenCenter) /  screenEdgeDistance;
+    }
 
     Vector3 _currentOffset;
     private float GetCameraHeight(float dist)
     {
-        var camHeight = _camHeightCurve.Evaluate(dist);
+        var camHeight = camHeightCurve.Evaluate(dist);
         UpdateCurrentOffset(dist);
         SetFollowOffset(_currentOffset);
         return camHeight;
     }
 
     private void UpdateCurrentOffset(float dist) {
-        _currentOffset = cameraOffSet - new Vector3(0,0, _camBackwardCurve.Evaluate(dist));
+        _currentOffset = cameraOffSet - new Vector3(0,0, camBackwardCurve.Evaluate(dist));
     }
 
     public override Vector3 Offset => _currentOffset;
 
     private Vector3 GetFocusPointLocation(Vector3 focusRelativeToPlayer, float camHeight) {
-        return new Vector3(_player.position.x + focusRelativeToPlayer.x, _player.position.y + camHeight,
-                           _player.position.z + focusRelativeToPlayer.z);
+        return new Vector3(player.position.x + focusRelativeToPlayer.x, player.position.y + camHeight,
+                           player.position.z + focusRelativeToPlayer.z);
     }
 
+    private float _rollAccModifier = 1;
     private void RollCamera() {
-        if(_lockManager.LockTarget==null) return;
-        var sqrDist = (_lockManager.LockTarget.position - _player.position).sqrMagnitude;
+        if(!_lockManager.LockTarget) return;
+        var sqrDist = (_lockManager.LockTarget.position - player.position).sqrMagnitude;
         var dir = _lockManager.LockTarget.position - focusPoint.position;
 
-        if(sqrDist > _minViewAngleOutOfDistance.y * _minViewAngleOutOfDistance.y &&
+        if(sqrDist > minViewAngleOutOfDistance.y * minViewAngleOutOfDistance.y &&
            dir.y < 0) {
             //out of range
             dir.y = 0;
@@ -179,8 +196,8 @@ public class LockTargetCamera : MovingCameraBase
         var roll =Quaternion.RotateTowards(focusPoint.rotation,targetRot,rollSpeed * Time.deltaTime);
         focusPoint.eulerAngles = new Vector3(roll.eulerAngles.x, roll.eulerAngles.y, 0);
 
-        if(Quaternion.Angle(focusPoint.rotation, targetRot) > _closeUpNoRollAngle) {
-            RollAccelerate();
+        if(Quaternion.Angle(focusPoint.rotation, targetRot) > closeUpNoRollAngle) {
+            RollAccelerate(_rollAccModifier);
         } else {
             rollSpeed = rollStartSpeed;
         }
@@ -188,16 +205,16 @@ public class LockTargetCamera : MovingCameraBase
 
     public override void OnEnter(CameraTransitionType transitionType) {
         base.OnEnter(transitionType);
-        var targetToPlayer = _lockManager.LockTarget.position - _player.position;
+        var targetToPlayer = _lockManager.LockTarget.position - player.position;
         UpdateCurrentOffset(targetToPlayer.magnitude);
         if(transitionType != CameraTransitionType.NONE) MatchPrevCamPosition();
         if(transitionType == CameraTransitionType.MATCH_LAST_ROT) {
             DebugUtil.Warn("Unsupported transition type " + CameraTransitionType.MATCH_LAST_ROT);
         }
-        _isMovingToCenter = true;
+        isMovingToCenter = true;
     }
 
-    protected override Transform CameraFocusSpawnPoint() => _player;
+    protected override Transform CameraFocusSpawnPoint() => player;
 
     public bool LockTargetExist() => _lockManager.LockTargetExist();
 

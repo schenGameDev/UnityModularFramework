@@ -160,9 +160,9 @@ public abstract class MovingCameraBase : CameraBase {
     protected bool FocusPointChase(Vector3 target) => FocusPointChase(target, followAcceleration, friction, followMaxSpeed);
     protected void FocusPointDecelerate() => FocusPointDecelerate(followAcceleration + friction);
 
-    protected void RollAccelerate() {
+    protected void RollAccelerate(float accelerationModifier = 1f) {
         if(rollSpeed<rollStartSpeed) rollSpeed = rollStartSpeed;
-        else if(rollSpeed < rollMaxSpeed) rollSpeed = Mathf.Min(rollSpeed + rollAcceleration * Time.deltaTime, rollMaxSpeed);
+        else if(rollSpeed < rollMaxSpeed) rollSpeed = Mathf.Min(rollSpeed + accelerationModifier * rollAcceleration * Time.deltaTime, rollMaxSpeed);
         else if(rollSpeed > rollMaxSpeed) rollSpeed = rollMaxSpeed;
     }
 
