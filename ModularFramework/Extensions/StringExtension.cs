@@ -5,6 +5,7 @@ public static class StringExtension {
 
     public static string SubstringBetween(this string str, int start, int endExclusive) {
         int len = endExclusive - start;
-        return str.Substring(start, endExclusive-start);
+        if (len <= 0) return str;
+        return str.Substring(start, len);
     }
 }

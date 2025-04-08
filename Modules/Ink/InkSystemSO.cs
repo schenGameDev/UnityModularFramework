@@ -5,6 +5,8 @@ using ModularFramework;
 using UnityEngine;
 using EditorAttributes;
 using System;
+using System.Text;
+using System.Text.RegularExpressions;
 using ModularFramework.Utility;
 using ModularFramework.Commons;
 using AYellowpaper.SerializedCollections;
@@ -17,10 +19,13 @@ using ValueType = ModularFramework.Commons.ValueType;
 [CreateAssetMenu(fileName = "InkSystem_SO", menuName = "Game Module/Ink/Ink System")]
 public class InkSystemSO : GameSystem
 {
+    private const string IN_TEXT_CODE_PATTERN = "[{][^{}]+[}]";
+    
     [Header("Config")]
     [SerializeField] private InkStoryBucket stories;
     [SerializeField] private InkTagDefBucket[] tagDefBuckets;
     [SerializeField] private Bucket varNameBucket;
+    [SerializeField] private Bucket codeReplaceBucket;
     [SerializeField] private bool saveLog;
 
     [FoldoutGroup("Event Channels", nameof(inkTextChannel), nameof(varChangeChannel), nameof(inkTaskChannel))]
@@ -113,7 +118,7 @@ public class InkSystemSO : GameSystem
                 inkTextChannel.Raise(Either<InkLine,InkChoice>.FromRight(_currentChoice));
                 stage = InkStage.WAIT_CHOICE;
             } else {
-                string text = _currentStory.Continue();
+                string text = ReplaceCode(_currentStory.Continue());
                 List<InkTag> tags = _currentStory.currentTags==null? new() : _currentStory.currentTags.Select(t=>InkTag.Of(t,tagDefBuckets,Get)).ToList();
                 _currentLine = new InkLine(text,tags);
                 SaveLog(text);
@@ -144,11 +149,38 @@ public class InkSystemSO : GameSystem
 
         for(int i=0;i<_currentStory.currentChoices.Count;i++) {
             var choice = _currentStory.currentChoices[i];
-            string text = choice.text;
+            string text = ReplaceCode(choice.text);
             List<InkTag> tags =choice.tags==null? new() : choice.tags.Select(t=>InkTag.Of(t,tagDefBuckets,Get)).ToList();
             choices.Add(new(text,tags, true));
         }
         return new InkChoice(choices,ExplainCondition);
+    }
+    
+    private string ReplaceCode(string text)
+    {
+        if(!codeReplaceBucket || text == null) return text;
+        
+        try
+        {
+            var matches = Regex.Matches(text, IN_TEXT_CODE_PATTERN, RegexOptions.None,
+                TimeSpan.FromSeconds(0.2f));
+            if(matches.Count == 0) return text;
+            
+            StringBuilder sb = new();
+            int i = 0;
+            foreach (Match match in matches)
+            {
+                sb.Append(text.SubstringBetween(i, match.Index));
+                i = match.Index + match.Length;
+                sb.Append(codeReplaceBucket.Get(match.Value.Substring(1, match.Length - 1)));
+            }
+            return sb.ToString();
+        }
+        catch (RegexMatchTimeoutException) {
+            // Do Nothing: Assume that timeout represents no match.
+        }
+        
+        return text;
     }
 
     private void LoadStory(string storyName, Story story) {
