@@ -7,8 +7,8 @@ using System;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 
-[RequireComponent(typeof(CinemachineCamera))]
-public abstract class CameraBase : Marker
+[RequireComponent(typeof(CinemachineCamera), typeof(Marker))]
+public abstract class CameraBase : MonoBehaviour,IMark
 {
 
     [Header("Config")]
@@ -20,31 +20,32 @@ public abstract class CameraBase : Marker
 
     protected CameraManagerSO cameraManager;
 
-    [ReadOnly] public CameraType Type;
-    [ReadOnly,SerializeField] protected bool isLive;
+    [ReadOnly] public CameraType type;
+
+    [SerializeField] public float povChangeSpeed = 20;
 
     [HideInChildren(typeof(EmptyCamera))] public virtual Vector3 Offset => Vector3.zero;
 
 #region General
     [SerializeField,Rename("POV Change Speed During Transition")] float _povDelta = 20;
     [ReadOnly] public Vector3 Momentum;
+    
+    public virtual Type[][] RegistryTypes =>new[] {new[]{typeof(CameraManagerSO)}};
 
-    public CameraBase() {
-        registryTypes = new(Type,int)[] {(typeof(CameraManagerSO), 1)};
-    }
-
-    public virtual void OnEnter(CameraTransitionType transitionType) {
-        isLive = true;
+    public virtual void OnEnter(CameraTransitionType transitionType)
+    {
+        enabled = true;
     }
 
     public virtual void OnExit() {
-        isLive = false;
         SaveCurrentPosAndRot();
+        ResetPOV();
+        enabled = false;
     }
-
-    protected override void Start()
+    
+    protected virtual void Start()
     {
-        cameraManager = GetRegistry<CameraManagerSO>().Get();
+        cameraManager = GetComponent<Marker>().GetRegistry<CameraManagerSO>().Get();
         _vc = GetComponent<CinemachineCamera>();
         _pov = _vc.Lens.FieldOfView;
         POV = _pov;
@@ -54,9 +55,8 @@ public abstract class CameraBase : Marker
         UpdatePOV();
     }
 
-    protected override void OnDestroy()
+    protected virtual void OnDestroy()
     {
-        base.OnDestroy();
         _cts?.Cancel();
         _cts?.Dispose();
         
@@ -74,16 +74,16 @@ public abstract class CameraBase : Marker
     public void SaveCurrentPosAndRot() {
         LastCamPos = transform.position;
         LastCamRot = transform.rotation;
-        if(focusPoint!=null) LastFocusRot = focusPoint.rotation;
+        if(focusPoint) LastFocusRot = focusPoint.rotation;
         else LastFocusRot = LastCamRot;
     }
 #endregion
 
 #region Transition
     protected virtual void MatchPrevCamPosition() {
-        if(cameraManager.PrevCamera==null) return;
+        if(!cameraManager.PrevCamera) return;
         var prevCam = cameraManager.PrevCamera.GetComponent<CameraBase>();
-        if(prevCam.focusPoint!=null && focusPoint!=null) {
+        if(prevCam.focusPoint && focusPoint) {
             var t = FindFocusPointPositionAndFwdDirectionByCamera(prevCam.LastCamPos, prevCam.LastCamRot);
             focusPoint.SetPositionAndRotation(t.Item1, t.Item2);
             RestrainMomentum(prevCam.Momentum);
@@ -92,7 +92,7 @@ public abstract class CameraBase : Marker
         _vc.Lens.FieldOfView = POV;
     }
 
-    protected Tuple<Vector3,Quaternion> FindFocusPointPositionAndFwdDirectionByCamera(Vector3 camPos,Quaternion camRot) {
+    private Tuple<Vector3,Quaternion> FindFocusPointPositionAndFwdDirectionByCamera(Vector3 camPos,Quaternion camRot) {
         Quaternion focusRot = camRot * Quaternion.Inverse(Quaternion.FromToRotation(Vector3.forward,-Offset));
         Vector3 focusPos = camPos - focusRot * Offset;
         // var camFwd = camRot * Vector3.forward;
@@ -104,11 +104,13 @@ public abstract class CameraBase : Marker
     }
     protected void UpdatePOV() {
         if(POV == _pov) return;
-        _povDelta = 20 * Time.deltaTime;
+        _povDelta = povChangeSpeed * Time.deltaTime;
         if(POV < _pov) POV = Mathf.Min(POV + _povDelta, _pov);
         else POV = Mathf.Max(POV - _povDelta, _pov);
         _vc.Lens.FieldOfView = POV;
     }
+    
+    protected void ResetPOV() => _vc.Lens.FieldOfView = _pov;
 #endregion
 
 #region Shake

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace UnityTimer {
     /// <summary>
-    /// Timer that counts down from a specific value to zero.
+    /// Timer that counts down from a specific frame value to zero.
     /// </summary>
     public class FrameCountdownTimer : Timer {
         public FrameCountdownTimer(int value) : base(value) { }

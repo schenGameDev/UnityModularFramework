@@ -1,8 +1,10 @@
+using System;
 using EditorAttributes;
+using ModularFramework;
 using Unity.Mathematics;
 using UnityEngine;
 using ModularFramework.Utility;
-using UnityEngine.Serialization;
+using Void = EditorAttributes.Void;
 
 public class LockTargetCamera : MovingCameraBase
 {
@@ -37,38 +39,37 @@ public class LockTargetCamera : MovingCameraBase
 
     [HideInInspector,SerializeField,Range(0,1)] private float focusRadius=0.3f;
     private LockManagerSO _lockManager;
+    
+    public override Type[][] RegistryTypes => new[] {new[]{typeof(CameraManagerSO)} , new[]{typeof(LockManagerSO)}};
 
     public LockTargetCamera() {
-        Type = CameraType.LOCK;
+        type = CameraType.LOCK;
         cameraOffSet = new(0,0,-3);
-        registryTypes = new[] {(typeof(CameraManagerSO), 1) , (typeof(LockManagerSO), 2)};
     }
 
     protected override void Start()
     {
         base.Start();
-        _lockManager = GetRegistry<LockManagerSO>().Get();
+        _lockManager = GetComponent<Marker>().GetRegistry<LockManagerSO>().Get();
     }
 
     protected override void Update()
     {
         base.Update();
-        if(isLive) {
-            MoveCamera();
-            if (fasterWhenTargetAtScreenEdge)
-            {
-                _targetOffCenterRatio = GetOffCenterRatio();
-                _rollAccModifier = _targetOffCenterRatio <= 0.5f ? 1 : (1 + math.pow((_targetOffCenterRatio - 0.5f) * 10, speedBoostExponential));
-            }
+        MoveCamera();
+        if (fasterWhenTargetAtScreenEdge)
+        {
+            _targetOffCenterRatio = GetOffCenterRatio();
+            _rollAccModifier = _targetOffCenterRatio <= 0.5f ? 1 : (1 + math.pow((_targetOffCenterRatio - 0.5f) * 10, speedBoostExponential));
+        }
             
-            if(playerOffCenter==0) RollCamera();
-            else {
-                if(isMovingToCenter) {
-                    RollCamera();
-                    isMovingToCenter = !IsTargetInScreenCenter();
-                } else {
-                    isMovingToCenter = !IsTargetInFocusRadius();
-                }
+        if(playerOffCenter==0) RollCamera();
+        else {
+            if(isMovingToCenter) {
+                RollCamera();
+                isMovingToCenter = !IsTargetInScreenCenter();
+            } else {
+                isMovingToCenter = !IsTargetInFocusRadius();
             }
         }
     }

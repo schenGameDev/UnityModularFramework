@@ -60,7 +60,7 @@ public abstract class MovingCameraBase : CameraBase {
     protected void SetFollowOffset(Vector3 offset)
     {
         var follow = GetComponent<CinemachineFollow>();
-        if (follow != null) {
+        if (follow) {
             follow.FollowOffset = offset;
             follow.TrackerSettings.BindingMode = Unity.Cinemachine.TargetTracking.BindingMode.LockToTarget;
             follow.TrackerSettings.PositionDamping = Vector3.zero;
@@ -68,7 +68,7 @@ public abstract class MovingCameraBase : CameraBase {
         }
 
         var followRot = GetComponent<CinemachineRotateWithFollowTarget>();
-        if (followRot != null) {
+        if (followRot) {
             followRot.Damping = 0;
         }
     }
@@ -113,7 +113,7 @@ public abstract class MovingCameraBase : CameraBase {
         rollMaxSpeed = _ogRollMax;
     }
 
-    protected bool FocusPointChase(Vector3 target, float acceleration, float friction, float maxSpeed) {
+    protected bool FocusPointChase(Vector3 target, float acceleration, float maxSpeed) {
         Vector3 diff = target - focusPoint.position;
         float sqrDiff = diff.sqrMagnitude;
         if(sqrDiff < 0.001f) {
@@ -157,7 +157,7 @@ public abstract class MovingCameraBase : CameraBase {
         Momentum -= force;
     }
 
-    protected bool FocusPointChase(Vector3 target) => FocusPointChase(target, followAcceleration, friction, followMaxSpeed);
+    protected bool FocusPointChase(Vector3 target) => FocusPointChase(target, followAcceleration, followMaxSpeed);
     protected void FocusPointDecelerate() => FocusPointDecelerate(followAcceleration + friction);
 
     protected void RollAccelerate(float accelerationModifier = 1f) {

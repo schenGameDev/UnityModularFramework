@@ -21,10 +21,10 @@ public class TextPrinter : Marker
 
     public TextPrinter()
     {
-        registryTypes = new[] { (typeof(InkUIIntegrationSO),1)};
+        RegistryTypes = new[] { new[]{typeof(InkUIIntegrationSO)}};
     }
     
-    private void Awake()
+    protected override void Awake()
     {
         Textbox = GetComponentInChildren<TextMeshProUGUI>();
         if (!Textbox)

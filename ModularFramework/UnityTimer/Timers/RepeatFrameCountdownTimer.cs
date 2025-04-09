@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace UnityTimer {
     /// <summary>
-    /// Timer that counts down from a specific value to zero then repeat.
+    /// Timer that counts down from a specific frame value to zero then repeat.
     /// </summary>
     public class RepeatFrameCountdownTimer : Timer {
         private int _tickNTimes;

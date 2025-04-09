@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 // https://github.com/adammyhre/Unity-Improved-Timers.git
 namespace UnityTimer {
@@ -10,6 +12,8 @@ namespace UnityTimer {
         public static void DeregisterTimer(Timer timer) => timers.Remove(timer);
 
         public static void UpdateTimers() {
+            Tick?.Invoke(Time.deltaTime);
+            
             if (timers.Count == 0) return;
 
             sweep.ReplaceWith(timers);
@@ -27,5 +31,9 @@ namespace UnityTimer {
             timers.Clear();
             sweep.Clear();
         }
+        /// <summary>
+        ///  Before Update()
+        /// </summary>
+        public static Action<float> Tick;
     }
 }

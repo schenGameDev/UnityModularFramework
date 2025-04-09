@@ -7,7 +7,7 @@ namespace ModularFramework
     {
         public CanvasMarker()
         {
-            registryTypes = new[] { (typeof(UISystem),1)};
+            RegistryTypes = new[] { new[] {typeof(UISystem)}};
         }
         
         public bool alwaysVisible = true;

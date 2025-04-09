@@ -1,7 +1,9 @@
+using System;
 using EditorAttributes;
 using Unity.Mathematics;
 using UnityEngine;
 using ModularFramework;
+using Void = EditorAttributes.Void;
 
 public class FollowPlayerCamera : MovingCameraBase
 {
@@ -27,14 +29,16 @@ public class FollowPlayerCamera : MovingCameraBase
     private Vector2 _lookDeltaMovement => _inputSystem.LookDeltaMovement;
 
     public Vector3 FreeMoveViewDirection => focusPoint.forward;
+    
+    public override Type[][] RegistryTypes =>new[] {new[] {typeof(CameraManagerSO)}, new[] {typeof(InputSystemSO)}};
 
     public FollowPlayerCamera() {
-        Type = CameraType.FOLLOW;
+        type = CameraType.FOLLOW;
         cameraOffSet = new(0,1,-5);
-        registryTypes = new[] {(typeof(CameraManagerSO),1) ,(typeof(InputSystemSO),2)};
     }
     protected override void Start() {
         base.Start();
+        
         focusPoint.position = _player.position + new Vector3(0,_camHeight,0);
         if(_defaultTarget != null) {
             focusPoint.LookAt(_defaultTarget.transform.position);
@@ -42,13 +46,11 @@ public class FollowPlayerCamera : MovingCameraBase
             focusPoint.eulerAngles = _defaultAngle;
         }
         _inputSystem =GameRunner.GetSystem<InputSystemSO>().Get();
-
     }
 
     protected override void Update()
     {
         base.Update();
-        if(!isLive) return;
         MoveCamera();
         RollCamera();
     }

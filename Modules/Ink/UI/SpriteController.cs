@@ -24,19 +24,18 @@ public class SpriteController : Marker
 
     public SpriteController()
     {
-        registryTypes = new[] { (typeof(InkUIIntegrationSO),1)};
+        RegistryTypes = new[] { new[]{typeof(InkUIIntegrationSO)}};
     }
 
-    private void Awake() {
+    protected override void Awake() {
         _sr = GetComponent<SpriteRenderer>();
         if (_sr) _isSpriteRenderer = true;
         else _img = GetComponent<Image>();
         SetAlpha(0);
     }
 
-    protected override void OnDestroy()
+    protected void OnDestroy()
     {
-        base.OnDestroy();
         _cts?.Cancel();
         _cts?.Dispose();
     }

@@ -3,7 +3,7 @@ using UnityEngine;
 public class FixPositionCamera : CameraBase
 {
     public FixPositionCamera() {
-        Type = CameraType.FIXED;
+        type = CameraType.FIXED;
     }
 
     protected override Transform CameraFocusSpawnPoint() => null;

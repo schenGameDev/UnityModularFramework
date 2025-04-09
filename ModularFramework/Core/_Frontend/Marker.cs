@@ -1,60 +1,69 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace ModularFramework {
     using Commons;
-    using ModularFramework.Utility;
+    using Utility;
     /// <summary>
     /// Marker is in-game object that auto-registers itself to GameRunner's resgistry at Start, and is monitored by Game Module
     /// </summary>
-    public abstract class Marker : MonoBehaviour {
+    public class Marker : MonoBehaviour {
         /// <summary>
-        /// (type : group_id). If one type in the same group is found, no warning will be logged
+        /// Array of type groups. If one type in the same group is found, no warning will be logged
         /// </summary>
-        protected (Type,int)[] registryTypes;
-        private bool started = false;
-        private List<Type> _registeredTypes = new();
+        protected Type[][] RegistryTypes;
+        private bool _started = false;
+        private readonly List<Type> _registeredTypes = new();
+        
+        /// <summary>
+        /// override don't call base.Awake()
+        /// </summary>
+        protected virtual void Awake() 
+        {
+            if (RegistryTypes != null) return;
+            foreach (var imark in GetComponents<IMark>())
+            {
+                RegistryTypes.AddRange(imark.RegistryTypes);
+            }
+        }
 
         protected virtual void Start() {
-            started = true;
+            _started = true;
             OnEnable();
         }
 
         protected virtual void OnEnable() {
-            if(started) RegisterAll();
+            if(_started) RegisterAll();
         }
 
         protected virtual void OnDisable() {
             UnregisterAll();
         }
 
-        protected virtual void OnDestroy() {
-            UnregisterAll();
-        }
-
-        protected Optional<T> GetRegistry<T>() where T : ScriptableObject,IRegistrySO 
+        public Optional<T> GetRegistry<T>() where T : ScriptableObject,IRegistrySO 
             => typeof(T) == typeof(GameSystem)? GameRunner.GetSystemRegistry<T>() : GameRunner.Instance.GetRegistry<T>();
 
         protected virtual void RegisterAll()
         {
-            HashSet<int> foundGroups = new();
-            List<int> unfoundTypeIndex = new();
-            int count = 0;
-            foreach (var t in registryTypes) {
-                bool found = t.Item1 == typeof(GameSystem)? GameRunner.RegisterSystem(t.Item1, transform) : GameRunner.Instance.Register(t.Item1, transform);
-                if (found) {
-                    foundGroups.Add(t.Item2);
-                    _registeredTypes.Add(t.Item1);
-                } else {
-                    unfoundTypeIndex.Add(count);
+            foreach (var types in RegistryTypes)
+            {
+                bool found = false;
+                List<string> unfoundTypes = new();
+                foreach (var t in types)
+                {
+                    found = t == typeof(GameSystem)? GameRunner.RegisterSystem(t, transform) : GameRunner.Instance.Register(t, transform);
+                    if (found)
+                    {
+                        _registeredTypes.Add(t);
+                        break;
+                    }
+                    unfoundTypes.Add(t.ToString());
                 }
-                count += 1;
+
+                if (!found) DebugUtil.Warn("Registry of type " + string.Join("/", unfoundTypes) + " not found");
             }
-            unfoundTypeIndex.Select(i => registryTypes[i])
-                            .Where(t => !foundGroups.Contains(t.Item2))
-                            .ForEach(t => DebugUtil.Warn("Registry of type " + t.Item1 + " not found"));
+            
         }
 
         private void UnregisterAll() {

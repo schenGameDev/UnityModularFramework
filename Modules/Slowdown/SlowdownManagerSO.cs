@@ -45,7 +45,7 @@ public class SlowdownManagerSO : GameModule, ILive
         NPCSpeedChangeEvent.Raise(1);
     }
 
-    public override void OnUpdate(float deltaTime)
+    protected override void Update()
     {
         if(!Live) return;
 

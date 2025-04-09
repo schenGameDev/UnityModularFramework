@@ -13,9 +13,8 @@ public class FadeTextPrinter : TextPrinter
     
     private CancellationTokenSource _cts;
     
-    protected override void OnDestroy()
+    protected void OnDestroy()
     {
-        base.OnDestroy();
         _cts?.Cancel();
         _cts?.Dispose();
     }

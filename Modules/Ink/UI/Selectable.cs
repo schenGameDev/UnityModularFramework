@@ -17,10 +17,10 @@ public class Selectable : Marker, ILive
 
     public Selectable()
     {
-        registryTypes = new[] { (typeof(InkUIIntegrationSO),1)};
+        RegistryTypes = new[] { new[] {typeof(InkUIIntegrationSO)}};
     }
     
-    private void Awake()
+    protected override void Awake()
     {
         _tmp = GetComponentInChildren<TextMeshProUGUI>();
     }

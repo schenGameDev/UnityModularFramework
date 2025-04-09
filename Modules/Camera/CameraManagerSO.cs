@@ -49,7 +49,7 @@ public class CameraManagerSO : GameModule,IRegistrySO {
         CameraBase cb = transform.GetComponent<CameraBase>();
 
         if(cb == null) return;
-        CameraType type = cb.Type;
+        CameraType type = cb.type;
         if(_activeCamerasInScene.ContainsKey(name)) {
             DebugUtil.Error("Camera fail to register because name duplicates");
             return;
@@ -132,7 +132,7 @@ public class CameraManagerSO : GameModule,IRegistrySO {
     private void SetCurrentCamera(Transform camera, CameraTransitionType transitionType) {
         CurrentCamera = camera;
         var camBase = CurrentCamera.GetComponent<CameraBase>();
-        CurrentMode = camBase.Type;
+        CurrentMode = camBase.type;
         _currentCamera = CurrentCamera.name;
         camBase.OnEnter(transitionType);
         CurrentCamera.GetComponent<CinemachineCamera>().Priority = 11;
@@ -140,6 +140,7 @@ public class CameraManagerSO : GameModule,IRegistrySO {
 
     private void SetInactiveCamera(Transform camera) {
         camera.GetComponent<CinemachineCamera>().Priority = 10;
+        
     }
 
     [Button]

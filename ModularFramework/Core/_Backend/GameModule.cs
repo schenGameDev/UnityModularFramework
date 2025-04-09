@@ -8,6 +8,8 @@ namespace ModularFramework {
     /// Life cycle: OnAwake(Reset,Load Ref Keywords) -> OnStart (link to GameManager) -> OnUpdate -> OnDestroy
     /// </summary>
     public abstract class GameModule : ScriptableObject {
+        protected float DeltaTime;
+        
         /// <summary>
         /// Trigger in <c>GameRunner</c> Awake method for sequential boot-up
         /// </summary>
@@ -39,10 +41,18 @@ namespace ModularFramework {
 
             Timer.Start();
         }
+
         /// <summary>
         /// Trigger in <c>GameRunner</c> Update method
         /// </summary>
-        public virtual void OnUpdate(float deltaTime){}
+        public void OnUpdate(float deltaTime)
+        {
+            DeltaTime = deltaTime;
+            Update();
+        }
+
+        protected virtual void Update() {}
+
         /// <summary>
         /// Trigger in <c>GameRunner</c> OnDestroy method
         /// </summary>

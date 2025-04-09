@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class EmptyCamera : CameraBase {
     public EmptyCamera() {
-        Type = CameraType.EMPTY;
+        type = CameraType.EMPTY;
     }
 
     protected override Transform CameraFocusSpawnPoint() => null;
@@ -13,7 +13,8 @@ public class EmptyCamera : CameraBase {
     }
 
     public override void OnExit() { // last cam pos/rot saved externally
-        isLive = false;
+        ResetPOV();
+        enabled = false;
     }
 
 }

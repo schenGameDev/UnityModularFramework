@@ -12,7 +12,7 @@ public class Lockable : Sensible
 
     public Lockable()
     {
-        registryTypes = new[] {(typeof(SensorManagerSO), 1), (typeof(LockManagerSO), 2)};
+        RegistryTypes = new[] {new[]{typeof(SensorManagerSO)}, new[]{typeof(LockManagerSO)}};
     }
 
     protected override void Start()

@@ -1,51 +1,42 @@
 using EditorAttributes;
 using UnityEngine;
+
 /// <summary>
 /// raise camera and look at target
 /// </summary>
 public class LookAtCamera : MovingCameraBase
 {
-    [SerializeField] Transform _target;
-    [SerializeField] Transform _player;
-    [SerializeField] bool _zoomIn;
+    [SerializeField] Transform target;
+    [SerializeField] Transform player;
+    [SerializeField] bool zoomIn;
 
-    [SerializeField,Rename("Camera Height"),Suffix("m")] private float _camHeight=0;
-    [SerializeField,Rename("Camera Distance To Target"),Suffix("m"), ShowField(nameof(_zoomIn))] private float _camDist=0;
+    [SerializeField,Rename("Camera Height"),Suffix("m")] private float camHeight=0;
+    [SerializeField,Rename("Camera Distance To Target"),Suffix("m"), ShowField(nameof(zoomIn))] private float camDist;
 
-
+    private Vector3 _camTarget;
+    
     public LookAtCamera() {
-        Type = CameraType.LOOK_AT;
+        type = CameraType.LOOK_AT;
     }
 
-    protected override Transform CameraFocusSpawnPoint() => _player;
-
+    protected override Transform CameraFocusSpawnPoint() => player;
 
     public override void OnEnter(CameraTransitionType transitionType)
     {
         base.OnEnter(transitionType);
-        _isEnter = true;
+        if(zoomIn) {
+            var targetToPlayerVec = player.position -target.position;
+            targetToPlayerVec.y = 0;
+            _camTarget = target.position + new Vector3(0,camHeight,0) + camDist * targetToPlayerVec.normalized;
+        }
     }
-
     protected override void Update()
     {
         base.Update();
-        if(!isLive) {
-            return;
-        }
-        if(_isEnter) {
-            _isEnter = false;
-            if(_zoomIn) {
-                var targetToPlayerVec = _player.position -_target.position;
-                targetToPlayerVec.y = 0;
-                _camTarget = _target.position + new Vector3(0,_camHeight,0) + _camDist * targetToPlayerVec.normalized;
-            }
-        }
         MoveCamera();
         RollCamera();
     }
-
-    bool _isEnter;
-    Vector3 _camTarget;
+    
     private void MoveCamera() {
         if(delayTimer>0) {
             FocusPointDecelerate();
@@ -53,7 +44,7 @@ public class LookAtCamera : MovingCameraBase
             return;
         }
 
-        Vector3 camTarget = _zoomIn? _camTarget : _player.position + new Vector3(0,_camHeight,0);
+        Vector3 camTarget = zoomIn? _camTarget : player.position + new Vector3(0,camHeight,0);
 
 
         if(FocusPointChase(camTarget)) {
@@ -63,7 +54,7 @@ public class LookAtCamera : MovingCameraBase
     }
 
     void RollCamera() {
-        var dir = _target.position - focusPoint.position;
+        var dir = target.position - focusPoint.position;
         Quaternion targetRot = Quaternion.LookRotation(dir);
 
         var roll =Quaternion.RotateTowards(focusPoint.rotation,targetRot,rollSpeed * Time.deltaTime);

@@ -4,8 +4,6 @@ using EditorAttributes;
 using UnityEngine;
 public class CameraObstacle : MonoBehaviour
 {
-    public bool Live;
-
     // [SerializeField] private float _duration = 0.5f;
     // [SerializeField,Range(0,1)] private float _alpha = 0;
     [SerializeField, MessageBox("Alpha is not in use when transparent material is set", nameof(_replaceMat), MessageMode.Log)]
@@ -30,8 +28,6 @@ public class CameraObstacle : MonoBehaviour
     }
 
     private void LateUpdate() {
-        if(!Live) return;
-
         Parallel.ForEach(_meshRenders, m => {
             Transform tf = m.Item1.transform;
             if(IsObstacleBetweenCameraAndPlayer(tf)) {
