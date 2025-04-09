@@ -13,7 +13,7 @@ public class Readable : TranslationText
     [SerializeField] private EventChannel interactInputChannel;
 
     private bool _isShow;
-
+    private TextPrinterBase _iTextPrinter;
 
     private void OnEnable()
     {
@@ -25,17 +25,21 @@ public class Readable : TranslationText
         interactInputChannel.RemoveListener(Clean);
     }
 
-    protected override void Start() { } // stop parent Start
+    protected override void Start()
+    {
+        _iTextPrinter = printer;
+    } // stop parent Start
     
     public void Read()
     {
-        printer?.Print(text);
+        if(_iTextPrinter==null) return;
+        _iTextPrinter.Print(text);
         _isShow = true;
     }
 
     private void Clean()
     {
-        if(!printer) return;
+        if(_iTextPrinter==null) return;
         if (_isShow)
         {
             if(printer.Done) printer.Clean();

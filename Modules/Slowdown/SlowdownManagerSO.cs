@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using ModularFramework;
 
-[CreateAssetMenu(fileName ="SlowdownManager_SO",menuName ="SO/SlowdownManager")]
+[CreateAssetMenu(fileName ="SlowdownManager_SO",menuName ="Game Module/Slowdown")]
 public class SlowdownManagerSO : GameModule, ILive
 {
     [Header("Config")]

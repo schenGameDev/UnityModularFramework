@@ -15,6 +15,6 @@ public class Sensible : Marker {
 
     public Sensible()
     {
-        RegistryTypes = new[] { new[] {typeof(SensorManagerSO)}};
+        RegistryTypes = new[] { new[] {typeof(SensorSystemSO)}};
     }
 }

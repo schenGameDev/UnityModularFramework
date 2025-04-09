@@ -22,7 +22,7 @@ public class Selectable : Marker, ILive
     
     protected override void Awake()
     {
-        _tmp = GetComponentInChildren<TextMeshProUGUI>();
+        if(!string.IsNullOrEmpty(text)) _tmp = GetComponentInChildren<TextMeshProUGUI>();
     }
     
     public virtual void Select() {

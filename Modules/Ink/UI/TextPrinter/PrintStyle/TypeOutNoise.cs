@@ -4,28 +4,30 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-public class TypeOutNoiseTextPrinter : TextPrinter
+[CreateAssetMenu(fileName = "TypeOutNoise_SO", menuName = "Game Module/Ink/Print Style/TypeOutNoise")]
+public class TypeOutNoise : PrintStyleBase
 {
+
     [Header("Config")]
     [SerializeField] private float timeGapBetweenLetters = 0.05f;
         
     private CancellationTokenSource _cts;
     
-    protected void OnDestroy()
+    public override void OnDestroy()
     {
         _cts?.Cancel();
         _cts?.Dispose();
     }
 
-    public override void Skip()
+    public override void OnSkip()
     {
         _cts.Cancel();
     }
 
-    public override void Print(string text, Action callback)
+    public override void OnPrint(string text, Action callback=null)
     {
-        Done = false;
-        endIndicator?.SetActive(false);
+        Printer.Done = false;
+        Printer.endIndicator?.SetActive(false);
         if (_cts != null)
         {
             _cts.Cancel();
@@ -34,40 +36,40 @@ public class TypeOutNoiseTextPrinter : TextPrinter
         }
         _cts = new CancellationTokenSource();
         
-        Textbox.text = string.Empty; 
+        Printer.Textbox.text = string.Empty; 
         PrintTaskNoise(text, callback,_cts.Token).Forget(); 
     }
 
     private async UniTaskVoid PrintTaskNoise(string text, Action callback, CancellationToken token)
     {
-        gameObject.SetActive(true);
-        SoundPlayer soundPlayer = SoundManager?.PlayLoopSound(soundName);
+        Printer.gameObject.SetActive(true);
+        SoundPlayer soundPlayer = Printer.GetSoundPlayer();
         foreach (var ch in text)
         {
             float t = timeGapBetweenLetters;
-            string txt = Textbox.text;
+            string txt = Printer.Textbox.text;
             while (t > 0)
             {
-                Textbox.text = txt + RandomChar();
+                Printer.Textbox.text = txt + RandomChar();
                 t-=Time.deltaTime;
                 bool isCanceled= await UniTask.NextFrame(cancellationToken:token).SuppressCancellationThrow();
                 if (isCanceled)
                 {
                     if(_cts==null) {
-                        Textbox.text = text; // canceled and no new print task
-                        Done = true;
+                        Printer.Textbox.text = text; // canceled and no new print task
+                        Printer.Done = true;
                         callback?.Invoke();
-                        endIndicator?.SetActive(true);
+                        Printer.endIndicator?.SetActive(true);
                         soundPlayer?.Stop();
                     }
                     return;
                 }
             }
-            Textbox.text = txt + ch;
+            Printer.Textbox.text = txt + ch;
         }
-        Done = true;
+        Printer.Done = true;
         callback?.Invoke();
-        endIndicator?.SetActive(true);
+        Printer.endIndicator?.SetActive(true);
         soundPlayer?.Stop();
     }
     

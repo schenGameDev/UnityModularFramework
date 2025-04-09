@@ -5,8 +5,10 @@ using EditorAttributes;
 using ModularFramework.Commons;
 using UnityEngine;
 
-public class TypeOutTextPrinter : TextPrinter
+[CreateAssetMenu(fileName = "TypeOut_SO", menuName = "Game Module/Ink/Print Style/TypeOut")]
+public class TypeOut : PrintStyleBase
 {
+
     [Header("Config")]
     [SerializeField] private float timeGapBetweenLetters = 0.05f;
     [SerializeField] private bool cursor;
@@ -15,21 +17,21 @@ public class TypeOutTextPrinter : TextPrinter
         
     private CancellationTokenSource _cts;
     
-    protected void OnDestroy()
+    public override void OnDestroy()
     {
         _cts?.Cancel();
         _cts?.Dispose();
     }
 
-    public override void Skip()
+    public override void OnSkip()
     {
         _cts.Cancel();
     }
 
-    public override void Print(string text, Action callback)
+    public override void OnPrint(string text, Action callback=null)
     {
-        Done = false;
-        endIndicator?.SetActive(false);
+        Printer.Done = false;
+        Printer.endIndicator?.SetActive(false);
         if (_cts != null)
         {
             _cts.Cancel();
@@ -38,16 +40,16 @@ public class TypeOutTextPrinter : TextPrinter
         }
         _cts = new CancellationTokenSource();
         
-        Textbox.text = string.Empty; 
+        Printer.Textbox.text = string.Empty; 
         if(cursor) PrintTaskCursor(text, callback, _cts.Token).Forget();
         else  PrintTask(text, callback, _cts.Token).Forget();
     }
 
     private async UniTaskVoid PrintTask(string text, Action callback,CancellationToken token)
     {
-        gameObject.SetActive(true);
+        Printer.gameObject.SetActive(true);
         bool lastCharIsPunctuation = false;
-        SoundPlayer soundPlayer = SoundManager?.PlayLoopSound(soundName);
+        SoundPlayer soundPlayer = Printer.GetSoundPlayer();
         foreach (var ch in text)
         {
             bool punctuation = char.IsPunctuation(ch);
@@ -69,27 +71,27 @@ public class TypeOutTextPrinter : TextPrinter
             if (isCanceled)
             {
                 if(_cts==null) {
-                    Textbox.text = text; // canceled and no new print task
+                    Printer.Textbox.text = text; // canceled and no new print task
                     soundPlayer?.Stop();
-                    Done = true;
+                    Printer.Done = true;
                     callback?.Invoke();
-                    endIndicator?.SetActive(true);
+                    Printer.endIndicator?.SetActive(true);
                 }
                 return;
             }
-            Textbox.text += ch;
+            Printer.Textbox.text += ch;
         }
         soundPlayer?.Stop();
-        Done = true;
+        Printer.Done = true;
         callback?.Invoke();
-        endIndicator?.SetActive(true);
+        Printer.endIndicator?.SetActive(true);
     }
     
     private async UniTaskVoid PrintTaskCursor(string text, Action callback, CancellationToken token)
     {
-        gameObject.SetActive(true);
+        Printer.gameObject.SetActive(true);
         bool lastCharIsPunctuation = false;
-        SoundPlayer soundPlayer = SoundManager?.PlayLoopSound(soundName);
+        SoundPlayer soundPlayer =  Printer.GetSoundPlayer();
         Flip flip = new Flip();
         bool printCursor = false;
         float b = blinkTime;
@@ -112,7 +114,7 @@ public class TypeOutTextPrinter : TextPrinter
             }
             
             float t = gap;
-            string txt = Textbox.text;
+            string txt =  Printer.Textbox.text;
             
             while (t > 0)
             {
@@ -124,31 +126,31 @@ public class TypeOutTextPrinter : TextPrinter
 
                 b += Time.deltaTime;
                 
-                if(printCursor) Textbox.text = txt + cursorSymbol;
-                else Textbox.text = txt;
+                if(printCursor)  Printer.Textbox.text = txt + cursorSymbol;
+                else  Printer.Textbox.text = txt;
                 
                 t-=Time.deltaTime;
                 bool isCanceled = await UniTask.NextFrame(cancellationToken:token).SuppressCancellationThrow();
                 if (isCanceled)
                 {
                     if(_cts==null) {
-                        Textbox.text = text; // canceled and no new print task
-                        Done = true;
+                        Printer.Textbox.text = text; // canceled and no new print task
+                        Printer.Done = true;
                         callback?.Invoke();
-                        endIndicator?.SetActive(true);
+                        Printer.endIndicator?.SetActive(true);
                         soundPlayer?.Stop();
                     }
                     return;
                 }
             }
 
-            Textbox.text = txt + ch;
+            Printer.Textbox.text = txt + ch;
 
         }
         soundPlayer?.Stop();
-        Done = true;
+        Printer.Done = true;
         callback?.Invoke();
-        endIndicator?.SetActive(true);
+        Printer.endIndicator?.SetActive(true);
     }
 
 }

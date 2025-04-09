@@ -9,19 +9,15 @@ using UnityEngine.Serialization;
 using static ModularFramework.Utility.MathUtil;
 
 /// <summary>
-/// Class <c>SensorManager</c> monitors all <c>Sensible</c> in scene, calculate distance and handle vision between them
+/// Class <c>SensorSystem</c> monitors all <c>Sensible</c> in scene, calculate distance and handle vision between them
 /// </summary>
-[CreateAssetMenu(fileName = "SensorManager_SO", menuName = "Game Module/Sensor")]
-public class SensorManagerSO : GameModule, IRegistrySO {
-    //[SerializeField,SerializedDictionary("Code","parameter")] private SerializedDictionary<int,string[]> _parameters;
-
-    [Header("Runtime")]
+[CreateAssetMenu(fileName = "SensorSystem_SO", menuName = "Game Module/Sensor")]
+public class SensorSystemSO : GameSystem, IRegistrySO {
+    
 #if UNITY_EDITOR
+    [Header("Runtime")]
     [ReadOnly,SerializeField,RuntimeObject] private string[] sensibleInScene;
 #endif
-    public SensorManagerSO() {
-        updateMode = UpdateMode.NONE;
-    }
 
     [RuntimeObject] private readonly Dictionary<string,Sensible> _sensibleDict = new();
 
@@ -46,10 +42,10 @@ public class SensorManagerSO : GameModule, IRegistrySO {
 #endif
     }
 
-    public Transform GetTransform(string name, bool overrideTargetVisible) {
-        var found = _sensibleDict[name];
-        if(found == null || (!overrideTargetVisible && !found.isVisible)) return null;
-        return found.transform;
+    public Transform GetTransform(string tfName, bool overrideTargetVisible) {
+        var found = _sensibleDict.Get(tfName);
+        if(!found.HasValue || (!overrideTargetVisible && !found.Get().isVisible)) return null;
+        return found.Get().transform;
     }
     public Transform GetTransformAbsoluteInRange(string targetName, Transform self, Vector2 minMaxRange) {
         return GetTransformAbsoluteInRange(targetName, self, minMaxRange, 180, true);
@@ -57,7 +53,7 @@ public class SensorManagerSO : GameModule, IRegistrySO {
     public Transform GetTransformAbsoluteInRange(string targetName, Transform self, Vector2 minMaxRange,
                                                  float halfConeAngle, bool overrideTargetVisible) {
         var target = GetTransform(targetName, overrideTargetVisible);
-        if(target != null && WithinViewCone(target, self, halfConeAngle) && WithinViewRange(target, self, minMaxRange)) {
+        if(target && WithinViewCone(target, self, halfConeAngle) && WithinViewRange(target, self, minMaxRange)) {
             return target;
         }
         return null;

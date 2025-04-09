@@ -47,7 +47,7 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
     [RuntimeObject] private Button _skipButton;
     
     [RuntimeObject] private readonly Dictionary<string,List<Selectable>> _selectables = new();
-    [RuntimeObject] private readonly Dictionary<string,TextPrinter> _dialogBoxes = new();
+    [RuntimeObject] private readonly Dictionary<string,TextPrinterBase> _dialogBoxes = new();
     [RuntimeObject] private readonly Dictionary<string,SpriteController> _sprites = new();
     [RuntimeObject] private readonly Dictionary<string,Playable> _playables = new();
     
@@ -101,67 +101,63 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
     #region Registry
     public void Register(Transform transform)
     {
-        var selectable = transform.GetComponent<Selectable>();
-        if (selectable)
+        bool found = false;
+        if (transform.TryGetComponent<Selectable>(out var selectable))
         {
             _selectables.GetOrCreateDefault(selectable.choiceGroupName).Add(selectable);
-            return;
+            found = true;
         }
         
-        var textPrinter = transform.GetComponent<TextPrinter>();
-        if (textPrinter)
+        if (transform.TryGetComponent<TextPrinterBase>(out var textPrinter))
         {
-            if (_dialogBoxes.TryAdd(transform.name, textPrinter))
+            if (textPrinter is InkTaskPrinter itp)
             {
-                return;
+                if(_dialogBoxes.TryAdd(itp.taskName, textPrinter)) found = true;
+            } else if (_dialogBoxes.TryAdd(transform.name, textPrinter))
+            {
+                found = true;
             }
             DebugUtil.Error("Duplicate gameObject " + transform.name, name);
         }
         
-        var spriteController = transform.GetComponent<SpriteController>();
-        if (spriteController)
+        if (transform.TryGetComponent<SpriteController>(out var spriteController))
         {
             if (_sprites.TryAdd(transform.name, spriteController))
             {
-                return;
+                found = true;
             }
             DebugUtil.Error("Duplicate gameObject " + transform.name, name);
         }
-        var playable = transform.GetComponent<Playable>();
-        if (playable)
+
+        if (transform.TryGetComponent<Playable>(out var playable))
         {
             if (_playables.TryAdd(transform.name, playable))
             {
-                return;
+                found = true;
             }
             DebugUtil.Error("Duplicate gameObject " + transform.name, name);
         }
         
+        if(found) return;
         
         DebugUtil.Error("Selectable/TextPrinter/SpriteController/Playable is not found on gameObject " + transform.name, name);
     }
     
     public void Unregister(Transform transform)
     {
-        var selectable = transform.GetComponent<Selectable>();
-        if (selectable)
+        if (transform.TryGetComponent<Selectable>(out var selectable))
         {
             _selectables[selectable.choiceGroupName]?.Remove(selectable);
-            return;
         }
-        var textPrinter = transform.GetComponent<TextPrinter>();
-        if (textPrinter)
+        if (transform.TryGetComponent<TextPrinterBase>(out var textPrinter))
         {
             _dialogBoxes.Remove(transform.name);
-            return;
         }
-        var spriteController = transform.GetComponent<SpriteController>();
-        if (spriteController)
+        if (transform.TryGetComponent<SpriteController>(out var spriteController))
         {
             _sprites.Remove(transform.name);
         }
-        var playable = transform.GetComponent<Playable>();
-        if (playable)
+        if (transform.TryGetComponent<Playable>(out var playable))
         {
             _playables.Remove(transform.name);
         }
@@ -179,7 +175,7 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
 
     #region Line
 
-    private TextPrinter _dialogBox;
+    private TextPrinterBase _dialogBox;
     private void SetupLine(InkLine line)
     {
         
@@ -192,14 +188,25 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
 #if UNITY_EDITOR
         subtext = $"(Character unknown because {line.subText})"; // true condition expression
 #endif
+        var sc = SetupCharacterImage(line);
         
         _dialogBox = _dialogBoxes[dialogBoxName];
-        _dialogBox.Print($"{text} <color=\"red\">{subtext}</color>",AutoPlay);
-        _skipped.Reset();
+        string t = $"{text} <color=\"red\">{subtext}</color>";
         
+        if(_dialogBox is ChatBubbleQueue) _dialogBox.Print(t,AutoPlay, isSpeakerOnLeftSide(sc.transform)? "1" : "0");
+        else _dialogBox.Print(t,AutoPlay);
+        
+        _skipped.Reset();
+       
         SetupSpeaker(line);
-        SetupCharacterImage(line);
+        
 
+    }
+
+    private bool isSpeakerOnLeftSide(Transform transform)
+    {
+        var screenPos = Camera.main.WorldToScreenPoint(transform.position);
+        return screenPos.x < Screen.width / 2;
     }
 
     private void SetupSpeaker(InkLine line)
@@ -248,14 +255,16 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
     }
 
     private string _lastPortraitPosition;
-    private void SetupCharacterImage(InkLine line)
+    private SpriteController SetupCharacterImage(InkLine line)
     {
         if (_lastPortraitPosition != line.portraitPosition)
         {
             _sprites[_lastPortraitPosition].Clear();
         }
-        _sprites[line.portraitPosition].SwapImage(spriteBucket.Get(line.portraitId).Get());
+        var sc = _sprites[line.portraitPosition];
+        sc.SwapImage(spriteBucket.Get(line.portraitId).Get());
         _lastPortraitPosition = line.portraitPosition;
+        return sc;
     }
     
     #endregion
@@ -316,7 +325,9 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO {
         string taskName = task.Item1;
         string parameter = task.Item2;
         Action<string> callback = task.Item3;
-
+        
+        _dialogBoxes[taskName]?.Print(parameter, () => callback(taskName));
+        
         if (taskName == InkConstants.TASK_CHANGE_SCENE)
         {
             GameBuilder.Instance.LoadScene(parameter,null,()=>SceneLoaded(parameter,callback));

@@ -4,7 +4,8 @@ using Cysharp.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 
-public class FadeTextPrinter : TextPrinter
+[CreateAssetMenu(fileName = "Fade_SO", menuName = "Game Module/Ink/Print Style/Fade")]
+public class Fade : PrintStyleBase
 {
     [Header("Config")]
     [SerializeField] private float fadeInDuration = 0.5f;
@@ -13,20 +14,20 @@ public class FadeTextPrinter : TextPrinter
     
     private CancellationTokenSource _cts;
     
-    protected void OnDestroy()
+    public override void OnDestroy()
     {
         _cts?.Cancel();
         _cts?.Dispose();
     }
 
-    public override void Skip()
+    public override void OnSkip()
     {
         _cts.Cancel();
     }
 
-    public override void Print(string text, Action callback)
+    public override void OnPrint(string text, Action callback=null)
     {
-        Done = false;
+        Printer.Done = false;
         if (_cts != null)
         {
             _cts.Cancel();
@@ -35,7 +36,7 @@ public class FadeTextPrinter : TextPrinter
         }
         _cts = new CancellationTokenSource();
         
-        Textbox.text = text;
+        Printer.Textbox.text = text;
         FadeIn(callback,_cts.Token).Forget();
     }
     private async UniTaskVoid FadeIn(Action callback, CancellationToken token)
@@ -44,12 +45,12 @@ public class FadeTextPrinter : TextPrinter
         bool isCancelled = false;
         while(t< fadeInDuration && !isCancelled) 
         {
-            Textbox.color.SetAlpha(math.min(1,t/fadeInDuration));
+            Printer.Textbox.color.SetAlpha(math.min(1,t/fadeInDuration));
             t+=Time.deltaTime;
             isCancelled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
         }
         
-        Textbox.color.SetAlpha(1);
+        Printer.Textbox.color.SetAlpha(1);
         
         if(displayDuration>0) await UniTask.WaitForSeconds(displayDuration, cancellationToken: token).SuppressCancellationThrow();
         if(fadeOutDuration <= 0) return;
@@ -57,13 +58,13 @@ public class FadeTextPrinter : TextPrinter
         t = 0;
         while(t< fadeOutDuration && !isCancelled) 
         {
-            Textbox.color.SetAlpha(math.max(0,1-t/fadeOutDuration));
+            Printer.Textbox.color.SetAlpha(math.max(0,1-t/fadeOutDuration));
             t+=Time.deltaTime;
             isCancelled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
         }
-        Textbox.color.SetAlpha(0);
+        Printer.Textbox.color.SetAlpha(0);
         callback?.Invoke();
-        Done = true;
+        Printer.Done = true;
 
     }
 }

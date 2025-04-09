@@ -10,7 +10,7 @@ using ModularFramework;
 using ModularFramework.Commons;
 using ModularFramework.Utility;
 
-[CreateAssetMenu(fileName ="CameraManager_SO",menuName ="SO/CameraManager")]
+[CreateAssetMenu(fileName ="CameraManager_SO",menuName ="Game Module/Camera")]
 public class CameraManagerSO : GameModule,IRegistrySO {
     [Header("Config")]
     [SerializedDictionary("Transition","Acceleration")] public SerializedDictionary<Vector<string>, float> TransitionAcceleration;

@@ -52,6 +52,12 @@ namespace ModularFramework {
                 List<string> unfoundTypes = new();
                 foreach (var t in types)
                 {
+                    if (_registeredTypes.Contains(t))
+                    {
+                        found = true;
+                        break;
+                    }
+                    
                     found = t == typeof(GameSystem)? GameRunner.RegisterSystem(t, transform) : GameRunner.Instance.Register(t, transform);
                     if (found)
                     {
