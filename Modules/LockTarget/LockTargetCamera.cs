@@ -154,6 +154,7 @@ public class LockTargetCamera : MovingCameraBase
     
     private float GetOffCenterRatio()
     {
+        if(!_lockManager.LockTarget) return 0;
         Vector2 targetScreenPos = Camera.main.WorldToScreenPoint(_lockManager.LockTarget.position);
         var screenCenter = new Vector2(Screen.width / 2, Screen.height / 2);
         var screenEdgeDistance = math.min(screenCenter.x, screenCenter.y);
