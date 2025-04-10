@@ -4,12 +4,12 @@ using UnityEngine;
 
 namespace ModularFramework.Utility {
 	public static class PhysicsUtil {
-		public static Vector3 FindGroundPosition(Vector3 target,string groundLayerName) {
+		public static Vector3 FindGroundPosition(Vector3 target) {
 			Vector3 targetSky = new (target.x,50,target.z);
 			Ray ray = new (targetSky, Vector3.down);
 			var landPos = target;
 
-			if(UnityEngine.Physics.Raycast(ray,out RaycastHit hitInfo, 100, 1<<LayerMask.NameToLayer(groundLayerName))) {
+			if(Physics.Raycast(ray,out RaycastHit hitInfo, 100, 1<<LayerMask.NameToLayer(EnvironmentConstants.LAYER_GROUND))) {
 				landPos = hitInfo.point;
 			}
 			return landPos;
