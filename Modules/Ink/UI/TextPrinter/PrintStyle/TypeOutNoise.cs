@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 [CreateAssetMenu(fileName = "TypeOutNoise_SO", menuName = "Game Module/Ink/Print Style/TypeOutNoise")]
 public class TypeOutNoise : PrintStyleBase
@@ -15,8 +16,15 @@ public class TypeOutNoise : PrintStyleBase
     
     public override void OnDestroy()
     {
-        _cts?.Cancel();
-        _cts?.Dispose();
+        try
+        {
+            _cts?.Cancel();
+            _cts?.Dispose();
+        }
+        catch (ObjectDisposedException)
+        {
+            // nothing
+        }
     }
 
     public override void OnSkip()
@@ -26,8 +34,7 @@ public class TypeOutNoise : PrintStyleBase
 
     public override void OnPrint(string text, Action callback=null)
     {
-        Printer.Done = false;
-        Printer.endIndicator?.SetActive(false);
+        if(Printer.endIndicator) Printer.endIndicator.SetActive(false);
         if (_cts != null)
         {
             _cts.Cancel();
@@ -35,8 +42,8 @@ public class TypeOutNoise : PrintStyleBase
             _cts = null;
         }
         _cts = new CancellationTokenSource();
-        
-        Printer.Textbox.text = string.Empty; 
+
+        Prepare();
         PrintTaskNoise(text, callback,_cts.Token).Forget(); 
     }
 
@@ -44,8 +51,17 @@ public class TypeOutNoise : PrintStyleBase
     {
         Printer.gameObject.SetActive(true);
         SoundPlayer soundPlayer = Printer.GetSoundPlayer();
+        bool isTextTag = false;
         foreach (var ch in text)
         {
+            if(!isTextTag) isTextTag = ch=='<';
+            if (isTextTag)
+            {
+                Printer.Textbox.text += ch;
+                if (ch == '>') isTextTag = false;
+                continue;
+            }
+           
             float t = timeGapBetweenLetters;
             string txt = Printer.Textbox.text;
             while (t > 0)
@@ -55,27 +71,30 @@ public class TypeOutNoise : PrintStyleBase
                 bool isCanceled= await UniTask.NextFrame(cancellationToken:token).SuppressCancellationThrow();
                 if (isCanceled)
                 {
-                    if(_cts==null) {
-                        Printer.Textbox.text = text; // canceled and no new print task
-                        Printer.Done = true;
-                        callback?.Invoke();
-                        Printer.endIndicator?.SetActive(true);
-                        soundPlayer?.Stop();
-                    }
+                    Finish(text); // canceled and no new print task
+                    callback?.Invoke();
+                    if(Printer.endIndicator) Printer.endIndicator.SetActive(true);
+                    soundPlayer?.Stop();
                     return;
                 }
             }
             Printer.Textbox.text = txt + ch;
+            if (ReturnEarly && text.Length - Printer.Textbox.text.Length == 2)
+            {
+                callback?.Invoke();
+                ReturnedEarly = true;
+            } 
         }
-        Printer.Done = true;
-        callback?.Invoke();
-        Printer.endIndicator?.SetActive(true);
+        
+        Finish();
+        if(!ReturnedEarly) callback?.Invoke();
+        if(Printer.endIndicator) Printer.endIndicator.SetActive(true);
         soundPlayer?.Stop();
     }
     
     private string RandomChar()
     {
-        byte value = (byte)UnityEngine.Random.Range(41f,128f);
+        byte value = (byte)Random.Range(41f,128f);
 
         string c = Encoding.ASCII.GetString(new byte[]{value});
 

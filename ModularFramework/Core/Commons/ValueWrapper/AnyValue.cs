@@ -20,7 +20,7 @@ namespace ModularFramework.Commons {
                 return kp.ConvertToAnyValue();
             }
 
-            ValueType tp = ValueTypeOf(typeof(T));
+            ValueType tp = ValueTypeOf(value.GetType());
             return tp switch {
                 ValueType.Bool => new AnyValue() {type=tp, boolValue=(bool)(object)value},
                 ValueType.Int => new AnyValue() {type=tp, intValue=(int)(object)value},

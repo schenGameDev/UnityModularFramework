@@ -11,15 +11,14 @@ public class ChatBubbleQueue : TextPrinterBase,IMark
     
     [SerializeField] private int maxBubbles = 5;
     [SerializeField] private float gap = 0.5f;
-    [SerializeField] private TextPrinter leftBubblePrefab;
-    [SerializeField] private TextPrinter rightBubblePrefab;
+    [SerializeField] private TextPrinter[] bubblePrefabs;
 
     private readonly List<TextPrinter> _bubbles = new();
     private TextPrinter LatestBubble => _bubbles.IsEmpty() ? null : _bubbles[^1];
     private Action _callback;
     private Timer _timer;
 
-    private void Awake()
+    protected void Awake()
     {
         if (gap > 0)
         {
@@ -54,7 +53,9 @@ public class ChatBubbleQueue : TextPrinterBase,IMark
             _timer.OnTimerStop-=_callback;
         }
         Done = false;
-        TextPrinter printer = CreateChatBubble(leftBubblePrefab !=null && parameters[0] == "1"? leftBubblePrefab : rightBubblePrefab);
+        int index = parameters.Length == 0 || parameters[0].IsEmpty() ? 0 : int.Parse(parameters[0]);
+        TextPrinter printer = CreateChatBubble(bubblePrefabs[index]);
+        printer.ReturnEarly = ReturnEarly;
         printer.Print(text, OnBubbleComplete);
         _callback = callback;
         _bubbles.Add(printer);
@@ -87,7 +88,8 @@ public class ChatBubbleQueue : TextPrinterBase,IMark
         {
             Destroy(b);
         }
-       
+        ReturnEarly = false;
+        Done = false;
     }
 
     private void OnDestroy()

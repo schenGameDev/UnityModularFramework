@@ -4,10 +4,9 @@ public class NoPrintStyle : PrintStyleBase
 {
     public override void OnPrint(string text, Action callback)
     {
-        Printer.Done = false;
-        Printer.endIndicator?.SetActive(false);
-        Printer.Textbox.text = text;
-        Printer.Done = true;
+        Prepare();
+        if(Printer.endIndicator) Printer.endIndicator.SetActive(false);
+        Finish(text);
         callback?.Invoke();
     }
 

@@ -1,9 +1,12 @@
 using System;
-using ModularFramework;
 using UnityEngine;
-[RequireComponent(typeof(Marker)),DisallowMultipleComponent]
+
+[DisallowMultipleComponent]
 public abstract class TextPrinterBase : MonoBehaviour
 {
+    public string printerName;
+    public bool hideWhenNotUsed;
+    
     /// <summary>
     /// override preset parameters when print text
     /// </summary>
@@ -19,4 +22,6 @@ public abstract class TextPrinterBase : MonoBehaviour
     public abstract void Clean();
     
     public bool Done { get; set; }
+    
+    public bool ReturnEarly { get; set; }
 }

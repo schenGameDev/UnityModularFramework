@@ -19,7 +19,7 @@ public class ExpandTransitionSO : SceneTransitionSO
         Canvas parentCanvas = lastSceneSnapshot.canvas;
         
         var mask = Instantiate(maskPrefab, parentCanvas.transform);
-        mask.color.SetAlpha(1);
+        mask.color = mask.color.SetAlpha(1);
         var rect = mask.rectTransform;
         
         rect.sizeDelta = Vector2.zero;
@@ -35,7 +35,7 @@ public class ExpandTransitionSO : SceneTransitionSO
             t += Time.deltaTime;
             await UniTask.NextFrame(cancellationToken: token);
         }
-        lastSceneSnapshot.color.SetAlpha(0);
+        lastSceneSnapshot.color = lastSceneSnapshot.color.SetAlpha(0);
         
         // new scene in
         t = 0;
@@ -46,5 +46,6 @@ public class ExpandTransitionSO : SceneTransitionSO
             await UniTask.NextFrame(cancellationToken: token);
         }
         Destroy(mask.gameObject);
+        Finish(lastSceneSnapshot);
     }
 }

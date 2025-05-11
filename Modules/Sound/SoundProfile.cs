@@ -1,6 +1,4 @@
-using System;
 using UnityEngine;
-using UnityEngine.Audio;
 
 [CreateAssetMenu(fileName = "SoundProfile_SO", menuName = "Game Module/Sound/Sound Profile")]
 public class SoundProfile : ScriptableObject {
@@ -17,7 +15,7 @@ public class SoundProfile : ScriptableObject {
     // public bool bypassReverbZones;
 
     // public int priority = 128;
-    public float volume = 1f;
+    [Range(0,1)]public float volume = 1f;
     public float pitch = 1f;
     // public float panStereo;
     // public float spatialBlend;

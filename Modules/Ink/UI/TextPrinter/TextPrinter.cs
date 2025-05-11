@@ -1,58 +1,80 @@
 using System;
-using EditorAttributes;
+using System.Collections.Generic;
 using ModularFramework;
 using TMPro;
 using UnityEngine;
 
 public class TextPrinter : TextPrinterBase
 {
+    public static readonly Dictionary<string,TextPrinter> INSTANCES = new ();
+    
+    [SerializeField] private bool staticPrinter;
     [SerializeField] public GameObject endIndicator;
-    [SerializeField] private bool hideWhenNotUsed;
     
     [SerializeField] protected string soundName;
-    
-    //[SerializeField,TypeFilter(typeof(PrintStyleBase))] 
-    //private SerializableType printStyle;
+
     [SerializeField] private PrintStyleBase printStyle;
+    
+    private PrintStyleBase _printStyleInstance;
     
     protected SoundManagerSO SoundManager;
     public TextMeshProUGUI Textbox { get; private set; }
+    private Action _callback;
 
     protected void Awake()
     {
-        Textbox = GetComponentInChildren<TextMeshProUGUI>();
+        Textbox = GetComponentInChildren<TextMeshProUGUI>(true);
         if (!Textbox)
         {
             throw new MissingComponentException("Missing TextMeshProUGUI");
         }
-        if (soundName.NonEmpty())
-        {
-            SoundManager = GameRunner.Instance.GetModule<SoundManagerSO>().OrElse(null);
-        }
 
-        if (printStyle == null) printStyle = ScriptableObject.CreateInstance<NoPrintStyle>();
-        
+        _printStyleInstance = printStyle ? Instantiate(printStyle) : ScriptableObject.CreateInstance<NoPrintStyle>();
+        _printStyleInstance.Printer = this;
+        if(endIndicator) endIndicator.SetActive(false);
+
+        if (staticPrinter)
+        {
+            INSTANCES.Add(printerName, this);
+            gameObject.SetActive(false);
+        }
     }
 
     public override void Skip()
     {
-        printStyle.OnSkip();
+        if (Done)
+        {
+            _callback?.Invoke();
+            return;
+        }
+        _printStyleInstance.OnSkip();
     }
 
     public override void Clean() // click again to hide
     {
         if(hideWhenNotUsed) gameObject.SetActive(false);
-        else Textbox.text = "";
+        else if(!_printStyleInstance.noClearText) Textbox.text = "";
+        ReturnEarly = false;
+        Done = false;
+        _callback = null;
     }
 
     public override void Print(string text, Action callback, params string[] parameters)
     {
-        printStyle.OnPrint(text, callback);
+        if (soundName.NonEmpty() && !SoundManager)
+        {
+            SoundManager = GameRunner.Instance.GetModule<SoundManagerSO>().OrElse(null);
+        }
+        gameObject.SetActive(true);
+        _callback = callback;
+        _printStyleInstance.ReturnEarly = ReturnEarly;
+        _printStyleInstance.OnPrint(text, callback);
     }
 
     private void OnDestroy()
     {
-        printStyle.OnDestroy();
+        _printStyleInstance.OnDestroy();
+        INSTANCES.Remove(printerName);
     }
 
     public SoundPlayer GetSoundPlayer() => SoundManager?.PlayLoopSound(soundName);

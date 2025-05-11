@@ -5,6 +5,8 @@ using ModularFramework.Utility;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityTimer;
+using Timer = UnityTimer.Timer;
 
 namespace ModularFramework
 {
@@ -14,10 +16,14 @@ namespace ModularFramework
     /// </summary>
     public class GameBuilder : Singleton<GameBuilder>
     {
+        public Action SceneTransitionCompleteCallback;
+        
         [Header("Scene Manager")]
         
         [SerializeField] private string startingScene;
         public string CurrentScene {get; private set;}
+        public string NextScene {get; private set;}
+        
         public RawImage transitionImage;
         [SerializeField] private SceneTransitionSO defaultTransition;
 
@@ -26,6 +32,8 @@ namespace ModularFramework
         private GameSystem[] systems;
         
         private CancellationTokenSource _cts;
+        
+        public Camera MainCamera { get; private set; }
 
         protected override void Awake()
         {
@@ -43,6 +51,7 @@ namespace ModularFramework
 
         void Start()
         {
+            MainCamera = Camera.main;
             LoadStartScene();
         }
 
@@ -57,39 +66,65 @@ namespace ModularFramework
         }
 
         #region Scene
+
+        private Timer _sceneLoadingTimer;
+        
         private void LoadStartScene() => LoadScene(startingScene);
 
         public void LoadScene(string sceneName, SceneTransitionSO transitionProfile = null, Action callback = null) {
             if(sceneName == CurrentScene || sceneName.IsEmpty()) return;
-
-            if(CurrentScene != null && CurrentScene.NonEmpty()) {
-                Scene s = SceneManager.GetSceneByName(CurrentScene);
-                if(s.IsValid()) {
-                    transitionImage.texture = GetCameraScreenshot();
-                    SceneManager.UnloadSceneAsync(s);
-
-                    if(_cts!=null) {
-                        _cts.Cancel();
-                        _cts.Dispose();
-                    }
-                    _cts = new CancellationTokenSource();
-                    SceneTransitionSO transition = transitionProfile ?? defaultTransition;
-                    transition.Transition(_cts.Token, transitionImage); 
-                }
+            NextScene = sceneName;
+            bool currentSceneExists = !string.IsNullOrEmpty(CurrentScene);
+            Scene currentScene = default(Scene);
+            if (currentSceneExists)
+            {
+                currentScene = SceneManager.GetSceneByName(CurrentScene);
+                currentSceneExists = currentScene.IsValid();
             }
-            AsyncOperation op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
-            op.allowSceneActivation = true;
-            op.completed += (_) => {
-                Scene newScene = SceneManager.GetSceneByName(sceneName);
-                SceneManager.SetActiveScene(newScene);
-                CurrentScene = sceneName;
-                callback?.Invoke();
-            };
+
+            if (currentSceneExists)
+            {
+                transitionImage.gameObject.SetActive(true);
+                transitionImage.texture = GetCameraScreenshot();
+            }
+
+            if(_sceneLoadingTimer==null) _sceneLoadingTimer = new FrameCountdownTimer(2);
+            else
+            {
+                _sceneLoadingTimer.Reset();
+                _sceneLoadingTimer.OnTimerStop = null;
+            }
+            _sceneLoadingTimer.OnTimerStop += () => UnloadLoadScene(currentSceneExists, currentScene,transitionProfile, callback);
+            _sceneLoadingTimer.Start();
 
         }
 
-        private Texture2D GetCameraScreenshot() {
-            Camera cam = Camera.main;
+        private void UnloadLoadScene(bool unloadScene, Scene currentScene, SceneTransitionSO transitionProfile, Action callback)
+        {
+            if(unloadScene) {
+                SceneManager.UnloadSceneAsync(currentScene);
+
+                if(_cts!=null) {
+                    _cts.Cancel();
+                    _cts.Dispose();
+                }
+                _cts = new CancellationTokenSource();
+                SceneTransitionSO transition = transitionProfile ?? defaultTransition;
+                transition.Transition(_cts.Token, transitionImage); 
+            }
+            AsyncOperation op = SceneManager.LoadSceneAsync(NextScene, LoadSceneMode.Additive);
+            op.allowSceneActivation = true;
+            op.completed += (_) => {
+                Scene newScene = SceneManager.GetSceneByName(NextScene);
+                SceneManager.SetActiveScene(newScene);
+                CurrentScene = NextScene;
+            };
+            SceneTransitionCompleteCallback = callback;
+        }
+
+        private Texture2D GetCameraScreenshot()
+        {
+            Camera cam = MainCamera;
             int w = cam.pixelWidth;
             int h = cam.pixelHeight;
 

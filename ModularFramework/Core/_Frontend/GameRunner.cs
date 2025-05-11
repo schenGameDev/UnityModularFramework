@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using AYellowpaper.SerializedCollections;
 using EditorAttributes;
+using ModularFramework.Commons;
+using ModularFramework.Utility;
+using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
+using UnityTimer;
 
 namespace ModularFramework {
-    using Commons;
-    using Utility;
-
     public class GameRunner : Singleton<GameRunner>
     {
         public static readonly List<GameSystem> SYSTEMS = new();
@@ -41,13 +41,36 @@ namespace ModularFramework {
                     _framelyUpdatedModules.Add(module);
                 }
             }
+
+            foreach (var m in PersistentBehaviour.INSTANCES)
+            {
+                m.OnSceneLoad(GameBuilder.Instance.NextScene);
+            }
         }
 
         private void Start()
         {
             if (modules == null) return;
+            RegistryBuffer.InjectAll();
             foreach(var module in modules) {
                 module.OnStart();
+            }
+
+            _timer = new FrameCountdownTimer(10);
+            _timer.OnTimerStop += SceneReady;
+            _timer.Start();
+   
+        }
+        
+        private Timer _timer;
+
+        private void SceneReady()
+        {
+            _timer.Dispose();
+            if (GameBuilder.Instance)
+            {
+                GameBuilder.Instance.SceneTransitionCompleteCallback?.Invoke();
+                GameBuilder.Instance.SceneTransitionCompleteCallback = null;
             }
         }
 
@@ -66,6 +89,10 @@ namespace ModularFramework {
             foreach(var module in modules) {
                 module.OnDestroy();
             }
+            foreach (var m in PersistentBehaviour.INSTANCES)
+            {
+                m.OnSceneDestroy(GameBuilder.Instance.NextScene);
+            }
         }
 
         private void OnDrawGizmos()
@@ -75,11 +102,10 @@ namespace ModularFramework {
                 module.OnGizmos();
             }
         }
-
-        [Button]
+        
         public void EndGame() {
             #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
+            EditorApplication.isPlaying = false;
             #elif UNITY_WEBPLAYER
             Application.OpenURL("http://google.com");
             #else
@@ -101,11 +127,11 @@ namespace ModularFramework {
     
     #region System
         public static Optional<T> GetSystem<T>() where T : GameSystem {
-            GameSystem sys = SYSTEMS.First(m => (m as T) != null);
-            if(sys != null) {
+            GameSystem sys = SYSTEMS.FirstOrDefault(m => m.GetType() == typeof(T));
+            if(sys) {
                 return (T) sys;
             }
-            DebugUtil.Error("System of type " + typeof(T) + " not found");
+            Debug.LogWarning("System of type " + typeof(T) + " not found");
             return null;
         }
 
@@ -113,7 +139,7 @@ namespace ModularFramework {
         {
             if (SYSTEMS.Any(s=> s.GetType() == sys.GetType()))
             {
-                DebugUtil.Error("System of type " + sys.GetType().Name + " already exists");
+                Debug.LogWarning("System of type " + sys.GetType().Name + " already exists");
                 return;
             }
             if(sys is IRegistrySO so) 

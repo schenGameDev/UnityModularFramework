@@ -1,16 +1,19 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Ink.Runtime;
-using ModularFramework;
-using UnityEngine;
-using EditorAttributes;
-using System;
 using System.Text;
 using System.Text.RegularExpressions;
-using ModularFramework.Utility;
-using ModularFramework.Commons;
 using AYellowpaper.SerializedCollections;
+using EditorAttributes;
+using Ink;
+using Ink.Runtime;
+using ModularFramework;
+using ModularFramework.Commons;
+using ModularFramework.Utility;
+using UnityEngine;
+using UnityTimer;
 using ValueType = ModularFramework.Commons.ValueType;
+using Void = EditorAttributes.Void;
 
 /// <summary>
 /// load and save story, send and receive variables.
@@ -20,6 +23,7 @@ using ValueType = ModularFramework.Commons.ValueType;
 public class InkSystemSO : GameSystem
 {
     private const string IN_TEXT_CODE_PATTERN = "[{][^{}]+[}]";
+    public const string NARRATIVE_TEXT = "NARRATIVE";
     
     [Header("Config")]
     [SerializeField] private InkStoryBucket stories;
@@ -28,15 +32,17 @@ public class InkSystemSO : GameSystem
     [SerializeField] private Bucket codeReplaceBucket;
     [SerializeField] private bool saveLog;
 
-    [FoldoutGroup("Event Channels", nameof(inkTextChannel), nameof(varChangeChannel), nameof(inkTaskChannel))]
-    [SerializeField] private EditorAttributes.Void eventChannelGroup;
-    [HideInInspector,SerializeField] EventChannel<(string,Keeper)> varChangeChannel;
-    [HideInInspector,SerializeField] EventChannel<Either<InkLine,InkChoice>> inkTextChannel;
-    [HideInInspector,SerializeField] EventChannel<(string,string,Action<string>)> inkTaskChannel;
+    [FoldoutGroup("Event Channels", nameof(varChangeChannel), nameof(inkTaskChannel))]
+    [SerializeField] private Void eventChannelGroup;
+    [HideInInspector,SerializeField] InkVarEventChannel varChangeChannel;
+    [HideInInspector,SerializeField] InkTaskEventChannel inkTaskChannel;
+
+    public static Action<Either<InkLine, InkChoice>> InkTextAction;
 
     [Header("Runtime")]
     [Rename("Current Story"),ReadOnly,SerializeField,RuntimeObject] string currentStoryName;
     [ReadOnly,SerializeField,RuntimeObject] private string currentChapter;
+    [RuntimeObject] private readonly Dictionary<string, string> _characterDialogBox = new();
 
 #if UNITY_EDITOR
     [ReadOnly,SerializeField,SerializedDictionary,RuntimeObject] private SerializedDictionary<string,string> stats;
@@ -47,7 +53,6 @@ public class InkSystemSO : GameSystem
     [SerializeField,ReadOnly] InkStage stage;
     [RuntimeObject] InkLine _currentLine;
     [RuntimeObject] InkChoice _currentChoice;
-    
 
     public override void OnDestroy() {
         stage = InkStage.END;
@@ -70,11 +75,12 @@ public class InkSystemSO : GameSystem
             (varName, newValue) => {
                 if(newValue == _keeperDict[varName]) return;
                 PutKeeper(varName, newValue);
+                Debug.Log("Ink Var Changed: " + varName);
                 varChangeChannel?.Raise((varName, PutKeeper(varName, newValue)));
             });
 
         _currentStory.onError += (msg, type) => {
-            if( type == Ink.ErrorType.Warning )
+            if( type == ErrorType.Warning )
                 DebugUtil.Warn(msg);
             else
                 DebugUtil.Error(msg);
@@ -84,6 +90,7 @@ public class InkSystemSO : GameSystem
     private void ClearStory() {
         _currentStory?.RemoveVariableObserver();
         _currentStory = null;
+        _firstLine = true;
     }
 
     /// <returns> true until story meets a choice or end</returns>
@@ -99,30 +106,66 @@ public class InkSystemSO : GameSystem
     }
 
     [RuntimeObject] int _lastChoiceIndex = -1;
+    [RuntimeObject] bool _firstLine = true;
     public InkStage Next(int choiceIndex = -1) { // next button clickable only at READY state
         if(TaskRunning()) {
             if(stage == InkStage.WAIT_CHOICE) _lastChoiceIndex = choiceIndex;
+            _playNextAfterTaskCompleted = true;
             return InkStage.WAIT_TASK;
         }
+        _playNextAfterTaskCompleted = false;
         _lastChoiceIndex = -1;
+        // Debug.Log("ink");
         if(stage == InkStage.READY) {
             _currentChoice = null;
             _currentLine = null;
             // check if story end or choice ahead
             if(!CanContinue()) {
                 _currentChoice = NextChoice();
-                if(_currentChoice == null) {
+                if(_currentChoice == null || _currentChoice.choices.Count == 0) {
                     stage = InkStage.END;
+                    GameBuilder.Instance.LoadScene("Menu");
                     return stage;
                 } 
-                inkTextChannel.Raise(Either<InkLine,InkChoice>.FromRight(_currentChoice));
+                InkTextAction.Invoke(Either<InkLine,InkChoice>.FromRight(_currentChoice));
                 stage = InkStage.WAIT_CHOICE;
             } else {
-                string text = ReplaceCode(_currentStory.Continue());
+                string text = ReplaceCode(_currentStory.Continue()).Trim();
+                if (text == InkConstants.VAR_SAVE)
+                {
+                    if (!_firstLine)
+                    {
+                        SaveStory(currentStoryName, _currentStory);
+                        GameRunner.GetSystem<NoteSystemSO>().Do(sys => sys.SaveNotes());
+                        SaveUtil.FlushToNextAvailableSlot();
+                    }
+                    _firstLine = false;
+                    return Next(choiceIndex);
+                }
+                _firstLine = false;
+                if (text.IsBlank())
+                {
+                    return Next(choiceIndex);
+                }
+                
+                if (text == InkConstants.VAR_PAUSE)
+                {
+                    _playNextAfterTaskCompleted = true;
+                    return InkStage.WAIT_TASK;
+                }
+                
+                if (text == InkConstants.VAR_WAIT)
+                {
+                    return InkStage.WAIT_TASK;
+                }
+                
+                
                 List<InkTag> tags = _currentStory.currentTags==null? new() : _currentStory.currentTags.Select(t=>InkTag.Of(t,tagDefBuckets,Get)).ToList();
                 _currentLine = new InkLine(text,tags);
+                UpdateDialogueBox(_currentLine);
+                
                 SaveLog(text);
-                inkTextChannel.Raise(Either<InkLine,InkChoice>.FromLeft(_currentLine));
+                InkTextAction.Invoke(Either<InkLine,InkChoice>.FromLeft(_currentLine));
                 stage = InkStage.READY;
             }
             return stage;
@@ -139,6 +182,19 @@ public class InkSystemSO : GameSystem
         }
 
         throw new Exception("Wrong place to be");
+    }
+
+    private void UpdateDialogueBox(InkLine line)
+    {
+        string character = string.IsNullOrEmpty(line.character)? NARRATIVE_TEXT : line.character;
+        if (string.IsNullOrEmpty(line.dialogBoxId))
+        {
+            line.dialogBoxId = _characterDialogBox.Get(character).OrElse(InkUIIntegrationSO.DEFAULT_DIALOG_BOX);
+        }
+        else
+        {
+            _characterDialogBox[character] = line.dialogBoxId;
+        }
     }
 
 
@@ -192,7 +248,6 @@ public class InkSystemSO : GameSystem
         story.BindExternalFunction(InkConstants.INK_FUNCTION_DO_TASK, 
             (string task, string parameter, bool isBlocking) => DoTask(task, parameter, isBlocking),
             false);
-        LoadNotes();
     }
 
     public void SaveStory(string storyName, Story story) {
@@ -200,37 +255,126 @@ public class InkSystemSO : GameSystem
         SaveUtil.SaveState(storyName, saveJson);
         SaveUtil.SaveState(InkConstants.KEY_CURRENT_STORY, storyName);
         SaveVariables();
-        SaveNotes();
     }
 
+    public string GetLastSceneName()
+    {
+        return _keeperDict.Get(InkConstants.VAR_SCENE).OrElse( Keeper.Of("UNDEFINED"));
+    }
 #endregion
 #region Task
     [RuntimeObject] int _tasksRunning = 0;
-    [RuntimeObject] readonly List<(string,string)> _taskBuffer = new();
+    [RuntimeObject] readonly List<(string,string,bool)> _taskBuffer = new();
     [RuntimeObject] bool _taskBlocked = false;
+    [RuntimeObject] bool _playNextAfterTaskCompleted = false;
+
     private void DoTask(string taskHandler, string parameter, bool isBlocking) {
         // wait till all tasks finish, then proceed to next
         if(_taskBlocked) {
-            _taskBuffer.Add((taskHandler, parameter));
+            _taskBuffer.Add((taskHandler, parameter, isBlocking));
             return;
         }
-        if(_taskBuffer.NonEmpty()) {
-            _taskBuffer.ForEach(task => inkTaskChannel.Raise((task.Item1,task.Item2,TaskComplete)));
-            _taskBuffer.Clear();
-        }
+        RunTask(taskHandler, parameter, isBlocking);
+    }
+
+    private void RunTask(string taskHandler, string parameter, bool isBlocking)
+    {
         _tasksRunning++;
-        inkTaskChannel.Raise((taskHandler, parameter, TaskComplete));
-        // effectprofile, name:effect(play anim, change BG, in-out style, wait time)
+        
+        RaiseTask(taskHandler, parameter);
         if(isBlocking) {
             _taskBlocked = true;
         }
     }
 
+    private void RaiseTask(string taskHandler, string parameter)
+    {
+        Debug.Log($"Task {taskHandler}:{parameter} Started");
+        if (taskHandler == InkConstants.TASK_CHANGE_SCENE)
+        {
+            GameBuilder.Instance.LoadScene(parameter,null,()=>SceneLoaded(parameter,TaskComplete));
+            return;
+        }
+        
+        if (taskHandler == InkConstants.TASK_HANG)
+        {
+            Timer timer = new CountdownTimer(float.Parse(parameter));
+            timer.OnTimerStop += () =>
+            {
+                TaskComplete(InkConstants.TASK_HANG);
+                _playNextAfterTaskCompleted = true;
+                timer.Dispose();
+            };
+            timer.Start();
+            return;
+        }
+        // immediate
+        if (taskHandler == InkConstants.TASK_PLAY_SOUND)
+        {
+            GameRunner.Instance?.GetModule<SoundManagerSO>().Do(sys => sys.PlaySound(parameter));
+            TaskComplete(taskHandler);
+            return;
+        }
+        if (taskHandler == InkConstants.TASK_PLAY_BGM)
+        {
+            GameRunner.GetSystem<MusicSystemSO>().Do(sys => sys.PlayTrack(parameter));
+            TaskComplete(taskHandler);
+            return;
+        }
+        if (taskHandler == InkConstants.TASK_ADD_NOTE)
+        {
+            GameRunner.GetSystem<NoteSystemSO>().Do(sys => sys.AddNote(parameter));
+            TaskComplete(taskHandler);
+            return;
+        }
+        if (taskHandler == InkConstants.TASK_ADD_QUEST || 
+            taskHandler == InkConstants.TASK_DROP_QUEST ||
+            taskHandler == InkConstants.TASK_COMPLETE_QUEST)
+        {
+            GameRunner.GetSystem<QuestSystemSO>().Do(sys =>
+            {
+                Quest.QuestStage stage = taskHandler switch
+                {
+                    InkConstants.TASK_DROP_QUEST => Quest.QuestStage.FAILED,
+                    InkConstants.TASK_COMPLETE_QUEST => Quest.QuestStage.COMPLETED,
+                    _ => Quest.QuestStage.ACTIVE
+                };
+                sys.UpdateQuestStage(parameter, stage);
+            });
+            TaskComplete(taskHandler);
+            return;
+        }
+
+        Action<string> callback = TaskComplete;
+        if (taskHandler == InkConstants.TASK_NOTIFICATION)
+        {
+            callback(taskHandler);
+            callback = null;
+        }
+
+        inkTaskChannel.Raise((taskHandler, parameter, callback));
+    }
+
+    private void SceneLoaded(string sceneName,  Action<string> callback)
+    {
+        inkTaskChannel.Raise((InkConstants.TASK_CHANGE_SCENE, sceneName, null));
+        callback?.Invoke(InkConstants.TASK_CHANGE_SCENE);
+    }
+    
+
     public void TaskComplete(string taskName) {
-        DebugUtil.DebugLog($"Task {taskName} is completed");
-        _tasksRunning--;
-        if(_tasksRunning == 0 && _taskBlocked) _taskBlocked = false;
-        if(_taskBuffer.IsEmpty() && _lastChoiceIndex!=-1) {
+        Debug.Log($"Task {taskName} is completed");
+        if (--_tasksRunning > 0) return;
+        _taskBlocked = false;
+        
+        if(!_taskBuffer.IsEmpty()) {
+            var task = _taskBuffer.RemoveAtAndReturn(0);
+            RunTask(task.Item1, task.Item2, task.Item3);
+            return;
+        }
+
+        if (_playNextAfterTaskCompleted)
+        {
             Next(_lastChoiceIndex);
         }
     }
@@ -287,12 +431,12 @@ public class InkSystemSO : GameSystem
     }
     private string ExplainCondition(string condition) {
         varNameBucket?.GetDictionary().ForEach((varName, newName) => {
-            condition = condition.Replace(varName, newName);
+            condition = condition.Replace(varName, newName).Replace('_', ' ');
         });
         return condition;
     }
 
-    private Optional<Keeper> Get(string varName) {
+    public Optional<Keeper> Get(string varName) {
             if(_keeperDict.TryGetValue(varName, out Keeper value)) {
                 return value;
             }
@@ -343,23 +487,6 @@ public class InkSystemSO : GameSystem
 
 #endregion
 
-    #region Note
-    [RuntimeObject] public readonly List<string> notes = new ();
-    private void SaveNotes()
-    {
-        if (notes.IsEmpty()) return;
-        var json = JsonUtility.ToJson(notes);
-        SaveUtil.SaveState(InkConstants.KEY_NOTES, json);
-    }
-
-    private void LoadNotes()
-    {
-        notes.Clear();
-        SaveUtil.GetState(InkConstants.KEY_NOTES).Do(n => notes.AddRange(JsonUtility.FromJson<List<string>>(n)));
-    }
-
-
-    #endregion
 }
 
 public enum InkStage {

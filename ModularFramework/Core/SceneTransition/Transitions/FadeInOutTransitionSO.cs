@@ -23,10 +23,9 @@ public class FadeInOutTransitionSO : SceneTransitionSO
         // old scene out
         if (mode != FadeMode.FADE_IN) 
         {
-            mask.color.SetAlpha(0);
+            mask.color = mask.color.SetAlpha(0);
             Color from = mask.color;
-            Color to = mask.color;
-            to.SetAlpha(1);
+            Color to = mask.color.SetAlpha(1);
 
             float t = 0;
             while(t<=duration) {
@@ -36,15 +35,14 @@ public class FadeInOutTransitionSO : SceneTransitionSO
             }
             
         }
-        lastSceneSnapshot.color.SetAlpha(0);
-        mask.color.SetAlpha(1);
+        lastSceneSnapshot.color = lastSceneSnapshot.color.SetAlpha(0);
+        mask.color = mask.color.SetAlpha(1);
         
         // new scene in
         if (mode != FadeMode.FADE_OUT)
         {
             Color from = mask.color;
-            Color to = mask.color;
-            to.SetAlpha(0);
+            Color to = mask.color.SetAlpha(0);
             
 
             float t = 0;
@@ -55,5 +53,6 @@ public class FadeInOutTransitionSO : SceneTransitionSO
             }
         }
         Destroy(mask.gameObject);
+        Finish(lastSceneSnapshot);
     }
 }

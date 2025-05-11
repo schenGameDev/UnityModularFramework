@@ -4,31 +4,62 @@ using UnityEngine;
 
 namespace ModularFramework
 {
+    /// <summary>
+    /// enable and hide Canvas on demand
+    /// </summary>
+    [CreateAssetMenu(fileName = "UISystem_SO", menuName = "Game Module/UI System")]
     public class UISystem : GameSystem,IRegistrySO
     {
-        [RuntimeObject] private readonly Dictionary<string, Transform> _canvasDict = new(); 
+        [SerializeField] StringBoolEventChannel canvasChannel;
+        [RuntimeObject] private readonly Dictionary<string, CanvasMarker> _canvasDict = new(); 
         [RuntimeObject,SerializeField, Rename("Active Canvas")] private List<string> activeCanvasNames = new();
-        [RuntimeObject] private Transform _frontCanvas;
-        [RuntimeObject] private readonly List<Transform> _alwaysVisibleCanvas = new();
+        [RuntimeObject] private readonly List<CanvasMarker> _frontCanvas = new();
+        [RuntimeObject] private readonly List<CanvasMarker> _alwaysVisibleCanvas = new();
+
+
+        private void OnEnable()
+        {
+            canvasChannel?.AddListener(CanvasChange);
+        }
+
+        private void OnDisable()
+        {
+            canvasChannel?.RemoveListener(CanvasChange);
+        }
+        
+        public void CanvasChange((string, bool) channelMsg)
+        {
+            string canvasName = channelMsg.Item1;
+            bool turnOn = channelMsg.Item2;
+            if(turnOn) ActivateCanvas(canvasName);
+            else DeactivateCanvas(canvasName);
+        }
+        
+        public bool IsCanvasActive(string canvasName) => activeCanvasNames.Contains(canvasName);
         
         public void ActivateCanvas(string canvasName)
         {
             if(activeCanvasNames.Contains(canvasName)) return;
-            if (_canvasDict.TryGetValue(canvasName, out Transform canvas))
+            if (_canvasDict.TryGetValue(canvasName, out CanvasMarker canvasMarker))
             {
-                canvas.gameObject.SetActive(true);
-                if (canvas.GetComponent<CanvasMarker>().alwaysVisible)
+                canvasMarker.Show();
+                if (canvasMarker.alwaysVisible)
                 {
-                    _alwaysVisibleCanvas.Add(canvas);
+                    _alwaysVisibleCanvas.Add(canvasMarker);
                 }
                 else
                 {
-                    if (!_frontCanvas)
+                    if (_frontCanvas.NonEmpty()
+                        && (!_frontCanvas[0].compatibleWithOtherCanvas || !canvasMarker.compatibleWithOtherCanvas))
                     {
-                        _frontCanvas.gameObject.SetActive(false);
-                        activeCanvasNames.Remove(_frontCanvas.name);
+                        _frontCanvas.ForEach(c =>
+                        {
+                            c.Hide();
+                            activeCanvasNames.Remove(c.name);
+                        });
+                        _frontCanvas.Clear();
                     }
-                    _frontCanvas = canvas;
+                    _frontCanvas.Add(canvasMarker);
                 }
 
                 activeCanvasNames.Add(canvasName);
@@ -39,29 +70,44 @@ namespace ModularFramework
         {
             if (!activeCanvasNames.Contains(canvasName)) return;
             activeCanvasNames.Remove(canvasName);
-            
-            if(_frontCanvas.name == canvasName)
-            {
-                _frontCanvas?.gameObject.SetActive(false);
-                _frontCanvas = null;
-                return;
-            }
 
-            _alwaysVisibleCanvas.RemoveWhere(tf => 
+
+            _frontCanvas.RemoveWhere(c =>
             {
-                if (tf.name == canvasName)
+                if (c.name == canvasName)
                 {
-                    tf.gameObject.SetActive(false);
+                    c.Hide();
+                    return true;
+                }
+
+                return false;
+            });
+
+            _alwaysVisibleCanvas.RemoveWhere(c => 
+            {
+                if (c.name == canvasName)
+                {
+                    c.Hide();
                     return true;
                 }
                 return false;
             });
             
         }
+
+        public void DeactivateAll()
+        {
+            _frontCanvas.ForEach(c =>c.Hide());
+            _alwaysVisibleCanvas.ForEach(c => c.Hide());
+            
+            _frontCanvas.Clear();
+            _alwaysVisibleCanvas.Clear();
+        }
         
         public void Register(Transform transform)
         {
-            _canvasDict.Add(transform.name, transform);
+            _canvasDict.Add(transform.name, transform.GetComponent<CanvasMarker>());
+            transform.gameObject.SetActive(false);
         }
 
         public void Unregister(Transform transform)

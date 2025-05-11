@@ -25,7 +25,7 @@ public class FillTransitionSO : SceneTransitionSO
         mask.fillMethod = fillMethod;
         mask.fillAmount = 0;
         mask.fillClockwise = fromLeftBottomClockwise;
-        mask.color.SetAlpha(1);
+        mask.color = mask.color.SetAlpha(1);
         
         // old scene out
         float t = 0;
@@ -34,7 +34,7 @@ public class FillTransitionSO : SceneTransitionSO
             t += Time.deltaTime;
             await UniTask.NextFrame(cancellationToken: token);
         }
-        lastSceneSnapshot.color.SetAlpha(0);
+        lastSceneSnapshot.color = lastSceneSnapshot.color.SetAlpha(0);
         
         // new scene in
         t = 0;
@@ -45,5 +45,6 @@ public class FillTransitionSO : SceneTransitionSO
             await UniTask.NextFrame(cancellationToken: token);
         }
         Destroy(mask.gameObject);
+        Finish(lastSceneSnapshot);
     }
 }

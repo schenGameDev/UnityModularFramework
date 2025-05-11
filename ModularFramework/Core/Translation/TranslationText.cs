@@ -8,8 +8,8 @@ namespace ModularFramework.Utility
     public class TranslationText : MonoBehaviour
     {
         [SerializeField,ReadOnly] protected string id;
-        [SerializeField] protected string text;
-        
+        private string _text;
+        private TextMeshProUGUI _tmp;
 #if UNITY_EDITOR
         [SerializeField] private bool saved;
         [SerializeField] private TranslationDraftBucket draftBucket;
@@ -25,30 +25,30 @@ namespace ModularFramework.Utility
                     return;
                 }
             }
-            
+
+            var text = GetDraftText();
             draftBucket.Put(id, text);
             saved = true;
             Debug.Log("Save success");
         }
+
+        protected virtual string GetDraftText() => GetComponent<TextMeshProUGUI>().text;
         
         private void RegenerateId()
         {
-            id = (DateTime.Now.Millisecond - new DateTime(2025, 1, 1).Millisecond).ToString("x");
+            id = (DateTime.Now - new DateTime(2025, 1, 1)).TotalMilliseconds.ToString("0");
         }
 #endif
 
         private void Awake()
         {
-            text = TranslationUtil.Translate(id);
+            _tmp = GetComponent<TextMeshProUGUI>();
+            _text = TranslationUtil.Translate(id, _tmp? _tmp.text : null);
         }
 
         protected virtual void Start()
         {
-            var tmp = GetComponent<TextMeshProUGUI>();
-            if (tmp)
-            {
-                tmp.text = text;
-            }
+            if (_tmp) _tmp.text = _text;
         }
     }
 }

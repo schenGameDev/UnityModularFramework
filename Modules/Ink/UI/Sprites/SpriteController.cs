@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using ModularFramework;
@@ -8,7 +6,8 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SpriteController : Marker
+[RequireComponent(typeof(Marker))]
+public class SpriteController : MonoBehaviour,IMark
 {
     public enum TransitionStyle
     {
@@ -22,12 +21,9 @@ public class SpriteController : Marker
     private Image _img;
     private bool _isSpriteRenderer;
 
-    public SpriteController()
-    {
-        RegistryTypes = new[] { new[]{typeof(InkUIIntegrationSO)}};
-    }
+    public Type[][] RegistryTypes => new[] { new[]{typeof(InkUIIntegrationSO)}};
 
-    protected override void Awake() {
+    protected void Awake() {
         _sr = GetComponent<SpriteRenderer>();
         if (_sr) _isSpriteRenderer = true;
         else _img = GetComponent<Image>();
@@ -99,10 +95,11 @@ public class SpriteController : Marker
 
     public void SwapImage(Sprite newSprite, TransitionStyle outStyle = TransitionStyle.FADE, TransitionStyle inStyle = TransitionStyle.FADE)
     {
-        if (outStyle == TransitionStyle.HARD && inStyle == TransitionStyle.HARD)
+        if ((!_img.sprite || outStyle == TransitionStyle.HARD) && inStyle == TransitionStyle.HARD)
         {
             UpdateSprite(newSprite);
             SetAlpha(1);
+            return;
         }
         if (_cts != null)
         {
@@ -111,18 +108,19 @@ public class SpriteController : Marker
             _cts = null;
         }
         _cts = new CancellationTokenSource();
-        if (outStyle == TransitionStyle.FADE && inStyle == TransitionStyle.FADE)
+        if (_img.sprite && outStyle == TransitionStyle.FADE && inStyle == TransitionStyle.FADE)
         {
             FadeSwap(newSprite, fadeTime, _cts.Token).Forget();
-        } else if (outStyle == TransitionStyle.HARD)
+        } else if (!_img.sprite || outStyle == TransitionStyle.HARD)
         {
             UpdateSprite(newSprite);
             Fade(true, fadeTime, _cts.Token).Forget();
         }
-        else
+        else if(_img.sprite)
         {
             FadeOutHardIn(newSprite, fadeTime, _cts.Token).Forget();
         }
+       
     }
 
     public void Clear(TransitionStyle outStyle = TransitionStyle.FADE)

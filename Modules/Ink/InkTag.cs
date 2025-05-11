@@ -2,18 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ModularFramework.Commons;
+using UnityEngine;
 
 [Serializable]
 public class InkTag {
     static readonly string CONDITION_TAG_PREFIX = "COND_";
     static readonly string CHOICE_GROUP_TAG_PREFIX = "GRP_";
+    static readonly string CHOICE_INDEX_OVERRIDE_TAG_PREFIX = "IDX_";
+    static readonly string CHOICE_HIDE_TEXT_TAG = "HIDE";
+    static readonly string INTERRUPTED_TAG = "INTERRUPT";
     static readonly char[] ESCAPE_MATH_CHARS = new char[] {'+','-','*','/','%'};
     static readonly char[] ESCAPE_LOGIC_CHARS = new char[] {'|','&'};
     static readonly char[] ESCAPE_COMPARE_CHARS = new char[] {'=','!','>','<'};
     static readonly string TRUE = "T";
     static readonly string FALSE = "F";
-
-    public string[] codes;
+    
+    [SerializeField] public string[] codes;
     public InkTagType type;
 
     public InkTag(InkTagType type, params string[] codes) {
@@ -57,10 +61,33 @@ public class InkTag {
         }
 
         if(tagText.StartsWith(CHOICE_GROUP_TAG_PREFIX)) {
-            return new InkTag(InkTagType.GROUP, tagText[CHOICE_GROUP_TAG_PREFIX.Length..]);
+            return new InkTag(InkTagType.GROUP, tagText[CHOICE_GROUP_TAG_PREFIX.Length..].Split('_'));
         }
 
-        return tagDefBuckets.Select(x=>x.Get(tagText)).First(op => op.HasValue).Get();
+        if (tagText.StartsWith(CHOICE_INDEX_OVERRIDE_TAG_PREFIX))
+        {
+            return new InkTag(InkTagType.INDEX, tagText[CHOICE_INDEX_OVERRIDE_TAG_PREFIX.Length..]);
+        }
+
+        if (tagText == CHOICE_HIDE_TEXT_TAG)
+        {
+            return new InkTag(InkTagType.HIDE_CHOICE_TEXT);
+        }
+        if (tagText == INTERRUPTED_TAG)
+        {
+            return new InkTag(InkTagType.INTERRUPTED);
+        }
+
+        var tag = tagDefBuckets.Select(x=>x.Get(tagText)).First(op => op.HasValue).Get();
+        if (tag.type == InkTagType.CHARACTER && tag.codes[1] == "false")
+        {
+            getKeeperFunc("Know" + tagText.FirstCharToUpper()).Do(x =>
+            {
+                if (x) tag.codes[1] = "true";
+            });
+        }
+
+        return tag;
     }
 
     private static string SimpleMathEvaluator(string expression, Func<string,Optional<Keeper>> getKeeperFunc) {
@@ -234,9 +261,13 @@ public class InkTag {
 }
 
 public enum InkTagType {
-    CHARACTER, // {character_name}
+    CHARACTER, // {character_name, is_character_known}
     PORTRAIT, // character portrait [id, position_on_screen]
     CONDITION, // in-text format: COND_{expression}${explanation_id} e.g. COND_player_health>1$12
     GROUP, // in-text format: GRP_{id} e.g. GRP_12 If not set, the line will display at default dialog box, the choices will display at default button group
     EFFECT, // word effect, font size change, print speed, color
+    INDEX,
+    
+    HIDE_CHOICE_TEXT,
+    INTERRUPTED
 }

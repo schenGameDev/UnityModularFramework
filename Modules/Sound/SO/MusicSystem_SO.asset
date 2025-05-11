@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 876131a7887d43cba6e627fd585805fe, type: 3}
+  m_Name: MusicSystem_SO
+  m_EditorClassIdentifier: 
+  masterGroup: {fileID: 24300002, guid: 1c4978043078c4485b1a2cdec1f0f9c2, type: 2}
+  soundFxGroup: {fileID: -2592916245730541905, guid: 1c4978043078c4485b1a2cdec1f0f9c2, type: 2}
+  tracks: {fileID: 11400000, guid: 5695e9e88ed5e4db593571e585f8bd72, type: 2}
+  crossFadeTime: 1
+  repeat: 1
+  repeatOnAwake: 1
+  defaultPlaylist: []
+  trackChannel: {fileID: 0}
+  currentTrackName: 
+  playlist: []

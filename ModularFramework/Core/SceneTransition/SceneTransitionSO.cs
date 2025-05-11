@@ -8,5 +8,10 @@ namespace ModularFramework
     {
         [SerializeField] protected float duration = 1;
         public abstract void Transition(CancellationToken token, RawImage lastSceneSnapshot);
+
+        public void Finish(RawImage lastSceneSnapshot)
+        {
+            lastSceneSnapshot.gameObject.SetActive(false);
+        }
     }
 }

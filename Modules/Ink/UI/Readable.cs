@@ -1,49 +1,85 @@
-using System;
-using ModularFramework;
 using ModularFramework.Utility;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// display text somewhere else after clicked
 /// </summary>
+[RequireComponent(typeof(Button))]
 public class Readable : TranslationText
 {
+    private static readonly int STOP = Animator.StringToHash("Stop");
+    public const string DEFAULT_PRINTER = "info";
+    
+    [SerializeField,TextArea] private string text;
+    [SerializeField] public string printerName;
     [SerializeField] private TextPrinter printer;
-    // [SerializeField] private bool clickAgainHide = true;
-    [SerializeField] private EventChannel interactInputChannel;
-
+    [SerializeField] private GameObject detail;
+    [SerializeField] private Animator indicator;
+    
     private bool _isShow;
-    private TextPrinterBase _iTextPrinter;
-
-    private void OnEnable()
-    {
-        interactInputChannel.AddListener(Clean);
-    }
-
-    private void OnDisable()
-    {
-        interactInputChannel.RemoveListener(Clean);
-    }
-
+    
     protected override void Start()
     {
-        _iTextPrinter = printer;
+        if (!printer)
+        {
+            printer = TextPrinter.INSTANCES.Get(string.IsNullOrEmpty(printerName)? DEFAULT_PRINTER : printerName).OrElse(null); // other scene printer
+        } else
+        {
+            printer.gameObject.SetActive(false); // local scene printer
+        }
     } // stop parent Start
     
     public void Read()
     {
-        if(_iTextPrinter==null) return;
-        _iTextPrinter.Print(text);
+        if(!printer && !detail) return;
+        if(_isShow) return;
+        Print();
+        if (detail)
+        {
+            detail.SetActive(true);
+        }
         _isShow = true;
+        if(indicator) indicator.SetBool(STOP, true);
+    }
+    
+    private void Print() => printer?.Print(text, PrintDone);
+
+    private void Skip()
+    {
+        if(!printer || !_isShow) return;
+        if (printer.Done)
+        {
+            printer.Clean();
+        }
+        else printer.Skip();
     }
 
-    private void Clean()
+    private bool _waitPlayerConfirm = false;
+    private void PrintDone()
     {
-        if(_iTextPrinter==null) return;
-        if (_isShow)
+        if(!_isShow) return;
+
+        if (!_waitPlayerConfirm)
         {
-            if(printer.Done) printer.Clean();
-            else printer.Skip();
+            _waitPlayerConfirm = true;
+            return;
         }
+        printer.Clean();
+        
+        if (detail)
+        {
+            detail.SetActive(false);
+        }
+        _isShow = false;
+        _waitPlayerConfirm = false;
     }
+
+    public void OnHover()
+    {
+        //GetComponent<Image>()?.;
+    }
+#if UNITY_EDITOR
+    protected override string GetDraftText() => text;
+#endif
 }

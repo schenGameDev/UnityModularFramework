@@ -16,20 +16,10 @@ MonoBehaviour:
   _everyNFrame: 1
   _everyNSecond: 0
   CentrallyManaged: 0
-  _masterGroup: {fileID: 24300002, guid: 1c4978043078c4485b1a2cdec1f0f9c2, type: 2}
-  _soundPlayerPrefab: {fileID: 8120940361321958304, guid: 937c53ad107804e179e19a982222b7b7, type: 3}
+  soundPlayerPrefab: {fileID: 8120940361321958304, guid: 937c53ad107804e179e19a982222b7b7, type: 3}
   soundFxs: {fileID: 11400000, guid: 79c05f359897e434c9d9ed61d4d0bf33, type: 2}
-  _collectionCheck: 1
-  _defaultCapacity: 5
-  _maxPoolSize: 100
-  _maxSoundInstances: 5
-  tracks: {fileID: 11400000, guid: 5695e9e88ed5e4db593571e585f8bd72, type: 2}
-  repeat: 1
-  repeatOnAwake: 0
-  _defaultPlaylist:
-  - Track_SO
-  _currentTrack: 
-  MusicPlayers:
-  - {fileID: 0}
-  - {fileID: 0}
-  _playlist: []
+  collectionCheck: 1
+  defaultCapacity: 5
+  maxPoolSize: 100
+  maxSoundInstances: 15
+  sfxChannel: {fileID: 0}

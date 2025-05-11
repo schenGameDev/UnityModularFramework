@@ -12,6 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b5b0fa78db7a45e9acb2d4f029d70cb, type: 3}
   m_Name: TrackBucket_SO
   m_EditorClassIdentifier: 
-  _items:
-  - {fileID: 11400000, guid: 0c238d81aba794ac3a7e0c2ecf581288, type: 2}
+  _items: []
   mixerGroup: {fileID: -2792137548058164995, guid: 1c4978043078c4485b1a2cdec1f0f9c2, type: 2}

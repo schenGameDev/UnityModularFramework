@@ -1,5 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace ModularFramework.Utility {
@@ -15,22 +16,34 @@ namespace ModularFramework.Utility {
 			return landPos;
 		}
 
-		public static IEnumerator Move(Transform tf, Vector3 target, float seconds) {
+		public static async UniTaskVoid Move(Transform tf, Vector3 target, float seconds, CancellationToken token) {
 			var currentPos = tf.position;
 			var t = 0f;
 			while(t <= 1f)
 			{
 				t += Time.deltaTime / seconds;
 				tf.position = Vector3.Lerp(currentPos, target, t);
-				yield return null;
+				await UniTask.NextFrame(cancellationToken:token);
 			}
 			tf.position = target;
+		}
+		
+		public static async UniTaskVoid MoveUI(RectTransform tf, Vector2 targetAnchor, float seconds, CancellationToken token) {
+			var currentPos = tf.anchoredPosition;
+			var t = 0f;
+			while(t <= 1f)
+			{
+				t += Time.deltaTime / seconds;
+				tf.anchoredPosition = Vector2.Lerp(currentPos, targetAnchor, t);
+				await UniTask.NextFrame(cancellationToken:token);
+			}
+			tf.anchoredPosition = targetAnchor;
 		}
 
 		public static int Choose(float[] choices) {
 			int i = 0;
 			float total = 0;
-			float rand = UnityEngine.Random.value;
+			float rand = Random.value;
 			foreach(float poss in choices) {
 			total+=poss;
 			if(rand <= total) {

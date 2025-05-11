@@ -1,17 +1,16 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using EditorAttributes;
+using ModularFramework.Commons;
+using ModularFramework.Utility;
+using UnityEngine;
 
 namespace ModularFramework {
-    using System;
-    using Commons;
-    using Utility;
     /// <summary>
     /// The bucket keeps a list of ScriptableObjects, which can be fetched by the name
     /// </summary>
     public abstract class SOBucket<T> : ScriptableObject where T : ScriptableObject {
-        [SerializeField,OnValueChanged(nameof(Clear))] private T[] _items;
+        [SerializeField] private T[] _items;
         private Dictionary<string,T> _dictionary = new();
 
         public Optional<T> Get(string name) {

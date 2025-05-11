@@ -13,26 +13,17 @@ namespace ModularFramework {
     public class Bucket : CustomTypeBucket<string> {
         public Optional<T> Get<T> (string name) {
             if(dictionary.TryGetValue(name, out string value)) {
-                if(typeof(T) == typeof(string)) {
+                if(value is T) {
                     return new Optional<T> ((T) (object) value);
                 }
-                if(typeof(T) == typeof(int)) {
-                    if(int.TryParse(value, out int res)) {
-                        return new Optional<T> ((T) (object) res);
-                    }
-                    return NoMatchType<T>(name);
-                }
-                if(typeof(T) == typeof(float)) {
-                    if(float.TryParse(value, out float res)) {
-                        return new Optional<T> ((T) (object) res);
-                    }
-                    return NoMatchType<T>(name);
-                }
-                if(typeof(T) == typeof(bool)) {
-                    if(bool.TryParse(value, out bool res)) {
-                        return new Optional<T> ((T) (object) res);
-                    }
-                    return NoMatchType<T>(name);
+                if(int.TryParse(value, out int res)) {
+                    return new Optional<T> ((T) (object) res);
+                } 
+                if(float.TryParse(value, out float res1)) {
+                    return new Optional<T> ((T) (object) res1);
+                } 
+                if(bool.TryParse(value, out bool res2)) {
+                    return new Optional<T> ((T) (object) res2);
                 }
                 return NoValue<T>("Unsupported type " + typeof(T));
             }

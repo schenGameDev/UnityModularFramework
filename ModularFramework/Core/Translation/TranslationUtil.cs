@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 namespace ModularFramework.Utility
@@ -38,7 +37,12 @@ namespace ModularFramework.Utility
             // spreadsheet has 2 column: id,text
             string path = "Localization/" + language;
             var translationDictionary = Resources.Load<TextAsset>(path);
-            if (!translationDictionary) throw new FileNotFoundException(path);
+            if (!translationDictionary)
+            {
+                DebugUtil.Warn($"file not found in {path}" );
+                return;
+            }
+            
             TRANSLATION_DICT.Clear();
             string[] fields = translationDictionary.text.Split(new [] {",","\n"}, StringSplitOptions.None);
             for (int i = 2; i < fields.Length; i += 2) // skip header
@@ -57,9 +61,9 @@ namespace ModularFramework.Utility
             PlayerPrefs.SetString("Language", language.ToString());
         }
 
-        public static string Translate(string key)
+        public static string Translate(string key, string defaultValue = null)
         {
-            return TRANSLATION_DICT.GetValueOrDefault(key, key);
+            return TRANSLATION_DICT.GetValueOrDefault(key, defaultValue ?? key);
         }
     }
     

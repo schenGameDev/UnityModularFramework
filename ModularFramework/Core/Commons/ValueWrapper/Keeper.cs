@@ -17,7 +17,7 @@ namespace ModularFramework.Commons {
 
 
         public static Keeper Of<T>(T value) {
-            ValueType tp = ValueTypeOf(typeof(T));
+            ValueType tp = ValueTypeOf(value.GetType());
             return tp switch {
                 ValueType.Bool => new Keeper() {type=tp, _boolValue=(bool)(object)value},
                 ValueType.Int => new Keeper() {type=tp, _intValue=(int)(object)value},
@@ -85,9 +85,9 @@ namespace ModularFramework.Commons {
         }
 
         public void Set<T>(T newValue) {
-            ValueType tp = ValueTypeOf(typeof(T));
-            if(tp != ValueTypeOf(typeof(T))) {
-                throw UnmatchTypeError(typeof(T));
+            ValueType tp = ValueTypeOf(newValue.GetType());
+            if(tp != ValueTypeOf(newValue.GetType())) {
+                throw UnmatchTypeError(newValue.GetType());
             }
             switch(tp)  {
                 case ValueType.Bool:
@@ -111,8 +111,8 @@ namespace ModularFramework.Commons {
                 return newValue;
             }
 
-            if(ValueTypeOf(typeof(T)) != type) {
-                throw UnmatchTypeError(typeof(T));
+            if(ValueTypeOf(newValue.GetType()) != type) {
+                throw UnmatchTypeError(newValue.GetType());
             }
             switch(type)  {
                 case ValueType.Bool:
@@ -171,8 +171,8 @@ namespace ModularFramework.Commons {
 
         public bool Is<T>(string logicOperator, T value) {
             // >/</==/>=/<=
-            if(ValueTypeOf(typeof(T)) != type) {
-                throw UnmatchTypeError(typeof(T));
+            if(ValueTypeOf(value.GetType()) != type) {
+                throw UnmatchTypeError(value.GetType());
             }
 
             switch(type)  {

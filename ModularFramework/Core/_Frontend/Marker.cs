@@ -1,19 +1,24 @@
 using System;
 using System.Collections.Generic;
+using ModularFramework.Commons;
+using ModularFramework.Utility;
 using UnityEngine;
 
 namespace ModularFramework {
-    using Commons;
-    using Utility;
     /// <summary>
     /// Marker is in-game object that auto-registers itself to GameRunner's resgistry at Start, and is monitored by Game Module
     /// </summary>
-    public class Marker : MonoBehaviour {
+    public class Marker : MonoBehaviour
+    {
+        /// <summary>
+        /// This mark will be bufferred and re-injected at each scene
+        /// </summary>
+        [SerializeField] private bool buffered;
+
         /// <summary>
         /// Array of type groups. If one type in the same group is found, no warning will be logged
         /// </summary>
         protected Type[][] RegistryTypes;
-        private bool _started = false;
         private readonly List<Type> _registeredTypes = new();
         
         /// <summary>
@@ -22,30 +27,31 @@ namespace ModularFramework {
         protected virtual void Awake() 
         {
             if (RegistryTypes != null) return;
+            List<Type[]> typeList = new();
             foreach (var imark in GetComponents<IMark>())
             {
-                RegistryTypes.AddRange(imark.RegistryTypes);
+               typeList.AddRange(imark.RegistryTypes);
             }
+            RegistryTypes = typeList.ToArray();
         }
 
         protected virtual void Start() {
-            _started = true;
-            OnEnable();
+            if(buffered) RegistryBuffer.Register(this);
+            else RegisterAll();
         }
-
-        protected virtual void OnEnable() {
-            if(_started) RegisterAll();
-        }
-
-        protected virtual void OnDisable() {
-            UnregisterAll();
+        
+        protected virtual void OnDestroy()
+        {
+            if(buffered) RegistryBuffer.Unregister(this);
+            else UnregisterAll();
         }
 
         public Optional<T> GetRegistry<T>() where T : ScriptableObject,IRegistrySO 
-            => typeof(T) == typeof(GameSystem)? GameRunner.GetSystemRegistry<T>() : GameRunner.Instance.GetRegistry<T>();
+            => typeof(T).InheritsOrImplements(typeof(GameSystem))? GameRunner.GetSystemRegistry<T>() : GameRunner.Instance.GetRegistry<T>();
 
-        protected virtual void RegisterAll()
+        public virtual void RegisterAll()
         {
+            _registeredTypes.Clear();
             foreach (var types in RegistryTypes)
             {
                 bool found = false;
@@ -58,7 +64,7 @@ namespace ModularFramework {
                         break;
                     }
                     
-                    found = t == typeof(GameSystem)? GameRunner.RegisterSystem(t, transform) : GameRunner.Instance.Register(t, transform);
+                    found =t.InheritsOrImplements(typeof(GameSystem))? GameRunner.RegisterSystem(t, transform) : GameRunner.Instance.Register(t, transform);
                     if (found)
                     {
                         _registeredTypes.Add(t);
@@ -71,10 +77,10 @@ namespace ModularFramework {
             }
             
         }
-
+        
         private void UnregisterAll() {
             foreach (Type t in _registeredTypes) {
-                bool found = t == typeof(GameSystem)? GameRunner.UnregisterSystem(t, transform) : GameRunner.Instance.Unregister(t, transform);
+                bool found = t.InheritsOrImplements(typeof(GameSystem))? GameRunner.UnregisterSystem(t, transform) : GameRunner.Instance.Unregister(t, transform);
                 if(!found) DebugUtil.Warn("Registry of type " + t + " not found");
             }
 

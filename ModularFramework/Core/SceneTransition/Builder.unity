@@ -280,6 +280,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1761000520}
   - component: {fileID: 1761000521}
+  - component: {fileID: 1761000522}
   m_Layer: 0
   m_Name: GameBuilder
   m_TagString: Untagged
@@ -318,6 +319,19 @@ MonoBehaviour:
   transitionImage: {fileID: 1229625229}
   defaultTransition: {fileID: 0}
   systems: []
+--- !u!114 &1761000522
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1761000518}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a05dd363d6e4ccb99e76457fce2e03b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetRatio: {x: 16, y: 9}
 --- !u!1 &1918250962
 GameObject:
   m_ObjectHideFlags: 0

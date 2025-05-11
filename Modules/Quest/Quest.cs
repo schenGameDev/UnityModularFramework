@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Quest_SO", menuName = "Game Module/Quest/Quest")]
@@ -51,4 +50,8 @@ public class Quest : ScriptableObject
         stage = QuestStage.UNKNOWN;
         milestones.ForEach(m => m.Reset());
     }
+    
+    
+    public bool IsCompleted => stage == QuestStage.COMPLETED;
+    public bool IsFailed => stage == QuestStage.FAILED;
 }

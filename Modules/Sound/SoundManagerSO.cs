@@ -1,9 +1,9 @@
-using UnityEngine;
-using ModularFramework;
-using EditorAttributes;
-using UnityEngine.Pool;
 using System.Collections.Generic;
+using EditorAttributes;
+using ModularFramework;
 using ModularFramework.Utility;
+using UnityEngine;
+using UnityEngine.Pool;
 
 /// <summary>
 /// Manage all one-shot sound in game. <br/>
@@ -23,8 +23,8 @@ public class SoundManagerSO : GameModule
     
     
     [FoldoutGroup("Event Channels", nameof(sfxChannel))]
-    [SerializeField] private EditorAttributes.Void eventChannelGroup;
-    [HideInInspector,SerializeField] EventChannel<string> sfxChannel;
+    [SerializeField] private Void eventChannelGroup;
+    [HideInInspector,SerializeField] StringEventChannelSO sfxChannel;
     
     [Header("Runtime")]
     [RuntimeObject] public Transform SoundParent {get; private set;}

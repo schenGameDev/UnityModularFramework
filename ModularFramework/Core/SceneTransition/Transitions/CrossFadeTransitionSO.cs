@@ -22,5 +22,6 @@ public class CrossFadeTransitionSO : SceneTransitionSO
             await UniTask.NextFrame(cancellationToken: token);
         }
         lastSceneSnapshot.color = to;
+        Finish(lastSceneSnapshot);
     }
 }

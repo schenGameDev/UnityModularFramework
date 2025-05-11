@@ -1,10 +1,8 @@
-
-
-using BayatGames.SaveGameFree;
 using System;
 using System.Collections.Generic;
-using ModularFramework.Commons;
 using System.Linq;
+using BayatGames.SaveGameFree;
+using ModularFramework.Commons;
 using UnityEngine;
 
 namespace ModularFramework.Utility
@@ -17,7 +15,7 @@ namespace ModularFramework.Utility
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Initialize() {
             SaveGame.Encode = true;
-            //Load();
+            Load();
         }
 
         public static void SaveValue<T>(string key, T value) {
@@ -38,9 +36,31 @@ namespace ModularFramework.Utility
 
         public static bool FlushToSlot(int slot) {
             if(_saveFile==null || slot < 0 || slot>MAX_MANUAL_SAVE_SLOT) return false;
+            Debug.Log("game saved");
             _saveFile.saveTime = DateTime.UtcNow;
             SaveGame.Save(slot.ToString(), _saveFile);
             return true;
+        }
+
+        public static bool FlushToNextAvailableSlot()
+        {
+            
+            int slot = MathUtil
+                .Repeat(MAX_MANUAL_SAVE_SLOT+1)
+                .FirstOrDefault(i => i!=DEFAULT_AUTO_SAVE_SLOT && !SaveGame.Exists(i.ToString()));
+            if (slot == 0)
+            {
+                slot = GetOldestSaveFile();
+            }
+            return FlushToSlot(slot);
+        }
+
+        private static int GetOldestSaveFile()
+        {
+            var pair = GetOccupiedSlots().Where(pair => pair.Item1 != DEFAULT_AUTO_SAVE_SLOT)
+                .OrderBy(pair => pair.Item2.saveTime)
+                .FirstOrDefault();
+            return pair.Item1;
         }
 
         /// <summary>
@@ -80,7 +100,7 @@ namespace ModularFramework.Utility
 
         public static (int,SaveFile)[] GetOccupiedSlots() {
             return MathUtil.Repeat(MAX_MANUAL_SAVE_SLOT+1)
-                            .Where(i=>SaveGame.Exists(i.ToString()))
+                            .Where(i=> SaveGame.Exists(i.ToString()))
                             .Select(i =>(i,SaveGame.Load<SaveFile>(i.ToString())))
                             .ToArray();
 
@@ -97,9 +117,11 @@ namespace ModularFramework.Utility
 
     public class SaveFile
     {
-        public Dictionary<string,string> states; // jsons, story state, note
-        public Dictionary<string,AnyValue> values;
+        public Dictionary<string,string> states = new(); // jsons, story state, note
+        public Dictionary<string,AnyValue> values = new();
         public DateTime saveTime;
+        // Transient
+        public int slot;
 
         public Optional<AnyValue> Get(string key) {
             if(values.TryGetValue(key, out AnyValue anyValue))

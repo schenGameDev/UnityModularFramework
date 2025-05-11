@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -6,6 +7,7 @@ using ModularFramework;
 using ModularFramework.Utility;
 using UnityEngine;
 using UnityEngine.Audio;
+using Void = EditorAttributes.Void;
 
 /// <summary>
 /// Manage BGM in game, use one system throughout the game
@@ -24,8 +26,8 @@ public class MusicSystemSO : GameSystem
     [SerializeField] List<string> defaultPlaylist = new();
     
     [FoldoutGroup("Event Channels", nameof(trackChannel))]
-    [SerializeField] private EditorAttributes.Void eventChannelGroup;
-    [HideInInspector,SerializeField] EventChannel<string> trackChannel;
+    [SerializeField] private Void eventChannelGroup;
+    [HideInInspector,SerializeField] StringEventChannelSO trackChannel;
     
     [Header("Runtime")]
     [ReadOnly,SerializeField,RuntimeObject,Rename("Current Track")] string currentTrackName;
@@ -54,14 +56,21 @@ public class MusicSystemSO : GameSystem
     }
     public override void OnDestroy()
     {
-        _cts?.Cancel();
-        _cts?.Dispose();
+        try
+        {
+            _cts?.Cancel();
+            _cts?.Dispose();
+        }
+        catch (ObjectDisposedException)
+        {
+            // nothing
+        }
     }
 
     void BuildPersistentParent() {
         PersistentSoundParent = new GameObject("=== Sounds (Permisstent) ===").transform;
         PersistentSoundParent.position = Vector3.zero;
-        DontDestroyOnLoad(PersistentSoundParent.gameObject);
+        //DontDestroyOnLoad(PersistentSoundParent.gameObject);
 
     }
 
@@ -245,6 +254,19 @@ public class MusicSystemSO : GameSystem
     public void SetMasterVolume(float volume) => SetVolume(masterGroup, volume);
     public void SetMusicVolume(float volume) => SetVolume(tracks.mixerGroup, volume);
     public void SetSoundFxVolume(float volume) => SetVolume(soundFxGroup, volume);
+    
+    public float GetVolume(AudioMixerGroup mixerGroup)
+    {
+        if (mixerGroup.audioMixer.GetFloat(mixerGroup.name, out var volume))
+        {
+            return Mathf.Clamp(Mathf.Pow(10, volume / 20f), 0, 1);
+        }
+        return 1;
+    }
+    
+    public float GetMasterVolume() => GetVolume(masterGroup);
+    public float GetMusicVolume() => GetVolume(tracks.mixerGroup);
+    public float GetSoundFxVolume() => GetVolume(soundFxGroup);
 #endregion
 #region Editor
     [Button]

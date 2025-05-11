@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.Serialization;
 
 [Serializable]
 public class InkChoice {
@@ -18,7 +17,7 @@ public class InkChoice {
                                 .Select(t=>t.codes[0])).FirstOrDefault();
         choices.ForEach(c => {
             c.tags.RemoveWhere(t=>t.type==InkTagType.GROUP);
-            c.subText = explainCondition(c.subText);
+            if(c.subText!=null) c.subText = explainCondition(c.subText);
         });
     }
 

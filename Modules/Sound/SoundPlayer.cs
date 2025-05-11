@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using ModularFramework;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -63,10 +61,11 @@ public class SoundPlayer : MonoBehaviour {
         if(_cts!=null) {
             _cts.Cancel();
             _cts.Dispose();
+            _cts = null;
         }
         if(!_audio) return;
         _audio.Stop();
-        _soundManager.ReturnToPool(this);
+        //_soundManager.ReturnToPool(this);
     }
     
     public void SetVolume(float volume) => _audio.volume = volume;
