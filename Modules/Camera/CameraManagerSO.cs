@@ -9,21 +9,22 @@ using AYellowpaper.SerializedCollections;
 using ModularFramework;
 using ModularFramework.Commons;
 using ModularFramework.Utility;
+using UnityEngine.Serialization;
 
 [CreateAssetMenu(fileName ="CameraManager_SO",menuName ="Game Module/Camera")]
 public class CameraManagerSO : GameModule,IRegistrySO {
     [Header("Config")]
-    [SerializedDictionary("Transition","Acceleration")] public SerializedDictionary<Vector<string>, float> TransitionAcceleration;
-    [SerializeField] Vector2 _positionShakeStrength = new (0.03f,0.03f);
-    [SerializeField] float  _rotationShakeStrength = 0.05f;
-    [SerializeField] float _shakeTime = 0.3f;
+    [SerializedDictionary("Transition","Acceleration")] public SerializedDictionary<Vector<string>, float> transitionAcceleration;
+    [SerializeField] Vector2 positionShakeStrength = new (0.03f,0.03f);
+    [SerializeField] float  rotationShakeStrength = 0.05f;
+    [SerializeField] float shakeTime = 0.3f;
 
 
 
     [Header("Runtime")]
-    [SerializeField,ReadOnly,RuntimeObject] private string _currentCamera;
-    [SerializeField,ReadOnly,RuntimeObject] private string _prevCamera;
-    [ReadOnly] public CameraType CurrentMode;
+    [SerializeField,ReadOnly,RuntimeObject] private string currentCamera;
+    [SerializeField,ReadOnly,RuntimeObject] private string prevCamera;
+    [ReadOnly] public CameraType currentMode;
 
 
     [RuntimeObject] public Transform CurrentCamera {get; private set;}
@@ -40,7 +41,7 @@ public class CameraManagerSO : GameModule,IRegistrySO {
 
     protected override void Reset() {
         base.Reset();
-        CurrentMode = CameraType.FIXED;
+        currentMode = CameraType.FIXED;
     }
 
     [RuntimeObject] bool _isDefaultSet;
@@ -77,12 +78,12 @@ public class CameraManagerSO : GameModule,IRegistrySO {
             var cam = temp.Item2;
             if(CurrentCamera == cam) {
                 CurrentCamera = null;
-                _currentCamera = "";
-                CurrentMode = CameraType.FIXED;
+                currentCamera = "";
+                currentMode = CameraType.FIXED;
             }
             if(PrevCamera == cam) {
                 PrevCamera = null;
-                _prevCamera = "";
+                prevCamera = "";
             }
         }
         _activeCamerasInScene.Remove(name);
@@ -102,7 +103,7 @@ public class CameraManagerSO : GameModule,IRegistrySO {
         if(CurrentCamera!=null) {
             PrevCamera = CurrentCamera;
             SetInactiveCamera(PrevCamera);
-            _prevCamera = _currentCamera;
+            prevCamera = currentCamera;
             PrevCamera.GetComponent<CameraBase>().OnExit();
         }
         SetCurrentCamera(target.Item2, transitionType);
@@ -118,7 +119,7 @@ public class CameraManagerSO : GameModule,IRegistrySO {
         PrevCamera = CurrentCamera;
         SetInactiveCamera(PrevCamera);
         PrevCamera.GetComponent<CameraBase>().OnExit();
-        _prevCamera = PrevCamera.name;
+        prevCamera = PrevCamera.name;
 
         SetCurrentCamera(temp, transitionType);
     }
@@ -132,8 +133,8 @@ public class CameraManagerSO : GameModule,IRegistrySO {
     private void SetCurrentCamera(Transform camera, CameraTransitionType transitionType) {
         CurrentCamera = camera;
         var camBase = CurrentCamera.GetComponent<CameraBase>();
-        CurrentMode = camBase.type;
-        _currentCamera = CurrentCamera.name;
+        currentMode = camBase.type;
+        currentCamera = CurrentCamera.name;
         camBase.OnEnter(transitionType);
         CurrentCamera.GetComponent<CinemachineCamera>().Priority = 11;
     }
@@ -144,7 +145,7 @@ public class CameraManagerSO : GameModule,IRegistrySO {
     }
 
     [Button]
-    public void Shake() => Shake(_positionShakeStrength,_rotationShakeStrength,_shakeTime);
+    public void Shake() => Shake(positionShakeStrength,rotationShakeStrength,shakeTime);
 
     public void Shake(Vector2 positionOffsetStrength, float rotationOffsetStrength, float seconds) {
         foreach(var cam in _activeCamerasInScene.Values.Select(t => t.Item2.GetComponent<CameraBase>())) {

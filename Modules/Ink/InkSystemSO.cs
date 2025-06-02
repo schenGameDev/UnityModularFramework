@@ -292,7 +292,7 @@ public class InkSystemSO : GameSystem
         Debug.Log($"Task {taskHandler}:{parameter} Started");
         if (taskHandler == InkConstants.TASK_CHANGE_SCENE)
         {
-            GameBuilder.Instance.LoadScene(parameter,null,()=>SceneLoaded(parameter,TaskComplete));
+            GameBuilder.Instance.LoadScene(parameter,()=>SceneLoaded(parameter,TaskComplete));
             return;
         }
         

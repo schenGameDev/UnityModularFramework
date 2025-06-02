@@ -1,6 +1,8 @@
 using System;
 using System.Threading;
+using AYellowpaper.SerializedCollections;
 using EditorAttributes;
+using ModularFramework.Commons;
 using ModularFramework.Utility;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -26,6 +28,8 @@ namespace ModularFramework
         
         public RawImage transitionImage;
         [SerializeField] private SceneTransitionSO defaultTransition;
+        [SerializeField,SerializedDictionary("from-to scenes","transition")] 
+        private SerializedDictionary<Vector<string>, SceneTransitionSO> customTransitions = new();
 
         [Header("Game Systems")]
         [SerializeField,HideLabel]
@@ -71,7 +75,7 @@ namespace ModularFramework
         
         private void LoadStartScene() => LoadScene(startingScene);
 
-        public void LoadScene(string sceneName, SceneTransitionSO transitionProfile = null, Action callback = null) {
+        public void LoadScene(string sceneName, Action callback = null) {
             if(sceneName == CurrentScene || sceneName.IsEmpty()) return;
             NextScene = sceneName;
             bool currentSceneExists = !string.IsNullOrEmpty(CurrentScene);
@@ -94,6 +98,10 @@ namespace ModularFramework
                 _sceneLoadingTimer.Reset();
                 _sceneLoadingTimer.OnTimerStop = null;
             }
+            
+            var transitionProfile = currentSceneExists? 
+                customTransitions[new Vector<string>(CurrentScene, sceneName)] ?? defaultTransition 
+                : defaultTransition;
             _sceneLoadingTimer.OnTimerStop += () => UnloadLoadScene(currentSceneExists, currentScene,transitionProfile, callback);
             _sceneLoadingTimer.Start();
 
@@ -109,8 +117,7 @@ namespace ModularFramework
                     _cts.Dispose();
                 }
                 _cts = new CancellationTokenSource();
-                SceneTransitionSO transition = transitionProfile ?? defaultTransition;
-                transition.Transition(_cts.Token, transitionImage); 
+                transitionProfile.Transition(_cts.Token, transitionImage); 
             }
             AsyncOperation op = SceneManager.LoadSceneAsync(NextScene, LoadSceneMode.Additive);
             op.allowSceneActivation = true;

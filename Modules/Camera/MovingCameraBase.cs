@@ -78,7 +78,7 @@ public abstract class MovingCameraBase : CameraBase {
         base.MatchPrevCamPosition();
         var prevName = cameraManager.PrevCamera.name;
         var curName = this.gameObject.name;
-        if(cameraManager.TransitionAcceleration.TryGetValue(new Vector<string>(prevName,curName), out float accModifier)) {
+        if(cameraManager.transitionAcceleration.TryGetValue(new Vector<string>(prevName,curName), out float accModifier)) {
             TempChangeAcceleration(accModifier);
         }
     }
