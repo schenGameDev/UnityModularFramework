@@ -16,7 +16,6 @@ using Void = EditorAttributes.Void;
 public class MusicSystemSO : GameSystem
 {
     [Header("Config")]
-    [SerializeField] public AudioMixerGroup masterGroup,soundFxGroup;
     public SoundProfileBucket tracks;
 
     [Header("Music")]
@@ -246,28 +245,7 @@ public class MusicSystemSO : GameSystem
     }
 
     #endregion 
-#region Volume
-    public void SetVolume(AudioMixerGroup mixerGroup, float volume) {
-        mixerGroup.audioMixer.SetFloat(mixerGroup.name, Mathf.Log10(volume) * 20f);
-    }
-
-    public void SetMasterVolume(float volume) => SetVolume(masterGroup, volume);
-    public void SetMusicVolume(float volume) => SetVolume(tracks.mixerGroup, volume);
-    public void SetSoundFxVolume(float volume) => SetVolume(soundFxGroup, volume);
     
-    public float GetVolume(AudioMixerGroup mixerGroup)
-    {
-        if (mixerGroup.audioMixer.GetFloat(mixerGroup.name, out var volume))
-        {
-            return Mathf.Clamp(Mathf.Pow(10, volume / 20f), 0, 1);
-        }
-        return 1;
-    }
-    
-    public float GetMasterVolume() => GetVolume(masterGroup);
-    public float GetMusicVolume() => GetVolume(tracks.mixerGroup);
-    public float GetSoundFxVolume() => GetVolume(soundFxGroup);
-#endregion
 #region Editor
     [Button]
     void PopulateDefaultPlaylist() {
