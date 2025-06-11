@@ -8,7 +8,7 @@ namespace ModularFramework
     /// OnStart() called on GameBuilder
     /// OnDestroy() called when game exits
     /// </summary>
-    public abstract class GameSystem :ScriptableObject
+    public abstract class GameSystem : ScriptableObject
     {
 
         public virtual void OnStart()

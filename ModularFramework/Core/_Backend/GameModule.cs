@@ -7,7 +7,7 @@ namespace ModularFramework {
     /// <summary>
     /// Life cycle: OnAwake(Reset,Load Ref Keywords) -> OnStart (link to GameManager) -> OnUpdate -> OnDestroy
     /// </summary>
-    public abstract class GameModule : ScriptableObject {
+    public abstract class GameModule : GameSystem {
         protected float DeltaTime;
         
         /// <summary>
@@ -20,7 +20,7 @@ namespace ModularFramework {
         /// <summary>
         /// Trigger in <c>GameRunner</c> Start method
         /// </summary>
-        public virtual void OnStart(){
+        public override void OnStart() {
             if(updateMode == UpdateMode.NONE || OperateEveryFrame) return;
             if(updateMode == UpdateMode.EVERY_N_FRAME)
             {
@@ -56,8 +56,8 @@ namespace ModularFramework {
         /// <summary>
         /// Trigger in <c>GameRunner</c> OnDestroy method
         /// </summary>
-        public virtual void OnDestroy() {
-            RuntimeObject.CleanRuntimeVars(this);
+        public override void OnDestroy() {
+            base.OnDestroy();
         }
         /// <summary>
         /// Trigger in <c>GameRunner</c> OnDrawGizmos method

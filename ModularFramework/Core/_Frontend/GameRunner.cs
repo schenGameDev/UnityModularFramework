@@ -115,13 +115,25 @@ namespace ModularFramework {
     #endregion
 
     #region Module
-        public Optional<T> GetModule<T>() where T : GameModule {
-            GameModule module = modules.First(m => (m as T) != null);
+
+        private readonly Dictionary<Type, GameModule> _moduleQuickAccessDict = new();
+        public Optional<T> GetModule<T>() where T : GameModule
+        {
+            Type type = typeof(T);
+            GameModule module;
+            if (_moduleQuickAccessDict.TryGetValue(type, out module))
+            {
+                return module ==null? Optional<T>.None() : (T) module;
+            }
+            module = modules.First(m => (m as T) != null);
+            if(module == null) module = GetSystem<T>().OrElse(null);
             if(module != null) {
+                _moduleQuickAccessDict.Add(type, module);
                 return (T) module;
             }
-            DebugUtil.Error("Module of type " + typeof(T) + " not found");
-            return null;
+
+            _moduleQuickAccessDict.Add(type, null);
+            return Optional<T>.None();
         }
     #endregion
     
@@ -132,7 +144,7 @@ namespace ModularFramework {
                 return (T) sys;
             }
             Debug.LogWarning("System of type " + typeof(T) + " not found");
-            return null;
+            return Optional<T>.None();
         }
 
         public static void InjectSystem<T>(T sys) where T : GameSystem
@@ -173,8 +185,7 @@ namespace ModularFramework {
             if(_registryDict.TryGetValue(typeof(T), out var registry)) {
                 return (T) registry;
             }
-            DebugUtil.Error("Registry of type " + typeof(T) + " not found");
-            return null;
+            return GetSystemRegistry<T>();
         }
         
         public static Optional<T> GetSystemRegistry<T>() where T : ScriptableObject,IRegistrySO
@@ -183,7 +194,7 @@ namespace ModularFramework {
                 return (T) registry;
             }
             DebugUtil.Error("Registry of type " + typeof(T) + " not found");
-            return null;
+            return Optional<T>.None();
         }
         public static bool RegisterSystem(Type registryType, Transform marker) {
             if(STATIC_REGISTRY_DICT.TryGetValue(registryType, out var registry)) {
