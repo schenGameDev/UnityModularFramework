@@ -63,7 +63,7 @@ public class TextPrinter : TextPrinterBase
     {
         if (soundName.NonEmpty() && !SoundManager)
         {
-            SoundManager = GameRunner.Instance.GetModule<SoundManagerSO>().OrElse(null);
+            SoundManager = GameRunner.Instance?.GetModule<SoundManagerSO>().OrElse(null);
         }
         gameObject.SetActive(true);
         _callback = callback;

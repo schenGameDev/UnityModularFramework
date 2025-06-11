@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using ModularFramework;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -19,12 +20,12 @@ public class SoundPlayer : MonoBehaviour {
         _audio = gameObject.GetOrAdd<AudioSource>();
     }
 
-    public void Initialize(SoundProfile soundProfile, AudioMixerGroup mixerGroup, SoundManagerSO soundManager, bool loop = false)
+    public void Initialize(SoundProfile soundProfile, bool loop = false)
     {
-        _soundManager = soundManager;
+        _soundManager = GameRunner.Instance?.GetModule<SoundManagerSO>().OrElse(null);
         Profile = soundProfile;
         _audio.clip = soundProfile.clip;
-        _audio.outputAudioMixerGroup = mixerGroup;
+        _audio.outputAudioMixerGroup = _soundManager.MixerGroup;
 
         _audio.volume = soundProfile.volume;
         _vol = soundProfile.volume;
@@ -54,7 +55,7 @@ public class SoundPlayer : MonoBehaviour {
         if(delay>0) isCancelled= await UniTask.WaitForSeconds(delay + 0.001f, cancellationToken: token).SuppressCancellationThrow();
         if(!isCancelled)
             await UniTask.WaitWhile(()=>_audio && _audio.isPlaying, cancellationToken: token).SuppressCancellationThrow();
-        _soundManager.ReturnToPool(this);
+        _soundManager?.Dispose(this);
     }
 
     public void Stop() {

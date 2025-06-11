@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ModularFramework;
 using ModularFramework.Utility;
 using UnityEngine;
 
@@ -6,8 +7,8 @@ public class SoundBuilder {
         readonly SoundManagerSO soundManager;
         Vector3 position = Vector3.zero;
 
-        public SoundBuilder(SoundManagerSO soundManager) {
-            this.soundManager = soundManager;
+        public SoundBuilder() {
+            this.soundManager = GameRunner.Instance?.GetModule<SoundManagerSO>().OrElse(null);
         }
 
         public SoundBuilder WithPosition(Vector3 position) {
@@ -21,16 +22,15 @@ public class SoundBuilder {
                 return null;
             }
 
-            SoundProfile profile = soundManager.soundFxs.Get(profileName).OrElseThrow(new KeyNotFoundException(profileName));
+            SoundProfile profile = soundManager.GetSound(profileName);
 
             if (!soundManager.CanPlaySound(profile)) return null;
 
-            SoundPlayer soundPlayer = soundManager.Get();
-            soundPlayer.Initialize(profile, soundManager.soundFxs.mixerGroup,soundManager);
+            SoundPlayer soundPlayer = soundManager.GetPlayer();
+            soundPlayer.Initialize(profile);
             soundPlayer.transform.position = position;
             soundPlayer.transform.parent = soundManager.SoundParent;
-
-
+            
             if (profile.frequentSound) {
                 soundPlayer.Node = soundManager.FrequentSoundPlayers.AddLast(soundPlayer);
             }

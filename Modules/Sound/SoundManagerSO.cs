@@ -3,10 +3,11 @@ using EditorAttributes;
 using ModularFramework;
 using ModularFramework.Utility;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.Pool;
 
 /// <summary>
-/// Manage all one-shot sound in game. <br/>
+/// Manage all one-shot sound in the scene. It has higher priority than SoundSystem<br/>
 /// 1. Must bootup before any module that calls it.<br/>
 /// 2. Must use the same soundManager throughout the game.
 /// </summary>
@@ -31,8 +32,9 @@ public class SoundManagerSO : GameModule
     [RuntimeObject] readonly List<SoundPlayer> _activeSoundPlayers = new();
     [RuntimeObject(nameof(ResetFrequentSoundPlayer),nameof(ResetFrequentSoundPlayer))]
     public readonly LinkedList<SoundPlayer> FrequentSoundPlayers = new();
-
-
+    
+    public AudioMixerGroup MixerGroup => soundFxs.mixerGroup;
+    
     public SoundManagerSO() {
         updateMode = UpdateMode.NONE;
     }
@@ -54,7 +56,7 @@ public class SoundManagerSO : GameModule
         InitializePool();
     }
     
-    private SoundBuilder CreateSoundBuilder() => new SoundBuilder(this);
+    private SoundBuilder CreateSoundBuilder() => new SoundBuilder();
 
     void BuildParent() {
         SoundParent = new GameObject("=== Sounds ===").transform;
@@ -62,6 +64,11 @@ public class SoundManagerSO : GameModule
     }
 
     #region Play SoundFx
+
+    public SoundProfile GetSound(string profileName)
+    {
+        return soundFxs.Get(profileName).OrElseThrow(new KeyNotFoundException(profileName));
+    }
 
     public void PlaySound(string soundName) => CreateSoundBuilder().Play(soundName);
 
@@ -82,7 +89,12 @@ public class SoundManagerSO : GameModule
         return true;
     }
 
-    public SoundPlayer Get() => _soundPlayerPool.Get();
+    public void Dispose(SoundPlayer soundPlayer)
+    {
+        ReturnToPool(soundPlayer);
+    }
+
+    public SoundPlayer GetPlayer() => _soundPlayerPool.Get();
     public void ReturnToPool(SoundPlayer soundPlayer) {
         if (soundPlayer.Node != null) {
             FrequentSoundPlayers.Remove(soundPlayer.Node);
