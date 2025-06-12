@@ -4,6 +4,7 @@ using UnityEngine.Audio;
 
 namespace UnityModularFramework
 {
+    [CreateAssetMenu(menuName = "Game Module/Volume System", fileName = "VolumeSystem_SO")]
     public class VolumeSystemSO : GameSystem
     {
         public enum VolumeType
