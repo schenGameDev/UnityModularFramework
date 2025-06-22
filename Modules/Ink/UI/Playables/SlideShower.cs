@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using EditorAttributes;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -77,6 +78,18 @@ public class SlideShower : Playable
             _cts = null;
         }
     }
+
+    #region Editor
+    [Header("Test")]
+    [Rename("Index"),SerializeField] private int editorIndex = -1;
+    [Button("Preview")]
+    private void PreviewImage()
+    {
+        if(editorIndex <0 || editorIndex >= profiles.Length) return;
+        SetImage(frontImage, profiles[editorIndex]);
+    }
+
+    #endregion
 }
 
 [Serializable]
