@@ -16,7 +16,7 @@ namespace ModularFramework.Utility {
 			return landPos;
 		}
 
-		public static async UniTaskVoid Move(Transform tf, Vector3 target, float seconds, CancellationToken token) {
+		public static async UniTask Move(Transform tf, Vector3 target, float seconds, CancellationToken token) {
 			var currentPos = tf.position;
 			var t = 0f;
 			while(t <= 1f)
@@ -28,7 +28,7 @@ namespace ModularFramework.Utility {
 			tf.position = target;
 		}
 		
-		public static async UniTaskVoid MoveUI(RectTransform tf, Vector2 targetAnchor, float seconds, CancellationToken token) {
+		public static async UniTask MoveUI(RectTransform tf, Vector2 targetAnchor, float seconds, CancellationToken token) {
 			var currentPos = tf.anchoredPosition;
 			var t = 0f;
 			while(t <= 1f)

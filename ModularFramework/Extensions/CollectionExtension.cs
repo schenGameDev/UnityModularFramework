@@ -50,12 +50,12 @@ public static class CollectionsExtension {
 
     public static bool IsEmpty<T>(this ICollection<T> collection)
     {
-        return collection.Count==0;
+        return collection==null || collection.Count==0;
     }
 
     public static bool NonEmpty<T>(this ICollection<T> collection)
     {
-        return collection.Count>0;
+        return !IsEmpty(collection);
     }
 }
 

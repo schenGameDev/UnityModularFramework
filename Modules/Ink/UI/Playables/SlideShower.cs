@@ -1,7 +1,5 @@
 using System;
 using System.Threading;
-using Cysharp.Threading.Tasks;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,6 +17,11 @@ public class SlideShower : Playable
 
     private void Awake()
     {
+        var defaultColor = frontImage.color.SetAlpha(1);
+        if (!profiles.IsEmpty())
+        {
+            profiles.ForEach(p=> p.Initialize(defaultColor));
+        }
         if (disableOnAwake)
         {
             SetImage(frontImage, null);
@@ -31,43 +34,19 @@ public class SlideShower : Playable
         base.Play(callback, parameter);
         _index = parameter.IsEmpty()? _index : int.Parse(parameter);
         
-        SetImage(backImage, _lastProfile);
-        
-        _lastProfile = profiles[_index];
-
-        _index += 1;
+        _lastProfile = profiles[_index++];
         SetImage(frontImage, _lastProfile);
-        if (_lastProfile.inTime > 0)
-        {
-            if (_cts != null)
-            {
-                _cts.Cancel();
-                _cts.Dispose();
-                _cts = null;
-            }
-            _cts = new CancellationTokenSource();
-            Fade(frontImage,true, _lastProfile.color,_lastProfile.inTime, _cts.Token).Forget();
-        }
+        DisposeToken();
+        _cts = _lastProfile.Enter(frontImage, _lastProfile==null? null : backImage, DisposeToken);
         OnTaskComplete?.Invoke(InkConstants.TASK_PLAY_CG);
     }
     
     public override void End()
     {
         if(_lastProfile == null) return;
+        DisposeToken();
         SetImage(frontImage, null);
         SetImage(backImage, _lastProfile);
-        if (_lastProfile.outTime > 0)
-        {
-            if (_cts != null)
-            {
-                _cts.Cancel();
-                _cts.Dispose();
-                _cts = null;
-            }
-            _cts = new CancellationTokenSource();
-            Fade(backImage,false, _lastProfile.color, _lastProfile.outTime, _cts.Token).Forget();
-        } 
-        _lastProfile = null;
     }
     
     private void SetImage(Image image, SlideShowProfile profile)
@@ -88,20 +67,15 @@ public class SlideShower : Playable
             image.enabled = false;
         }
     }
-    
-    private async UniTask Fade(Image image, bool isFadeIn, Color targetColor, float time, CancellationToken token) {
-        float t = 0;
-        float startAlpha = isFadeIn ? 0 : 1;
-        bool isCancelled = false;
-        while(t< time && !isCancelled) 
+
+    private void DisposeToken()
+    {
+        if (_cts != null)
         {
-            image.color = targetColor.SetAlpha(isFadeIn? math.min(1,t/time) : math.max(0,startAlpha-t/time));
-            t+=Time.deltaTime;
-            isCancelled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
-            if(isCancelled) break;
+            _cts.Cancel();
+            _cts.Dispose();
+            _cts = null;
         }
-        
-        image.color = targetColor.SetAlpha(isFadeIn? 1: 0);
     }
 }
 
@@ -109,7 +83,17 @@ public class SlideShower : Playable
 public class SlideShowProfile
 {
     public Sprite sprite;
-    public Color color = Color.white;
-    public float inTime; // time to fade in, 0 means immediately appear
-    public float outTime;
+    public Color color = Color.clear;
+    [SerializeReference] private SlideTransitionBase transition;
+
+    public void Initialize(Color defaultColor)
+    {
+        if(color==Color.clear) color = defaultColor;
+    }
+
+    public CancellationTokenSource Enter(Image frontImage, Image backImage, Action onFinish)
+    {
+        return transition ? transition.Enter(this, frontImage, backImage, onFinish) : null;
+    }
 }
+
