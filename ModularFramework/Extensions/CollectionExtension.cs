@@ -35,7 +35,7 @@ public static class CollectionsExtension {
         foreach(T i in others) collection.Remove(i);
     }
 
-    public static void RemoveWhere<T>(this ICollection<T> list, Predicate<T> match) {
+    public static bool RemoveWhere<T>(this ICollection<T> list, Predicate<T> match) {
         List<T> index = new();
         int i = 0;
         foreach (T item in list) {
@@ -44,8 +44,9 @@ public static class CollectionsExtension {
             }
             i+=1;
         }
-
+        if(index.Count == 0) return false;
         foreach(T j in index) list.Remove(j);
+        return true;
     }
 
     public static bool IsEmpty<T>(this ICollection<T> collection)

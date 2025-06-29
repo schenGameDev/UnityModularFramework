@@ -244,6 +244,18 @@ public class InkSystemSO : GameSystem
             .Do(states => story.state.LoadJson(states))
             .OrElseDo(story.ResetState);
         InjectVariables(story);
+        SaveUtil.GetState(InkConstants.KEY_CURRENT_SCENE_HISTORY)
+            .Do(states =>
+            {
+                var history = JsonUtility.FromJson<List<(string, string, bool)>>(states);
+                if(history.IsEmpty()) return;
+                _taskHistory = history;
+                foreach (var th in _taskHistory)
+                {
+                    RunTask(th.Item1, th.Item2, th.Item3);
+                } 
+            });
+        
         story.variablesState.ForEach(varName => PutKeeper(varName,story.variablesState[varName]));
         story.BindExternalFunction(InkConstants.INK_FUNCTION_DO_TASK, 
             (string task, string parameter, bool isBlocking) => DoTask(task, parameter, isBlocking),
@@ -254,6 +266,7 @@ public class InkSystemSO : GameSystem
         string saveJson =story.state.ToJson();
         SaveUtil.SaveState(storyName, saveJson);
         SaveUtil.SaveState(InkConstants.KEY_CURRENT_STORY, storyName);
+        SaveUtil.SaveState(InkConstants.KEY_CURRENT_SCENE_HISTORY,  JsonUtility.ToJson(_taskHistory));
         SaveVariables();
     }
 
@@ -263,6 +276,8 @@ public class InkSystemSO : GameSystem
     }
 #endregion
 #region Task
+    [RuntimeObject] private List<(string, string, bool)> _taskHistory = new(); // clear when scen
+
     [RuntimeObject] int _tasksRunning = 0;
     [RuntimeObject] readonly List<(string,string,bool)> _taskBuffer = new();
     [RuntimeObject] bool _taskBlocked = false;
@@ -275,6 +290,7 @@ public class InkSystemSO : GameSystem
             return;
         }
         RunTask(taskHandler, parameter, isBlocking);
+        AuditHistory(taskHandler, parameter, isBlocking);
     }
 
     private void RunTask(string taskHandler, string parameter, bool isBlocking)
@@ -333,13 +349,13 @@ public class InkSystemSO : GameSystem
         {
             GameRunner.GetSystem<QuestSystemSO>().Do(sys =>
             {
-                Quest.QuestStage stage = taskHandler switch
+                Quest.QuestStage s = taskHandler switch
                 {
                     InkConstants.TASK_DROP_QUEST => Quest.QuestStage.FAILED,
                     InkConstants.TASK_COMPLETE_QUEST => Quest.QuestStage.COMPLETED,
                     _ => Quest.QuestStage.ACTIVE
                 };
-                sys.UpdateQuestStage(parameter, stage);
+                sys.UpdateQuestStage(parameter, s);
             });
             TaskComplete(taskHandler);
             return;
@@ -353,6 +369,82 @@ public class InkSystemSO : GameSystem
         }
 
         inkTaskChannel.Raise((taskHandler, parameter, callback));
+    }
+
+    private void AuditHistory(string taskHandler, string parameter, bool isBlocking)
+    {
+        if (taskHandler == InkConstants.TASK_CHANGE_SCENE)
+        {
+            _taskHistory.Clear();
+        }
+        // ignore instant task
+        if (taskHandler is 
+                InkConstants.TASK_HANG or InkConstants.TASK_PLAY_SOUND or InkConstants.TASK_ADD_NOTE or 
+                InkConstants.TASK_ADD_QUEST or InkConstants.TASK_DROP_QUEST or InkConstants.TASK_COMPLETE_QUEST or 
+                InkConstants.TASK_NOTIFICATION)
+        {
+            return;
+        }
+        // cancel prev task
+        if (taskHandler is InkConstants.TASK_HIDE_CG)
+        {
+            if (_taskHistory.RemoveWhere(th => th.Item1 == taskHandler && th.Item2 == parameter))
+            {
+                return;
+            }
+        }
+        // overwrite prev same task
+        if (taskHandler is InkConstants.TASK_PLAY_BGM or InkConstants.TASK_TITLE)
+        {
+            _taskHistory.RemoveWhere(th => th.Item1 == taskHandler);
+        }
+
+        if (isBlocking)
+        {
+            _taskHistory.RemoveWhere(th => th.Item3);
+        }
+        // extend prev same task
+        if (taskHandler is InkConstants.TASK_PLAY_CG) // slideShower
+        {
+            string prefix = parameter + "_";
+            string origin = parameter;
+            int count = 0;
+            _taskHistory.RemoveWhere(th =>
+            {
+                if (th.Item1 == taskHandler)
+                {
+                    if (th.Item2.StartsWith(prefix))
+                    {
+                        count = int.Parse(th.Item2[prefix.Length..]) + 1;
+                        return true;
+                    }
+
+                    if (th.Item2 == origin)
+                    {
+                        count++;
+                        return true;
+                    }
+                }
+                return false;
+            });
+            if (count > 0)
+            {
+                parameter = prefix + count;
+            }
+        }
+
+        _taskHistory.Add((taskHandler, parameter, isBlocking));
+    }
+
+    [Button]
+    private void PrintHistory()
+    {
+        
+        _taskHistory.ForEach(th =>
+        {
+            string blockingMsg = th.Item3 ? ": Blocking" : "";
+            Debug.Log($"{th.Item1} - {th.Item2}{blockingMsg}");
+        });
     }
 
     private void SceneLoaded(string sceneName,  Action<string> callback)
