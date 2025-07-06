@@ -1,5 +1,9 @@
 namespace ModularFramework
 {
+    /// <summary>
+    /// automatically retrieve module/system. It must be initialized with new().
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class Autowire<T> : IResetable where T : GameSystem
     {
         private T _instance;

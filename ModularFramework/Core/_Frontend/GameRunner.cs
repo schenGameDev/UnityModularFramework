@@ -36,7 +36,7 @@ namespace ModularFramework {
                 if(module is IRegistrySO so) {
                     _registryDict.Add(module.GetType(), so);
                 }
-                module.OnAwake(flags,references);
+                module.OnAwake();
                 if(!module.CentrallyManaged && module.OperateEveryFrame) {
                     _framelyUpdatedModules.Add(module);
                 }
@@ -112,6 +112,13 @@ namespace ModularFramework {
             Application.Quit();
             #endif
         }
+    #endregion
+
+    #region In-Scene Reference
+    public string GetInSceneFlag(string keyword) => flags[keyword];
+    
+    public GameObject GetInSceneGameObject(string keyword) => references[keyword];
+    
     #endregion
 
     #region Module
@@ -307,18 +314,15 @@ namespace ModularFramework {
             HashSet<string> kw = new(), kw2 = new();
             foreach(var m in modules) {
                 if(m==null) continue;
-
-                if(m.Keywords != null) {
-                    foreach (var k in m.Keywords) {
-                        kw.Add(k);
-                        flags.AddIfAbsent(k,"");
-                    }
+                
+                foreach (var k in SceneFlag.GetAllSceneFlagKeywords(m)) {
+                    kw.Add(k);
+                    flags.AddIfAbsent(k,"");
                 }
-                if(m.RefKeywords != null) {
-                    foreach (var k in m.RefKeywords) {
-                        kw2.Add(k);
-                        references.AddIfAbsent(k,null);
-                    }
+                    
+                foreach (var k in SceneRef.GetAllSceneReferenceKeywords(m)) {
+                    kw2.Add(k);
+                    references.AddIfAbsent(k,null);
                 }
             }
             flags.RemoveWhere(k => !kw.Contains(k));

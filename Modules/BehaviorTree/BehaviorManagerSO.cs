@@ -10,17 +10,15 @@ public class BehaviorManagerSO : GameModule,IRegistrySO
     [RuntimeObject] private readonly Dictionary<Transform,BTMarker> _btDict = new();
     [RuntimeObject] public SensorSystemSO sensorSystem;
     [RuntimeObject] public PlayerStatsSO playerStats;
-    [RuntimeObject] public Transform player;
+    [RuntimeObject,SceneRef("PLAYER")] public Transform player;
     
     public BehaviorManagerSO() {
-        RefKeywords = new[]{"PLAYER"};
         updateMode = UpdateMode.EVERY_N_FRAME;
     }
     
-    public override void OnAwake(Dictionary<string, string> flags, Dictionary<string, GameObject> references)
+    public override void OnAwake()
     {
-        base.OnAwake(flags, references);
-        player = references["PLAYER"].transform;
+        base.OnAwake();
         sensorSystem = GameRunner.GetSystem<SensorSystemSO>().OrElseThrow(new Exception("SensorSystem not found."));
         playerStats = GameRunner.GetSystem<PlayerStatsSO>().OrElseThrow(new Exception("PlayerStatsSO not found."));
     }

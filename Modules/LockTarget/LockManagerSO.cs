@@ -27,20 +27,13 @@ public class LockManagerSO : GameModule, IRegistrySO
     [ReadOnly,RuntimeObject] public Transform LockTarget;
 
     [RuntimeObject] private HashSet<Transform> _lockableSet=new();
-    [RuntimeObject] private Transform Player;
-    [RuntimeObject] private string _lockCameraName;
+    [RuntimeObject,SceneRef("PLAYER")] private Transform Player;
+    [RuntimeObject,SceneFlag("LOCK_CAMERA")] private string _lockCameraName;
 
     public LockManagerSO() {
-        RefKeywords = new[]{"PLAYER","LOCK_CAMERA"};
         updateMode = UpdateMode.EVERY_N_FRAME;
     }
-
-    public override void OnAwake(Dictionary<string, string> flags, Dictionary<string, GameObject> references)
-    {
-        base.OnAwake(flags, references);
-        Player = references["PLAYER"].transform;
-        _lockCameraName = references["LOCK_CAMERA"].name;
-    }
+    
     private void OnEnable() {
         _lockEvent.AddListener(LockUnlock);
         _switchLockTargetEvent.AddListener(SwitchTarget);

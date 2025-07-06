@@ -13,7 +13,7 @@ namespace ModularFramework {
         /// <summary>
         /// Trigger in <c>GameRunner</c> Awake method for sequential boot-up
         /// </summary>
-        public virtual void OnAwake(Dictionary<string, string> flags, Dictionary<string,GameObject> references){
+        public virtual void OnAwake(){
             Reset();
         }
 
@@ -67,12 +67,11 @@ namespace ModularFramework {
         protected virtual void Reset() {
             OperateEveryFrame = (updateMode == UpdateMode.EVERY_N_FRAME && _everyNFrame == 1) || (updateMode == UpdateMode.EVERY_N_SECOND && _everyNSecond == 0);
             RuntimeObject.InitializeRuntimeVars(this);
+            SceneRef.InjectSceneReferences(this);
+            SceneFlag.InjectSceneFlags(this);
         }
 
         // Handled in GameRunner
-        public string[] Keywords {get; protected set;}
-        public string[] RefKeywords {get; protected set;}
-
         public Timer Timer {get; private set;}
 
         [Header("Execution")]

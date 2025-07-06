@@ -19,7 +19,7 @@ public abstract class VisionMap : GameModule, IRegistrySO
     [SerializeField, Range(0.05f, 1f)] protected float stepSize = 0.05f;
     [SerializeField] protected string[] _layers;
     [SerializeField] protected float mapHeight = 100;
-    protected Transform maskParent;
+    [SceneRef("VISION_MASK_PARENT")] protected Transform maskParent;
 
 
     [Header("Vision Config")]
@@ -35,17 +35,13 @@ public abstract class VisionMap : GameModule, IRegistrySO
     [SerializeField, ShowField(nameof(isDim))] protected float dimTime = 2;
 
 
-    [RuntimeObject] protected Transform Player {get; private set;}
+    [RuntimeObject, SceneRef("PLAYER")] protected Transform Player;
 
     [RuntimeObject] protected float skippedTime;
 
     [Header("Event Channel")]
     [SerializeField] private EventChannel<bool> _openEyeEvent;
     public bool Active;
-
-    public VisionMap() {
-        RefKeywords = new[]{"PLAYER","VISION_MASK_PARENT"};
-    }
 
     private void OnEnable() {
         if(_openEyeEvent != null) {
@@ -59,11 +55,8 @@ public abstract class VisionMap : GameModule, IRegistrySO
 
     public void SetActive(bool isEyeOpen) => Active = !Active;
 
-    public override void OnAwake(Dictionary<string, string> flags, Dictionary<string,GameObject> references)
+    public override void OnAwake()
     {
-        base.OnAwake(flags, references);
-        Player = references["PLAYER"].transform;
-        maskParent = references["VISION_MASK_PARENT"].transform;
         Prepare();
     }
 
