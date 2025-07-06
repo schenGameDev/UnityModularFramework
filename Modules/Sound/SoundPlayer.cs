@@ -10,7 +10,7 @@ public class SoundPlayer : MonoBehaviour {
     AudioSource _audio;
     float _delay;
     private float _vol;
-    SoundManagerSO _soundManager;
+    private readonly Autowire<SoundManagerSO> _soundManager = new();
     CancellationTokenSource _cts;
     public SoundProfile Profile {get; private set;}
     public LinkedListNode<SoundPlayer> Node { get; set; }
@@ -22,10 +22,9 @@ public class SoundPlayer : MonoBehaviour {
 
     public void Initialize(SoundProfile soundProfile, bool loop = false)
     {
-        _soundManager = GameRunner.Instance?.GetModule<SoundManagerSO>().OrElse(null);
         Profile = soundProfile;
         _audio.clip = soundProfile.clip;
-        _audio.outputAudioMixerGroup = _soundManager.MixerGroup;
+        _audio.outputAudioMixerGroup = _soundManager.Get().MixerGroup;
 
         _audio.volume = soundProfile.volume;
         _vol = soundProfile.volume;
@@ -55,7 +54,7 @@ public class SoundPlayer : MonoBehaviour {
         if(delay>0) isCancelled= await UniTask.WaitForSeconds(delay + 0.001f, cancellationToken: token).SuppressCancellationThrow();
         if(!isCancelled)
             await UniTask.WaitWhile(()=>_audio && _audio.isPlaying, cancellationToken: token).SuppressCancellationThrow();
-        _soundManager?.Dispose(this);
+        _soundManager.Get()?.Dispose(this);
     }
 
     public void Stop() {

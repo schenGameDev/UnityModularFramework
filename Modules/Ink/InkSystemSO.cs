@@ -53,6 +53,13 @@ public class InkSystemSO : GameSystem
     [SerializeField,ReadOnly] InkStage stage;
     [RuntimeObject] InkLine _currentLine;
     [RuntimeObject] InkChoice _currentChoice;
+    
+    
+    // modules
+    [RuntimeObject] Autowire<SoundManagerSO> _soundManager = new();
+    Autowire<MusicSystemSO> _musicSystem = new();
+    Autowire<NoteSystemSO> _noteSystem = new();
+    Autowire<QuestSystemSO> _questSystem = new();
 
     public override void OnDestroy() {
         stage = InkStage.END;
@@ -136,7 +143,7 @@ public class InkSystemSO : GameSystem
                     if (!_firstLine)
                     {
                         SaveStory(currentStoryName, _currentStory);
-                        GameRunner.GetSystem<NoteSystemSO>().Do(sys => sys.SaveNotes());
+                        _noteSystem.Get().SaveNotes();
                         SaveUtil.FlushToNextAvailableSlot();
                     }
                     _firstLine = false;
@@ -327,19 +334,19 @@ public class InkSystemSO : GameSystem
         // immediate
         if (taskHandler == InkConstants.TASK_PLAY_SOUND)
         {
-            GameRunner.Instance?.GetModule<SoundManagerSO>().Do(sys => sys.PlaySound(parameter));
+            _soundManager.Get()?.PlaySound(parameter);
             TaskComplete(taskHandler);
             return;
         }
         if (taskHandler == InkConstants.TASK_PLAY_BGM)
         {
-            GameRunner.GetSystem<MusicSystemSO>().Do(sys => sys.PlayTrack(parameter));
+            _musicSystem.Get().PlayTrack(parameter);
             TaskComplete(taskHandler);
             return;
         }
         if (taskHandler == InkConstants.TASK_ADD_NOTE)
         {
-            GameRunner.GetSystem<NoteSystemSO>().Do(sys => sys.AddNote(parameter));
+            _noteSystem.Get().AddNote(parameter);
             TaskComplete(taskHandler);
             return;
         }
@@ -347,7 +354,8 @@ public class InkSystemSO : GameSystem
             taskHandler == InkConstants.TASK_DROP_QUEST ||
             taskHandler == InkConstants.TASK_COMPLETE_QUEST)
         {
-            GameRunner.GetSystem<QuestSystemSO>().Do(sys =>
+            QuestSystemSO sys = _questSystem;
+            if (sys)
             {
                 Quest.QuestStage s = taskHandler switch
                 {
@@ -356,7 +364,8 @@ public class InkSystemSO : GameSystem
                     _ => Quest.QuestStage.ACTIVE
                 };
                 sys.UpdateQuestStage(parameter, s);
-            });
+            }
+
             TaskComplete(taskHandler);
             return;
         }

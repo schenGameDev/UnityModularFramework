@@ -9,14 +9,13 @@ public class AnimCameraController : MonoBehaviour
     [SerializeField] private string initialState;
     [SerializeField] private string animState;
     [SerializeField] private EmptyCamera emptyCamera;
-    private CameraManagerSO _cameraManager;
+    private readonly Autowire<CameraManagerSO> _cameraManager=new();
 
     int _initStateHash,_animStateHash;
 
     private void Start() {
         _initStateHash = Animator.StringToHash(initialState);
         _animStateHash = Animator.StringToHash(animState);
-        _cameraManager = GameRunner.Instance.GetModule<CameraManagerSO>().Get();
     }
 
     public void UpdateCamFinishPos() {//Animation Event function
@@ -30,12 +29,12 @@ public class AnimCameraController : MonoBehaviour
     {
         if (active)
         {
-            _cameraManager.CameraTransitionTo(emptyCamera.name, CameraTransitionType.NONE);
+            _cameraManager.Get().CameraTransitionTo(emptyCamera.name, CameraTransitionType.NONE);
             PlayAnim();
         }
         else
         {
-            _cameraManager.BackToPrevCamera(CameraTransitionType.MATCH_LAST_ROT);
+            _cameraManager.Get().BackToPrevCamera(CameraTransitionType.MATCH_LAST_ROT);
             ResetAnim();
         }
     }

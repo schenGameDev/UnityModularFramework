@@ -25,7 +25,6 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
     
     
     [Header("Config")]
-    [SerializeField] private InkSystemSO inkSystem;
     [SerializeField] private string storyName;
     [SerializeField] private bool autoPlay;
     [SerializeField,ShowField(nameof(autoPlay))] private float autoPlayDelay = 3f;
@@ -54,6 +53,8 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
     [RuntimeObject] public string currentSceneName;
     [RuntimeObject] private string _currentLineBox = DEFAULT_DIALOG_BOX;
     
+    private Autowire<InkSystemSO> _inkSystem = new();
+    
     #region General
     public InkUIIntegrationSO() {
         updateMode = UpdateMode.NONE;
@@ -63,8 +64,7 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
     {
         base.OnStart();
         CanSkipOrNext = true;
-        inkSystem = GameRunner.GetSystem<InkSystemSO>().OrElse(null);
-        if(currentSceneName=="") currentSceneName = inkSystem.GetLastSceneName();
+        if(currentSceneName=="") currentSceneName = _inkSystem.Get().GetLastSceneName();
     }
 
     private void OnEnable() {
@@ -234,14 +234,14 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
     {
         if (_lineInterrupted)
         {
-            inkSystem.Next();
+            _inkSystem.Get().Next();
         }
         if (autoPlay)
         {
             if (_autoPlayTimer == null)
             {
                 _autoPlayTimer = new CountdownTimer(autoPlayDelay);
-                _autoPlayTimer.OnTimerStop += () => inkSystem.Next();
+                _autoPlayTimer.OnTimerStop += () => _inkSystem.Get().Next();
             }
             
             _autoPlayTimer.Reset();
@@ -259,7 +259,7 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
             {
                 _autoPlayTimer?.Stop();
                 if(_dialogBox.hideWhenNotUsed) _dialogBox.gameObject.SetActive(false);
-                inkSystem.Next();
+                _inkSystem.Get().Next();
             }
         }
     }
@@ -300,7 +300,7 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
         ResetSelectableGroup(_choiceGroupName);
         _choiceGroupName="";
         CanSkipOrNext = true;
-        inkSystem.Next(index);
+        _inkSystem.Get().Next(index);
     }
     
     #endregion

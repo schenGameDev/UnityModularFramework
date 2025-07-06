@@ -135,6 +135,27 @@ namespace ModularFramework {
             _moduleQuickAccessDict.Add(type, null);
             return Optional<T>.None();
         }
+        
+        public Optional<T> GetModuleOrSystem<T>() where T : GameSystem
+        {
+            Type type = typeof(T);
+            if (type.IsSubclassOf(typeof(GameModule)))
+            {
+                GameModule module;
+                if (_moduleQuickAccessDict.TryGetValue(type, out module))
+                {
+                    return module ==null? Optional<T>.None() : (T)(GameSystem) module;
+                }
+                module = modules.First(m => (m as T) != null);
+                
+                if(module != null) {
+                    _moduleQuickAccessDict.Add(type, module);
+                    return (T)(GameSystem) module;
+                }
+            }
+            
+            return GetSystem<T>();
+        }
     #endregion
     
     #region System

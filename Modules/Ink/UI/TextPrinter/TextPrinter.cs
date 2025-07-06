@@ -17,7 +17,7 @@ public class TextPrinter : TextPrinterBase
     
     private PrintStyleBase _printStyleInstance;
     
-    protected SoundManagerSO SoundManager;
+    protected Autowire<SoundManagerSO> SoundManager = new();
     public TextMeshProUGUI Textbox { get; private set; }
     private Action _callback;
 
@@ -61,10 +61,6 @@ public class TextPrinter : TextPrinterBase
 
     public override void Print(string text, Action callback, params string[] parameters)
     {
-        if (soundName.NonEmpty() && !SoundManager)
-        {
-            SoundManager = GameRunner.Instance?.GetModule<SoundManagerSO>().OrElse(null);
-        }
         gameObject.SetActive(true);
         _callback = callback;
         _printStyleInstance.ReturnEarly = ReturnEarly;
@@ -77,5 +73,5 @@ public class TextPrinter : TextPrinterBase
         INSTANCES.Remove(printerName);
     }
 
-    public SoundPlayer GetSoundPlayer() => SoundManager?.PlayLoopSound(soundName);
+    public SoundPlayer GetSoundPlayer() => SoundManager.Get()?.PlayLoopSound(soundName);
 }

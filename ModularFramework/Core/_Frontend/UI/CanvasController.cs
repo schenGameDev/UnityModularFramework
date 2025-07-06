@@ -5,9 +5,11 @@ namespace ModularFramework
 {
     public class CanvasController : MonoBehaviour
     {
+        private Autowire<UISystem> _uiSystem = new();
+        
         public void OpenClose(string canvasName)
         {
-            GameRunner.GetSystem<UISystem>().Do(sys=>Control(canvasName, !sys.IsCanvasActive(canvasName)));
+            Control(canvasName, !_uiSystem.Get().IsCanvasActive(canvasName));
         }
         
         public void Close(string canvasName) => Control(canvasName, false);
@@ -16,13 +18,8 @@ namespace ModularFramework
         
         private void Control(string canvasName, bool visible)
         {
-            GameRunner.GetSystem<UISystem>()
-                .Do(sys =>
-                {
-                    if (visible) sys.ActivateCanvas(canvasName);
-                    else sys.DeactivateCanvas(canvasName);
-                })
-                .OrElseThrow(new KeyNotFoundException("Canvas not found."));
+            if (visible) _uiSystem.Get().ActivateCanvas(canvasName);
+            else _uiSystem.Get().DeactivateCanvas(canvasName);
         }
     }
 }

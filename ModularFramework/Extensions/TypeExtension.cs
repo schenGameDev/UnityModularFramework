@@ -24,6 +24,22 @@ public static class TypeExtension
 
         return false;
     }
+    
+    public static bool Inherits(this Type type, Type baseType) {
+        if(baseType == type) return true;
+        type = ResolveGenericType(type);
+        baseType = ResolveGenericType(baseType);
+
+        while (type != typeof(object)) {
+            if(baseType == type) return true;
+
+            type = ResolveGenericType(type.BaseType);
+            if(type == null) return false;
+        }
+
+        return false;
+    }
+    
     static Type ResolveGenericType(Type type) {
         if(type is not { IsGenericType: true}) return type;
 

@@ -10,12 +10,11 @@ namespace UnityModularFramework {
         [SerializeField] private VolumeType volumeType;
 
         private Slider _slider;
-        private VolumeSystemSO _volumeSystem;
+        private Autowire<VolumeSystemSO> _volumeSystem = new();
 
         private void Start()
         {
             _slider = GetComponent<Slider>();
-            _volumeSystem = GameRunner.GetSystem<VolumeSystemSO>().Get();
             InitializeVolume();
         }
 
@@ -30,13 +29,13 @@ namespace UnityModularFramework {
             switch (volumeType)
             {
                 case VolumeType.MASTER:
-                    _slider.value = _volumeSystem.GetMasterVolume();
+                    _slider.value = _volumeSystem.Get().GetMasterVolume();
                     break;
                 case VolumeType.MUSIC:
-                    _slider.value = _volumeSystem.GetMusicVolume();
+                    _slider.value = _volumeSystem.Get().GetMusicVolume();
                     break;
                 case VolumeType.SFX:
-                    _slider.value = _volumeSystem.GetSoundFxVolume();
+                    _slider.value = _volumeSystem.Get().GetSoundFxVolume();
                     break;
             }
         }
@@ -46,13 +45,13 @@ namespace UnityModularFramework {
             switch (volumeType)
             {
                 case VolumeType.MASTER:
-                    _volumeSystem.SetMasterVolume(volume);
+                    _volumeSystem.Get().SetMasterVolume(volume);
                     break;
                 case VolumeType.MUSIC:
-                    _volumeSystem.SetMusicVolume(volume);
+                    _volumeSystem.Get().SetMusicVolume(volume);
                     break;
                 case VolumeType.SFX:
-                    _volumeSystem.SetSoundFxVolume(volume);
+                    _volumeSystem.Get().SetSoundFxVolume(volume);
                     break;
             }
         }

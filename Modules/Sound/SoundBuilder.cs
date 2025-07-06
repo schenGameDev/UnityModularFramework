@@ -4,15 +4,11 @@ using ModularFramework.Utility;
 using UnityEngine;
 
 public class SoundBuilder {
-        readonly SoundManagerSO soundManager;
-        Vector3 position = Vector3.zero;
-
-        public SoundBuilder() {
-            this.soundManager = GameRunner.Instance?.GetModule<SoundManagerSO>().OrElse(null);
-        }
+        private readonly Autowire<SoundManagerSO> _soundManager = new();
+        private Vector3 _position = Vector3.zero;
 
         public SoundBuilder WithPosition(Vector3 position) {
-            this.position = position;
+            this._position = position;
             return this;
         }
 
@@ -22,17 +18,17 @@ public class SoundBuilder {
                 return null;
             }
 
-            SoundProfile profile = soundManager.GetSound(profileName);
+            SoundProfile profile = _soundManager.Get().GetSound(profileName);
 
-            if (!soundManager.CanPlaySound(profile)) return null;
+            if (!_soundManager.Get().CanPlaySound(profile)) return null;
 
-            SoundPlayer soundPlayer = soundManager.GetPlayer();
+            SoundPlayer soundPlayer = _soundManager.Get().GetPlayer();
             soundPlayer.Initialize(profile);
-            soundPlayer.transform.position = position;
-            soundPlayer.transform.parent = soundManager.SoundParent;
+            soundPlayer.transform.position = _position;
+            soundPlayer.transform.parent = _soundManager.Get().SoundParent;
             
             if (profile.frequentSound) {
-                soundPlayer.Node = soundManager.FrequentSoundPlayers.AddLast(soundPlayer);
+                soundPlayer.Node = _soundManager.Get().FrequentSoundPlayers.AddLast(soundPlayer);
             }
 
             soundPlayer.Play();

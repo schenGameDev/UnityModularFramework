@@ -47,7 +47,7 @@ namespace ModularFramework {
         }
 
         public Optional<T> GetRegistry<T>() where T : ScriptableObject,IRegistrySO 
-            => typeof(T).InheritsOrImplements(typeof(GameSystem))? GameRunner.GetSystemRegistry<T>() : GameRunner.Instance.GetRegistry<T>();
+            => typeof(T).Inherits(typeof(GameSystem))? GameRunner.GetSystemRegistry<T>() : GameRunner.Instance.GetRegistry<T>();
 
         public virtual void RegisterAll()
         {
@@ -64,7 +64,7 @@ namespace ModularFramework {
                         break;
                     }
                     
-                    found =t.InheritsOrImplements(typeof(GameSystem))? GameRunner.RegisterSystem(t, transform) : GameRunner.Instance.Register(t, transform);
+                    found =t.Inherits(typeof(GameSystem))? GameRunner.RegisterSystem(t, transform) : GameRunner.Instance.Register(t, transform);
                     if (found)
                     {
                         _registeredTypes.Add(t);
@@ -80,7 +80,7 @@ namespace ModularFramework {
         
         private void UnregisterAll() {
             foreach (Type t in _registeredTypes) {
-                bool found = t.InheritsOrImplements(typeof(GameSystem))? GameRunner.UnregisterSystem(t, transform) : GameRunner.Instance.Unregister(t, transform);
+                bool found = t.IsSubclassOf(typeof(GameSystem))? GameRunner.UnregisterSystem(t, transform) : GameRunner.Instance.Unregister(t, transform);
                 if(!found) DebugUtil.Warn("Registry of type " + t + " not found");
             }
 

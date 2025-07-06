@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class StoryController : MonoBehaviour
 {
+    private Autowire<InkUIIntegrationSO> _inkUI = new();
     public void StartGame()
     {
         string storyName = InkConstants.DEFAULT_STORY_NAME;
@@ -25,10 +26,7 @@ public class StoryController : MonoBehaviour
     
     public void SkipOrNext()
     {
-        GameRunner.Instance?.GetModule<InkUIIntegrationSO>()
-            .Do(inkUI =>
-            {
-                if (inkUI.CanSkipOrNext) inkUI.SkipOrNext();
-            });
+        InkUIIntegrationSO inkUI = _inkUI.Get();
+        if (inkUI.CanSkipOrNext) inkUI.SkipOrNext();
     }
 }

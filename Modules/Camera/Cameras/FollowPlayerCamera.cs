@@ -24,9 +24,9 @@ public class FollowPlayerCamera : MovingCameraBase
     [HideInInspector,SerializeField,Rename("Target")] private GameObject _defaultTarget;
     [HideInInspector,SerializeField,Rename("Angles"), HelpBox("Angles are inactive if Target is set", MessageMode.None)] private Vector3 _defaultAngle;
 
-    private InputSystemSO _inputSystem;
+    private Autowire<InputSystemSO> _inputSystem = new();
 
-    private Vector2 _lookDeltaMovement => _inputSystem.LookDeltaMovement;
+    private Vector2 _lookDeltaMovement => _inputSystem.Get().LookDeltaMovement;
 
     public Vector3 FreeMoveViewDirection => focusPoint.forward;
     
@@ -45,7 +45,6 @@ public class FollowPlayerCamera : MovingCameraBase
         } else {
             focusPoint.eulerAngles = _defaultAngle;
         }
-        _inputSystem =GameRunner.GetSystem<InputSystemSO>().Get();
     }
 
     protected override void Update()
