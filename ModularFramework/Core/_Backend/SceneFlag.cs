@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -24,7 +25,20 @@ namespace ModularFramework
 
         public void Inject(FieldInfo field, object instance)
         {
-            if (GameRunner.Instance) field.SetValue(instance, GameRunner.Instance.GetInSceneFlag(Keyword));
+            if (!GameRunner.Instance) return;
+            string value = GameRunner.Instance.GetInSceneFlag(Keyword);
+            Type type = field.FieldType;
+            if (type == typeof(string)) field.SetValue(instance, value);
+            else if (type == typeof(int)) field.SetValue(instance, int.Parse(value));
+            else if (type == typeof(float)) field.SetValue(instance, float.Parse(value));
+            else if (type == typeof(bool)) field.SetValue(instance, bool.Parse(value));
+            else if (type == typeof(List<string>)) field.SetValue(instance, value.Split(',').ToList());
+            else if (type == typeof(List<int>)) field.SetValue(instance, value.Split(',').Select(int.Parse).ToList());
+            else if (type == typeof(List<bool>)) field.SetValue(instance, value.Split(',').Select(bool.Parse).ToList());
+            else
+            {
+                Debug.LogError($"Unsupported SceneFlag type: " + type);
+            }
         }
         
         public static List<string> GetAllSceneFlagKeywords(object instance) {
@@ -32,9 +46,10 @@ namespace ModularFramework
             foreach(FieldInfo field in instance.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
                 if (GetCustomAttribute(field, typeof(SceneFlag)) is not SceneFlag attribute) continue;
                 Type type = field.FieldType;
-                if (type != typeof(string))
+                if (type != typeof(string) && type != typeof(bool) && type != typeof(int) && type != typeof(float) && 
+                    type != typeof(List<string>) && type != typeof(List<int>) && type != typeof(List<bool>)) 
                 {
-                    Debug.LogError( $"{attribute.Keyword} cannot be added. SceneFlag can only be used with string. Please refresh modules manually after fixing script.");
+                    Debug.LogError( $"{attribute.Keyword} cannot be added. SceneFlag doesn't support the given type. Please refresh modules manually after fixing script.");
                     continue;
                 }
                 keywords.Add(attribute.Keyword);
