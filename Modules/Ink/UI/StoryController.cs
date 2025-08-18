@@ -44,4 +44,10 @@ public class StoryController : MonoBehaviour
         inkUI.ResumeAutoPlay();
         Time.timeScale = 1;
     }
+    
+    public bool CanSave()
+    {
+        var inkSys = GameRunner.GetSystem<InkSystemSO>();
+        return inkSys.HasValue && inkSys.Get().CanSave;
+    } 
 }
