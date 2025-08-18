@@ -30,4 +30,18 @@ public class StoryController : MonoBehaviour
         InkUIIntegrationSO inkUI = _inkUI.Get();
         if (inkUI.CanSkipOrNext) inkUI.SkipOrNext();
     }
+
+    public void Pause()
+    {
+        InkUIIntegrationSO inkUI = _inkUI.Get();
+        inkUI.PauseAutoPlay();
+        Time.timeScale = 0;
+    }
+
+    public void Resume()
+    {
+        InkUIIntegrationSO inkUI = _inkUI.Get();
+        inkUI.ResumeAutoPlay();
+        Time.timeScale = 1;
+    }
 }

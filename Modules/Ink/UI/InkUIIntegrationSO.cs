@@ -62,7 +62,7 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
     [RuntimeObject] public string currentSceneName;
     [RuntimeObject] private string _currentLineBox = DEFAULT_DIALOG_BOX;
     
-    private Autowire<InkSystemSO> _inkSystem = new();
+    private readonly Autowire<InkSystemSO> _inkSystem = new();
     
     #region General
     public InkUIIntegrationSO() {
@@ -237,26 +237,6 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
         }
         
     }
-    
-    Timer _autoPlayTimer;
-    private void AutoPlay() // only in line
-    {
-        if (_lineInterrupted)
-        {
-            _inkSystem.Get().Next();
-        }
-        if (PlaySpeed != AutoPlaySpeed.NONE)
-        {
-            if (_autoPlayTimer == null)
-            {
-                _autoPlayTimer = new CountdownTimer(AutoPlayDelay);
-                _autoPlayTimer.OnTimerStop += () => _inkSystem.Get().Next();
-            }
-            
-            _autoPlayTimer.Reset();
-            _autoPlayTimer.Start();
-        }
-    }
 
     private readonly Flip _skipped = new();
     public void SkipOrNext()
@@ -341,6 +321,40 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
         } 
     }
 
+    
+    #endregion
+
+    #region AutoPlay
+  
+    Timer _autoPlayTimer;
+    private void AutoPlay() // only in line
+    {
+        if (_lineInterrupted)
+        {
+            _inkSystem.Get().Next();
+        }
+        if (PlaySpeed != AutoPlaySpeed.NONE)
+        {
+            if (_autoPlayTimer == null)
+            {
+                _autoPlayTimer = new CountdownTimer(AutoPlayDelay);
+                _autoPlayTimer.OnTimerStop += () => _inkSystem.Get().Next();
+            }
+            
+            _autoPlayTimer.Reset();
+            _autoPlayTimer.Start();
+        }
+    }
+
+    public void PauseAutoPlay()
+    {
+        if(PlaySpeed != AutoPlaySpeed.NONE)  _autoPlayTimer?.Pause();
+    }
+
+    public void ResumeAutoPlay()
+    {
+        if(PlaySpeed != AutoPlaySpeed.NONE)  _autoPlayTimer?.Resume();
+    }
     
     #endregion
 }

@@ -46,6 +46,8 @@ namespace ModularFramework {
             {
                 m.OnSceneLoad(GameBuilder.Instance.NextScene);
             }
+            
+            Time.timeScale = 1;
         }
 
         private void Start()
