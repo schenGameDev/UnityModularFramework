@@ -13,7 +13,7 @@ public class SlideShower : Playable
     [SerializeField] private Image backImage;
     
     private SlideShowProfile _lastProfile;
-    private int _index = 0;
+    [SavableState] private int _index = 0;
     private CancellationTokenSource _cts;
 
     private void Awake()
@@ -89,6 +89,14 @@ public class SlideShower : Playable
         SetImage(frontImage, profiles[editorIndex]);
     }
 
+    #endregion
+
+    #region ISavable
+    public override void Load()
+    {
+        _index -= 1;
+        base.Load();
+    } 
     #endregion
 }
 

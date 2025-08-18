@@ -1,32 +1,25 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ModularFramework;
 using UnityEngine;
 using UnityTimer;
 
 [RequireComponent(typeof(Marker))]
-public class ChatBubbleQueue : TextPrinterBase,IMark
+public class ChatBubbleQueue : TextPrinterBase,IMark,ISavable
 {
     public Type[][] RegistryTypes => new[] { new []{typeof(InkUIIntegrationSO)}};
     
     [SerializeField] private int maxBubbles = 5;
-    [SerializeField] private float gap = 0.5f;
     [SerializeField] private TextPrinter[] bubblePrefabs;
 
     private readonly List<TextPrinter> _bubbles = new();
     private TextPrinter LatestBubble => _bubbles.IsEmpty() ? null : _bubbles[^1];
     private Action _callback;
-    private Timer _timer;
-
-    protected void Awake()
-    {
-        if (gap > 0)
-        {
-            _timer = new CountdownTimer(gap);
-            _timer.OnTimerStop+= () =>Done = true;
-        }
-        
-    }
+    [SavableState] private string _historyStr = "";
+    private (int,string) _current;
+    private List<string> _lines = new();
+    
 
     private TextPrinter CreateChatBubble(TextPrinter prefab)
     {
@@ -35,23 +28,20 @@ public class ChatBubbleQueue : TextPrinterBase,IMark
     
     private void OnBubbleComplete()
     {
-        if (_callback == null || _timer == null)
+        Done = true;
+        _lines.Add(_current.Item1 + "&&" + _current.Item2);
+        if (_lines.Count > maxBubbles)
         {
-            Done = true;
-            return;
+            _lines.RemoveAt(0);
         }
+        _historyStr = string.Join("||", _lines);
         
-        _timer.OnTimerStop+=_callback;
-        _timer.Start();
+        _callback?.Invoke();
     }
 
 
     public override void Print(string text, Action callback, params string[] parameters)
     {
-        if (_timer != null && _callback!=null)
-        {
-            _timer.OnTimerStop-=_callback;
-        }
         Done = false;
         int index = parameters.Length == 0 || parameters[0].IsEmpty() ? 0 : int.Parse(parameters[0]);
         TextPrinter printer = CreateChatBubble(bubblePrefabs[index]);
@@ -59,6 +49,7 @@ public class ChatBubbleQueue : TextPrinterBase,IMark
         printer.Print(text, OnBubbleComplete);
         _callback = callback;
         _bubbles.Add(printer);
+        _current = (index, text);
         if (_bubbles.Count > maxBubbles)
         {
             Destroy(_bubbles.RemoveAtAndReturn(0));
@@ -71,32 +62,40 @@ public class ChatBubbleQueue : TextPrinterBase,IMark
         {
             LatestBubble.Skip();
         }
-        else
-        {
-            _timer?.Stop();
-        }
-        
     }
 
     public override void Clean()
     {
-        if (_timer != null && _callback!=null)
-        {
-            _timer.OnTimerStop-=_callback;
-        }
         foreach (var b in _bubbles)
         {
             Destroy(b);
         }
+        
+        _historyStr = "";
+        _lines.Clear();
+        
         ReturnEarly = false;
         Done = false;
     }
 
-    private void OnDestroy()
+        
+    #region ISavable
+    public string Id => printerName;
+
+    public virtual void Load()
     {
-        if (_timer != null && _callback!=null)
+        if (gameObject.activeSelf)
         {
-            _timer.OnTimerStop-=_callback;
+            _lines = _historyStr.Split("||").ToList();
+            _lines.ForEach(line =>
+            {
+                var arr = line.Split("&&");
+                TextPrinter printer = CreateChatBubble(bubblePrefabs[int.Parse(arr[0])]);
+                printer.Textbox.text = arr[1];
+                _bubbles.Add(printer);
+            });
         }
     }
+
+    #endregion
 }

@@ -76,9 +76,18 @@ public class GifPlayer : Playable,IResetable
         }
         Reset();
     }
-
+    #region IResetable
     public void Reset()
     {
         _index = 0;
     }
+    #endregion
+    
+    #region ISavable
+    public override void Load()
+    {
+        _index = 0;
+        base.Load();
+    } 
+    #endregion
 }

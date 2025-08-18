@@ -15,8 +15,7 @@ namespace ModularFramework.Commons {
 
 
         public static AnyValue Of<T>(T value) {
-            if(value is Keeper) {
-                var kp = value as Keeper;
+            if(value is Keeper kp) {
                 return kp.ConvertToAnyValue();
             }
 

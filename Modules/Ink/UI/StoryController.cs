@@ -19,6 +19,7 @@ public class StoryController : MonoBehaviour
             .Do(so =>
             {
                 so.StartStory(storyName);
+                so.LoadScene();
                 so.Next();
             });
         GameRunner.GetSystem<NoteSystemSO>().Do(sys => sys.LoadNotes());

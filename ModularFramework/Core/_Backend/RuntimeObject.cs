@@ -132,40 +132,64 @@ namespace ModularFramework
             if(type == typeof(short)) {
                 field.SetValue(instance, 0);
                 return true;
-            } else if(type == typeof(uint)) {
+            }
+
+            if(type == typeof(uint)) {
                 field.SetValue(instance, 0);
                 return true;
-            } else if(type == typeof(int)) {
+            }
+
+            if(type == typeof(int)) {
                 field.SetValue(instance, 0);
                 return true;
-            } else if(type == typeof(float)) {
+            }
+
+            if(type == typeof(float)) {
                 field.SetValue(instance, 0);
                 return true;
-            } else if(type == typeof(double)) {
+            }
+
+            if(type == typeof(double)) {
                 field.SetValue(instance, 0);
                 return true;
-            } else if(type == typeof(bool)) {
+            }
+
+            if(type == typeof(bool)) {
                 field.SetValue(instance, false);
                 return true;
-            } else if(type == typeof(byte)) {
+            }
+
+            if(type == typeof(byte)) {
                 field.SetValue(instance, 0);
                 return true;
-            } else if(type == typeof(char)) {
+            }
+
+            if(type == typeof(char)) {
                 field.SetValue(instance, '\0');
                 return true;
-            } else if(type == typeof(Vector2)) {
+            }
+
+            if(type == typeof(Vector2)) {
                 field.SetValue(instance, Vector2.zero);
                 return true;
-            } else if(type == typeof(Vector3)) {
+            }
+
+            if(type == typeof(Vector3)) {
                 field.SetValue(instance, Vector3.zero);
                 return true;
-            } else if(type == typeof(Vector2Int)) {
+            }
+
+            if(type == typeof(Vector2Int)) {
                 field.SetValue(instance, Vector2Int.zero);
                 return true;
-            } else if(type == typeof(Vector3Int)) {
+            }
+
+            if(type == typeof(Vector3Int)) {
                 field.SetValue(instance, Vector3Int.zero);
                 return true;
-            } else if(type == typeof(string)) {
+            }
+
+            if(type == typeof(string)) {
                 field.SetValue(instance, "");
                 return true;
             }

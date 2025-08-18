@@ -4,7 +4,7 @@ using ModularFramework;
 using UnityEngine;
 
 [RequireComponent(typeof(Marker))]
-public abstract class Playable : MonoBehaviour,IMark
+public abstract class Playable : MonoBehaviour,IMark,ISavable
 {
     [Rename("name")]public string playbaleName;
     public bool disableOnAwake = true;
@@ -21,4 +21,14 @@ public abstract class Playable : MonoBehaviour,IMark
     {
         OnTaskComplete?.Invoke(InkConstants.TASK_PLAY_CG);
     }
+    
+    #region ISavable
+    public string Id => playbaleName;
+
+    public virtual void Load()
+    {
+        if(gameObject.activeSelf) Play();
+    }
+
+    #endregion
 }

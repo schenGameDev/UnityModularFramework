@@ -26,8 +26,17 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
     
     [Header("Config")]
     [SerializeField] private string storyName;
-    [SerializeField] private bool autoPlay;
-    [SerializeField,ShowField(nameof(autoPlay))] private float autoPlayDelay = 3f;
+    public enum AutoPlaySpeed { NONE, SLOW, NORMAL, FAST, ULTRAFAST}
+    public static AutoPlaySpeed PlaySpeed = AutoPlaySpeed.NORMAL;
+    private float AutoPlayDelay => PlaySpeed switch
+    {
+        AutoPlaySpeed.NONE => 999f,
+        AutoPlaySpeed.SLOW => 3f,
+        AutoPlaySpeed.NORMAL => 1f,
+        AutoPlaySpeed.FAST => 0.5f,
+        AutoPlaySpeed.ULTRAFAST => 0.1f,
+        _ => throw new ArgumentOutOfRangeException()
+    };
     [SerializeField] private bool showHiddenChoice = true;
     
     [Header("Bucket")]
@@ -236,11 +245,11 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
         {
             _inkSystem.Get().Next();
         }
-        if (autoPlay)
+        if (PlaySpeed != AutoPlaySpeed.NONE)
         {
             if (_autoPlayTimer == null)
             {
-                _autoPlayTimer = new CountdownTimer(autoPlayDelay);
+                _autoPlayTimer = new CountdownTimer(AutoPlayDelay);
                 _autoPlayTimer.OnTimerStop += () => _inkSystem.Get().Next();
             }
             

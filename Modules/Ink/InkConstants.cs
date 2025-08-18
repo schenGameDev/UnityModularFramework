@@ -3,6 +3,7 @@ public static class InkConstants {
     public const string KEY_CURRENT_STORY = "CurrentStory";
     public const string KEY_CURRENT_SCENE_HISTORY = "CurrentSceneHistory";
     public const string KEY_NOTES = "Notes";
+    public const string KEY_AUTO_PLAY_SPEED = "AutoPlaySpeed";
     
     public const string INK_FUNCTION_DO_TASK = "doTask";
     
