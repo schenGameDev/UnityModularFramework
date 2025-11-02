@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using EditorAttributes;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityTimer;
 
 namespace ModularFramework {
@@ -24,14 +25,14 @@ namespace ModularFramework {
             if(updateMode == UpdateMode.NONE || OperateEveryFrame) return;
             if(updateMode == UpdateMode.EVERY_N_FRAME)
             {
-                var timer = new RepeatFrameCountdownTimer(_everyNFrame, 2);
+                var timer = new RepeatFrameCountdownTimer(everyNFrame, 2);
                 timer.OnTick += () =>  {
                     if(CentrallyManaged) GameRunner.Instance?.AddToExecQueue(this, timer.DeltaTime);
                     else OnUpdate(timer.DeltaTime);
                 };
                 Timer = timer;
             } else {
-                var timer = new RepeatCountdownTimer(_everyNSecond, 2);
+                var timer = new RepeatCountdownTimer(everyNSecond, 2);
                 timer.OnTick += () =>  {
                     if(CentrallyManaged) GameRunner.Instance?.AddToExecQueue(this, timer.DeltaTime);
                     else OnUpdate(timer.DeltaTime);
@@ -65,7 +66,7 @@ namespace ModularFramework {
         public virtual void OnGizmos() {}
 
         protected virtual void Reset() {
-            OperateEveryFrame = (updateMode == UpdateMode.EVERY_N_FRAME && _everyNFrame == 1) || (updateMode == UpdateMode.EVERY_N_SECOND && _everyNSecond == 0);
+            OperateEveryFrame = (updateMode == UpdateMode.EVERY_N_FRAME && everyNFrame == 1) || (updateMode == UpdateMode.EVERY_N_SECOND && everyNSecond == 0);
             RuntimeObject.InitializeRuntimeVars(this);
             SceneRef.InjectSceneReferences(this);
             SceneFlag.InjectSceneFlags(this);
@@ -76,8 +77,8 @@ namespace ModularFramework {
 
         [Header("Execution")]
         [SerializeField] protected UpdateMode updateMode;
-        [SerializeField,ShowField(nameof(updateMode), UpdateMode.EVERY_N_FRAME)] private int _everyNFrame = 1;
-        [SerializeField,ShowField(nameof(updateMode), UpdateMode.EVERY_N_SECOND)] private float _everyNSecond = 0;
+        [SerializeField,ShowField(nameof(updateMode), UpdateMode.EVERY_N_FRAME)] protected int everyNFrame = 1;
+        [SerializeField,ShowField(nameof(updateMode), UpdateMode.EVERY_N_SECOND)] protected float everyNSecond = 0;
         /// <summary>
         /// only one of centerally managed modules will be executed at one frame
         /// </summary>

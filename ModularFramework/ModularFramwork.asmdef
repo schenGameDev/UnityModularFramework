@@ -1,5 +1,5 @@
 {
-    "name": "ModularFramwork",
+    "name": "ModularFramework",
     "rootNamespace": "ModularFramework",
     "references": [
         "GUID:d525ad6bd40672747bde77962f1c401e",
