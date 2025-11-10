@@ -19,6 +19,7 @@ namespace ModularFramework
     public class GameBuilder : Singleton<GameBuilder>
     {
         public Action SceneTransitionCompleteCallback;
+        public static bool GameStartFromBuilder {get; private set;}
         
         [Header("Scene Manager")]
         
@@ -42,6 +43,7 @@ namespace ModularFramework
         protected override void Awake()
         {
             base.Awake();
+            GameStartFromBuilder = true;
             if (systems == null) return;
             
             GameRunner.SYSTEMS.Clear();

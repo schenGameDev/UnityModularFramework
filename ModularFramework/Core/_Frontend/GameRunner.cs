@@ -52,10 +52,14 @@ namespace ModularFramework {
 
         private void Start()
         {
-            if (modules == null) return;
             RegistryBuffer.InjectAll();
-            foreach(var module in modules) {
-                module.OnStart();
+            LoadSystemsForDev();
+            if (modules != null)
+            {
+                foreach (var module in modules)
+                {
+                    module.OnStart();
+                }
             }
 
             _timer = new FrameCountdownTimer(10);
@@ -87,10 +91,15 @@ namespace ModularFramework {
 
         private void OnDestroy()
         {
-            if (modules == null) return;
-            foreach(var module in modules) {
-                module.OnDestroy();
+            DestroySystemsForDev();
+            if (modules != null)
+            {
+                foreach (var module in modules)
+                {
+                    module.OnDestroy();
+                }
             }
+
             foreach (var m in PersistentBehaviour.INSTANCES)
             {
                 m.OnSceneDestroy(GameBuilder.Instance.NextScene);
@@ -334,6 +343,38 @@ namespace ModularFramework {
             DebugUtil.DebugLog("Module parameters refreshed");
         }
 
+    #endregion
+
+    #region Dev
+    [Header("Game Systems (Dev Only)")]
+    [SerializeField,HideLabel]
+    private GameSystem[] systems;
+
+    private void LoadSystemsForDev()
+    {
+        if(GameBuilder.GameStartFromBuilder) return;
+        if (systems == null) return;
+            
+        SYSTEMS.Clear();
+        STATIC_REGISTRY_DICT.Clear();
+            
+        foreach (var sys in systems)
+        {
+            InjectSystem(sys);
+        }
+    }
+
+    private void DestroySystemsForDev()
+    {
+        if(GameBuilder.GameStartFromBuilder) return;
+        if (systems == null) return;
+        SYSTEMS.Clear();
+        STATIC_REGISTRY_DICT.Clear();
+            
+        foreach(var sys in systems) {
+            sys.OnDestroy();
+        }
+    }
     #endregion
     }
 }
