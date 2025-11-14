@@ -6,7 +6,7 @@ using ModularFramework;
 using ModularFramework.Utility;
 using UnityEngine.InputSystem;
 
-[CreateAssetMenu(fileName ="InpuSystem_SO",menuName ="Game Module/Input System")]
+[CreateAssetMenu(fileName ="InputSystem_SO",menuName ="Game Module/Input/Input System")]
 public class InputSystemSO : GameSystem, PlayerActions.IInputActions, ILive {
  
     public EventChannel ActionInteract,OpenEyeEvent,ActionUse;
