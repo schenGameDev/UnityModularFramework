@@ -16,7 +16,7 @@ namespace ModularFramework
     public class RuntimeObject : PropertyAttribute  {
         #region Static Public
         public static void CleanRuntimeVars(object instance) {
-            foreach(FieldInfo field in instance.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
+            foreach(FieldInfo field in instance.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)) {
                 if (GetCustomAttribute(field, typeof(RuntimeObject)) is not RuntimeObject attribute) continue;
                 attribute.CleanField(field,instance);
             }
@@ -24,7 +24,7 @@ namespace ModularFramework
         }
 
         public static void InitializeRuntimeVars(object instance) {
-            foreach(FieldInfo field in instance.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
+            foreach(FieldInfo field in instance.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)) {
                 if (GetCustomAttribute(field, typeof(RuntimeObject)) is not RuntimeObject attribute) continue;
                 attribute.InitializeField(field, instance);
             }
@@ -62,7 +62,7 @@ namespace ModularFramework
             try { 
                 if(_initializer.NonEmpty()) 
                 {
-                    instance.GetType().GetMethod(_initializer, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.Invoke(instance, null);
+                    instance.GetType().GetMethod(_initializer, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(instance, null);
                 } 
                 else if (value is IResetable resettable) 
                 {
