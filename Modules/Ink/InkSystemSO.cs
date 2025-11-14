@@ -145,8 +145,8 @@ public class InkSystemSO : GameSystem
                         SaveStory(currentStoryName, _currentStory);
                         _noteSystem.Get().SaveNotes();
                         SaveUtil.FlushToNextAvailableSlot();
+                        _firstLine = false;
                     }
-                    _firstLine = false;
                     return Next(choiceIndex);
                 }
                 _firstLine = false;

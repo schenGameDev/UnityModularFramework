@@ -1,4 +1,7 @@
 namespace ModularFramework.Commons {
+    /// <summary>
+    /// flip boolean value every time Get() is called
+    /// </summary>
     public class Flip : IResetable {
         protected bool value = false;
         public static implicit operator bool(Flip flip) => flip.Get();
@@ -7,7 +10,7 @@ namespace ModularFramework.Commons {
             return !value;
         }
 
-        public void Set(bool value) {
+        public virtual void Set(bool value) {
             this.value = value;
         }
 

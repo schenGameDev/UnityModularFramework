@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ModularFramework.Commons;
 
 public static class EnumerableExtension {
     public static void ForEach<T>(this IEnumerable<T> sequence, Action<T> action) {
@@ -48,5 +49,10 @@ public static class EnumerableExtension {
 
     public static string Join<T>(this IEnumerable<T> source) {
         return string.Join(",", source);
+    }
+
+    public static Optional<T> GetFirst<T>(this IEnumerable<T> source)
+    {
+        return source.First();
     }
 }

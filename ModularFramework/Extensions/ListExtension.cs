@@ -101,4 +101,9 @@ public static class ListExtension {
 
     //     return source.Select(x => EqualityComparer<T>.Default.Equals(x, oldValue) ? newValue : x);
     // }
+    
+    public static List<T> AsSingletonList<T>(this T source)
+    {
+        return new List<T> { source };
+    }
 }

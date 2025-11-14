@@ -59,21 +59,22 @@ namespace ModularFramework
             if(_noInitialize) return;
             Type type = field.FieldType;
             object value = field.GetValue(instance);
-            try {
-                if(_initializer.NonEmpty()) {
+            try { 
+                if(_initializer.NonEmpty()) 
+                {
                     instance.GetType().GetMethod(_initializer, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.Invoke(instance, null);
-                } else if(!ResetValueTypes(type, field, instance)) {
-                    if (value is IResetable resettable) {
-                        resettable.Reset();
-                    } else if(type.InheritsOrImplements(typeof(ICollection<>))) {
-                        PurgeCollection(type, value);
-                    } else if(type.InheritsOrImplements(typeof(Object)) || 
-                              type.BaseType == typeof(object) || 
-                              type.BaseType?.BaseType == typeof(object)) {
-                        field.SetValue(instance, null);
-                    } else {
-                        throw new("Do not support " + field.Name);
-                    }
+                } 
+                else if (value is IResetable resettable) 
+                {
+                    resettable.Reset();
+                } 
+                else if(type.InheritsOrImplements(typeof(ICollection<>))) 
+                {
+                    PurgeCollection(type, value);
+                }
+                else
+                {
+                    ResetFieldToDefault(type, field, instance);
                 }
             } catch (Exception e) {
                 DebugUtil.Error(e.Message);
@@ -91,7 +92,7 @@ namespace ModularFramework
                 
                 if(_cleaner.NonEmpty()) {
                     instance.GetType().GetMethod(_cleaner)?.Invoke(instance, null);
-                } else if(IsValueType(type)) {
+                } else if(type.GetTypeInfo().IsValueType) {
                     // no need to clean value type
                 } else if(value is IDisposable disposable) {
                     try
@@ -120,80 +121,22 @@ namespace ModularFramework
                 Debug.LogError($"{instanceName} - {field.Name}: "  + e.Message);
             }
         }
-
-        private bool IsValueType(Type type) {
-            return type == typeof(short) || type == typeof(uint) || type == typeof(int) ||
-                type == typeof(float) || type == typeof(double) || type == typeof(bool) ||
-                type == typeof(byte) || type == typeof(char) || type == typeof(Vector2) ||
-                type == typeof(Vector3) || type == typeof(Vector2Int) || type == typeof(Vector3Int);
-        }
-
-        private bool ResetValueTypes(Type type, FieldInfo field, object instance) {
-            if(type == typeof(short)) {
-                field.SetValue(instance, 0);
-                return true;
-            }
-
-            if(type == typeof(uint)) {
-                field.SetValue(instance, 0);
-                return true;
-            }
-
-            if(type == typeof(int)) {
-                field.SetValue(instance, 0);
-                return true;
-            }
-
-            if(type == typeof(float)) {
-                field.SetValue(instance, 0);
-                return true;
-            }
-
-            if(type == typeof(double)) {
-                field.SetValue(instance, 0);
-                return true;
-            }
-
-            if(type == typeof(bool)) {
-                field.SetValue(instance, false);
-                return true;
-            }
-
-            if(type == typeof(byte)) {
-                field.SetValue(instance, 0);
-                return true;
-            }
-
-            if(type == typeof(char)) {
-                field.SetValue(instance, '\0');
-                return true;
-            }
-
-            if(type == typeof(Vector2)) {
-                field.SetValue(instance, Vector2.zero);
-                return true;
-            }
-
-            if(type == typeof(Vector3)) {
-                field.SetValue(instance, Vector3.zero);
-                return true;
-            }
-
-            if(type == typeof(Vector2Int)) {
-                field.SetValue(instance, Vector2Int.zero);
-                return true;
-            }
-
-            if(type == typeof(Vector3Int)) {
-                field.SetValue(instance, Vector3Int.zero);
-                return true;
-            }
-
+        
+        private void ResetFieldToDefault(Type type, FieldInfo field, object instance) {
             if(type == typeof(string)) {
                 field.SetValue(instance, "");
-                return true;
+                return;
             }
-            return false;
+            field.SetValue(instance,GetDefault(type));
+        }
+        
+        private static object GetDefault(Type type)
+        {
+            if(type.GetTypeInfo().IsValueType)
+            {
+                return Activator.CreateInstance(type);
+            }
+            return null;
         }
 
         private void PurgeCollection(Type collectionType, object collection) {

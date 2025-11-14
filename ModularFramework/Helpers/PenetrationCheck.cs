@@ -1,4 +1,5 @@
 using System;
+using EditorAttributes;
 using ModularFramework;
 using UnityEngine;
 
@@ -12,12 +13,12 @@ public class PenetrationCheck : MonoBehaviour
     public event Action<Vector3> OnPenetrationStay;
     public event Action OnPenetrationEnd;
 
-    private Collider collider;
-    private bool resolvingCollision;
+    private Collider _collider;
+    [SerializeField,ReadOnly] private bool resolvingCollision;
     
     private void Start()
     {
-        collider = GetComponent<Collider>();
+        _collider = GetComponent<Collider>();
         // OnPenetrationStart += correction =>
         // {
         //     float penetrationDepth = correction.magnitude;
@@ -26,7 +27,7 @@ public class PenetrationCheck : MonoBehaviour
 
     private void Update()
     {
-        bool isColliding = collider.GetPenetrationInLayer(obstacleLayers, out Vector3 correction);
+        bool isColliding = _collider.GetPenetrationInLayer(obstacleLayers, out Vector3 correction);
 
         if (isColliding)
         {

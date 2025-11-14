@@ -44,7 +44,7 @@ public class CameraManagerSO : GameModule,IRegistrySO {
         currentMode = CameraType.FIXED;
     }
 
-    [RuntimeObject] bool _isDefaultSet;
+    [RuntimeObject] OnetimeFlip _isDefaultSet = new();
     public void Register(Transform transform) {
         string name = transform.name;
         CameraBase cb = transform.GetComponent<CameraBase>();

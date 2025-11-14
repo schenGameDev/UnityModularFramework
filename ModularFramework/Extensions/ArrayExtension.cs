@@ -16,4 +16,9 @@ public static class ArrayExtension {
     {
         sourceArray.AsSpan().BlockCopy(sourceIndex, destinationArray.AsSpan(), destinationIndex, count);
     }
+    
+    public static T[] AsSingletonArray<T>(this T source)
+    {
+        return new[] { source };
+    }
 }

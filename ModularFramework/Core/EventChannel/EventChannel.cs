@@ -19,7 +19,7 @@ namespace ModularFramework {
 
         protected UnityAction<T> action;
         private T _lastSend;
-        [SerializeField] private bool _log;
+        [SerializeField] private bool log;
         [field: SerializeField] public bool Live { get; set; } = true; // can be used to pause channel while listener handles action, then unpause once done
 
         public void Raise(T param)
@@ -27,9 +27,9 @@ namespace ModularFramework {
             _lastSend = param;
             _isRequestable = true;
             if(Live && IsEventSubscribed()) {
-                if(_log) DebugUtil.DebugLog("Triggered", name);
+                if(log) DebugUtil.DebugLog("Triggered", name);
                 Invoke(param);
-            } else if(_log) {
+            } else if(log) {
                 DebugUtil.DebugLog("Blocked", name);
             }
         }

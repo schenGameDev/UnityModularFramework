@@ -1,3 +1,4 @@
+using ModularFramework.Commons;
 using ModularFramework.Utility;
 using UnityEngine;
 using UnityEngine.UI;
@@ -55,14 +56,13 @@ public class Readable : TranslationText
         else printer.Skip();
     }
 
-    private bool _waitPlayerConfirm = false;
+    private readonly Flip _waitPlayerConfirm = new();
     private void PrintDone()
     {
         if(!_isShow) return;
 
         if (!_waitPlayerConfirm)
         {
-            _waitPlayerConfirm = true;
             return;
         }
         printer.Clean();
@@ -72,7 +72,6 @@ public class Readable : TranslationText
             detail.SetActive(false);
         }
         _isShow = false;
-        _waitPlayerConfirm = false;
     }
 
     public void OnHover()

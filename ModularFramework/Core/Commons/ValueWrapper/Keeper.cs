@@ -10,19 +10,19 @@ namespace ModularFramework.Commons {
         [SerializeField] public ValueType type;
 
         // Storage for different types of values
-        [SerializeField,ShowField(nameof(type),ValueType.Bool)] private bool _boolValue;
-        [SerializeField,ShowField(nameof(type),ValueType.Int)] private int _intValue;
-        [SerializeField,ShowField(nameof(type),ValueType.Float)] private float _floatValue;
-        [SerializeField,ShowField(nameof(type),ValueType.String)] private string _stringValue;
+        [SerializeField,ShowField(nameof(type),ValueType.Bool)] private bool boolValue;
+        [SerializeField,ShowField(nameof(type),ValueType.Int)] private int intValue;
+        [SerializeField,ShowField(nameof(type),ValueType.Float)] private float floatValue;
+        [SerializeField,ShowField(nameof(type),ValueType.String)] private string stringValue;
 
 
         public static Keeper Of<T>(T value) {
             ValueType tp = ValueTypeOf(value.GetType());
             return tp switch {
-                ValueType.Bool => new Keeper() {type=tp, _boolValue=(bool)(object)value},
-                ValueType.Int => new Keeper() {type=tp, _intValue=(int)(object)value},
-                ValueType.Float => new Keeper() {type=tp, _floatValue=(float)(object)value},
-                ValueType.String => new Keeper() {type=tp, _stringValue=(string)(object)value},
+                ValueType.Bool => new Keeper() {type=tp, boolValue=(bool)(object)value},
+                ValueType.Int => new Keeper() {type=tp, intValue=(int)(object)value},
+                ValueType.Float => new Keeper() {type=tp, floatValue=(float)(object)value},
+                ValueType.String => new Keeper() {type=tp, stringValue=(string)(object)value},
                 _ => throw new InvalidCastException()
             };
         }
@@ -34,16 +34,16 @@ namespace ModularFramework.Commons {
         public static implicit operator string(Keeper value) => value.ConvertValue<string>();
 
         public AnyValue ConvertToAnyValue() {
-            return new AnyValue() {type=this.type, boolValue = _boolValue, stringValue = _stringValue, floatValue = _floatValue, intValue=_intValue};
+            return new AnyValue() {type=this.type, boolValue = boolValue, stringValue = stringValue, floatValue = floatValue, intValue=intValue};
         }
 
         public T ConvertValue<T>() {
             if (typeof(T) == typeof(object)) return CastToObject<T>();
             return type switch {
-                ValueType.Int => AsInt<T>(_intValue),
-                ValueType.Float => AsFloat<T>(_floatValue),
-                ValueType.Bool => AsBool<T>(_boolValue),
-                ValueType.String => (T) (object) _stringValue,
+                ValueType.Int => AsInt<T>(intValue),
+                ValueType.Float => AsFloat<T>(floatValue),
+                ValueType.Bool => AsBool<T>(boolValue),
+                ValueType.String => (T) (object) stringValue,
                 _ => throw new InvalidCastException($"Cannot convert Keeper of type {type} to {typeof(T).Name}")
             };
         }
@@ -76,10 +76,10 @@ namespace ModularFramework.Commons {
 
         T CastToObject<T>() {
             return type switch {
-                ValueType.Int => (T) (object) _intValue,
-                ValueType.Float => (T) (object) _floatValue,
-                ValueType.Bool => (T) (object) _boolValue,
-                ValueType.String => (T) (object) _stringValue,
+                ValueType.Int => (T) (object) intValue,
+                ValueType.Float => (T) (object) floatValue,
+                ValueType.Bool => (T) (object) boolValue,
+                ValueType.String => (T) (object) stringValue,
                 _ => throw new InvalidCastException($"Cannot convert Keeper of type {type} to {typeof(T).Name}")
             };
         }
@@ -91,16 +91,16 @@ namespace ModularFramework.Commons {
             }
             switch(tp)  {
                 case ValueType.Bool:
-                    _boolValue=(bool)(object)newValue;
+                    boolValue=(bool)(object)newValue;
                     break;
                 case ValueType.Int:
-                    _intValue=(int)(object)newValue;
+                    intValue=(int)(object)newValue;
                     break;
                 case ValueType.Float:
-                    _floatValue=(float)(object)newValue;
+                    floatValue=(float)(object)newValue;
                     break;
                 case ValueType.String:
-                    _stringValue=(string)(object)newValue;
+                    stringValue=(string)(object)newValue;
                     break;
             }
 
@@ -119,9 +119,9 @@ namespace ModularFramework.Commons {
                     bool b=(bool)(object)newValue;
                     switch(operatorStr) {
                         case "||":
-                            return (T)(object)(_boolValue || b);
+                            return (T)(object)(boolValue || b);
                         case "&&":
-                            return (T)(object)(_boolValue && b);
+                            return (T)(object)(boolValue && b);
                         default:
                             throw NotSupportError(operatorStr);
                     }
@@ -129,15 +129,15 @@ namespace ModularFramework.Commons {
                     int i=(int)(object)newValue;
                     switch(operatorStr) {
                         case "+":
-                            return (T)(object)(_intValue+i);
+                            return (T)(object)(intValue+i);
                         case "-":
-                            return (T)(object)(_intValue-i);
+                            return (T)(object)(intValue-i);
                         case "*":
-                            return (T)(object)(_intValue*i);
+                            return (T)(object)(intValue*i);
                         case "/":
-                            return (T)(object)(_intValue/i);
+                            return (T)(object)(intValue/i);
                         case "%":
-                            return (T)(object)(_intValue%i);
+                            return (T)(object)(intValue%i);
                         default:
                             throw NotSupportError(operatorStr);
                     }
@@ -145,13 +145,13 @@ namespace ModularFramework.Commons {
                     float f=(float)(object)newValue;
                     switch(operatorStr) {
                         case "+":
-                            return (T)(object)(_floatValue+f);
+                            return (T)(object)(floatValue+f);
                         case "-":
-                            return (T)(object)(_floatValue-f);
+                            return (T)(object)(floatValue-f);
                         case "*":
-                            return (T)(object)(_floatValue*f);
+                            return (T)(object)(floatValue*f);
                         case "/":
-                            return (T)(object)(_floatValue/f);
+                            return (T)(object)(floatValue/f);
                         default:
                             throw NotSupportError(operatorStr);
                     }
@@ -159,9 +159,9 @@ namespace ModularFramework.Commons {
                     string s=(string)(object)newValue;
                     switch(operatorStr) {
                         case "+":
-                            return (T)(object)(_stringValue+s);
+                            return (T)(object)(stringValue+s);
                         case "-":
-                            return (T)(object)_stringValue.Replace(s, "");
+                            return (T)(object)stringValue.Replace(s, "");
                         default:
                             throw NotSupportError(operatorStr);
                     }
@@ -180,9 +180,9 @@ namespace ModularFramework.Commons {
                     bool b=(bool)(object)value;
                     switch(logicOperator) {
                         case "==":
-                            return _boolValue == b;
+                            return boolValue == b;
                         case "!=":
-                            return _boolValue != b;
+                            return boolValue != b;
                         default:
                             throw NotSupportError(logicOperator);
                     }
@@ -191,17 +191,17 @@ namespace ModularFramework.Commons {
                     int i=(int)(object)value;
                     switch(logicOperator) {
                         case ">":
-                            return _intValue>i;
+                            return intValue>i;
                         case "<":
-                            return _intValue<i;
+                            return intValue<i;
                         case "==":
-                            return _intValue==i;
+                            return intValue==i;
                         case "!=":
-                            return _intValue!=i;
+                            return intValue!=i;
                         case ">=":
-                            return _intValue>=i;
+                            return intValue>=i;
                         case "<=":
-                            return _intValue<=i;
+                            return intValue<=i;
                         default:
                             throw NotSupportError(logicOperator);
                     }
@@ -210,17 +210,17 @@ namespace ModularFramework.Commons {
                     float f=(float)(object)value;
                     switch(logicOperator) {
                         case ">":
-                            return _floatValue>f;
+                            return floatValue>f;
                         case "<":
-                            return _floatValue<f;
+                            return floatValue<f;
                         case "==":
-                            return _floatValue==f;
+                            return floatValue==f;
                         case "!=":
-                            return _floatValue!=f;
+                            return floatValue!=f;
                         case ">=":
-                            return _floatValue>=f;
+                            return floatValue>=f;
                         case "<=":
-                            return _floatValue<=f;
+                            return floatValue<=f;
                         default:
                             throw NotSupportError(logicOperator);
                     }
@@ -229,9 +229,9 @@ namespace ModularFramework.Commons {
                     string s=(string)(object)value;
                     switch(logicOperator) {
                         case "==":
-                            return _stringValue==s;
+                            return stringValue==s;
                         case "!=":
-                            return _stringValue!=s;
+                            return stringValue!=s;
                         default:
                             throw NotSupportError(logicOperator);
                     }
@@ -244,10 +244,10 @@ namespace ModularFramework.Commons {
         public override string ToString()
         {
             return type switch {
-                ValueType.Int =>  _intValue.ToString(),
-                ValueType.Float => _floatValue.ToString(),
-                ValueType.Bool => _boolValue.ToString(),
-                ValueType.String => _stringValue.ToString(),
+                ValueType.Int =>  intValue.ToString(),
+                ValueType.Float => floatValue.ToString(),
+                ValueType.Bool => boolValue.ToString(),
+                ValueType.String => stringValue,
                 _ => throw new InvalidCastException($"Cannot convert Keeper of type {type} to string")
             };
         }
