@@ -11,7 +11,6 @@ public class SelectableGroup : MonoBehaviour, ISelectableGroup
     [field: SerializeField] public string ChoiceGroupName { get; private set; }
     [field:SerializeField] public bool EnableOnAwake { get; private set; }
 
-    [SerializeField] private IntEventChannelSO choiceEventChannel;
     public Type[][] RegistryTypes => new[] { new[] { typeof(InkUIIntegrationSO) } };
 
     private List<Selectable> _selectables;
@@ -25,11 +24,13 @@ public class SelectableGroup : MonoBehaviour, ISelectableGroup
         Reset();
     }
 
+    public Action<int> OnSelect {get; set;}
+
     public void Select(int index)
     {
         if (hasSelected) return;
         hasSelected = true;
-        choiceEventChannel?.Raise(_choiceIndexMap[index]);
+        OnSelect?.Invoke(_choiceIndexMap[index]);
     }
 
     public virtual void Activate(InkChoice choiceInfo, bool showHiddenChoice)

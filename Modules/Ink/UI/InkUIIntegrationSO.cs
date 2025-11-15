@@ -43,11 +43,10 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
     [SerializeField] private SpriteBucket spriteBucket;
     
     
-    [FoldoutGroup("Event Channels", nameof(inkTaskChannel), nameof(choiceEventChannel))]
+    [FoldoutGroup("Event Channels", nameof(inkTaskChannel))]
     [SerializeField] private Void eventChannelGroup;
     // [HideInInspector,SerializeField] EventChannel<(string,Keeper)> varChangeChannel;
     [HideInInspector,SerializeField] InkTaskEventChannel inkTaskChannel;
-    [HideInInspector, SerializeField] private IntEventChannelSO choiceEventChannel;
 
     [Header("Runtime")]
 
@@ -78,13 +77,11 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
 
     private void OnEnable() {
         inkTaskChannel?.AddListener(HandleTask);
-        choiceEventChannel?.AddListener(SelectChoice);
         InkSystemSO.InkTextAction += HandleText;
     }
     
     private void OnDisable() {
         inkTaskChannel?.RemoveListener(HandleTask);
-        choiceEventChannel?.RemoveListener(SelectChoice);
         InkSystemSO.InkTextAction -= HandleText;
     }
 
@@ -116,6 +113,7 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
             {
                 found = true;
                 enabled = selectableGroup.EnableOnAwake;
+                selectableGroup.OnSelect += SelectChoice;
             }
             else DebugUtil.Error("Duplicate gameObject " + selectableGroup.ChoiceGroupName, name);
         }

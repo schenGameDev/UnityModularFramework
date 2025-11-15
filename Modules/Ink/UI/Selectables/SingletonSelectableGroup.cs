@@ -7,11 +7,9 @@ using UnityEngine;
 [RequireComponent(typeof(Marker), typeof(CanvasGroup))]
 public class SingletonSelectableGroup : Selectable, ISelectableGroup
 {
-    
     [field:SerializeField] public string ChoiceGroupName { get; private set; }
     [field:SerializeField] public bool EnableOnAwake { get; private set; }
-    [SerializeField] private EventChannel<int> choiceEventChannel;
-    private Action _onSelect;
+    public Action<int> OnSelect { get; set; }
 
     protected override void Awake()
     {
@@ -52,8 +50,7 @@ public class SingletonSelectableGroup : Selectable, ISelectableGroup
     
     public void Select(int index)
     {
-        choiceEventChannel?.Raise(index);
-        _onSelect?.Invoke();
+        OnSelect?.Invoke(index);
     }
 
 
@@ -82,7 +79,7 @@ public class SingletonSelectableGroup : Selectable, ISelectableGroup
         SetUp(text);
         gameObject.SetActive(true);
         Live = true;
-        _onSelect = onSelect;
+        OnSelect += _ => onSelect();
     }
     
 }
