@@ -341,6 +341,8 @@ namespace ModularFramework {
                     references.AddIfAbsent(k,null);
                 }
             }
+
+            AddDevSystemBootUpParameter(kw, kw2);
             flags.RemoveWhere(k => !kw.Contains(k));
 
             references.RemoveWhere(k => !kw2.Contains(k));
@@ -378,6 +380,24 @@ namespace ModularFramework {
             
         foreach(var sys in systems) {
             sys.Destroy();
+        }
+    }
+    
+    private void AddDevSystemBootUpParameter(HashSet<string> kw, HashSet<string> kw2)
+    {
+        if (systems == null) return;
+        foreach(var sys in systems) {
+            if(sys==null) continue;
+                
+            foreach (var k in SceneFlag.GetAllSceneFlagKeywords(sys)) {
+                kw.Add(k);
+                flags.AddIfAbsent(k,"");
+            }
+                    
+            foreach (var k in SceneRef.GetAllSceneReferenceKeywords(sys)) {
+                kw2.Add(k);
+                references.AddIfAbsent(k,null);
+            }
         }
     }
     #endregion
