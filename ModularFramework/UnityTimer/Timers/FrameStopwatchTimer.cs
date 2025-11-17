@@ -4,16 +4,18 @@ namespace UnityTimer {
     /// <summary>
     /// Timer that counts up from zero to infinity.  Great for measuring durations.
     /// </summary>
-    public class FrameStopwatchTimer : Timer {
+    public class FrameStopwatchTimer : Timer<FrameStopwatchTimer> {
         public FrameStopwatchTimer() : base(0) { }
 
-        public override void Tick() {
+        protected override void CustomTick() {
             if (IsRunning) {
                 CurrentFrameCount += 1;
-                base.Tick();
+                OnTick.Invoke();
             }
         }
 
-        public override bool IsFinished => false;
+        protected override void CustomReset() { }
+
+        protected override bool FinishCondition() => false;
     }
 }

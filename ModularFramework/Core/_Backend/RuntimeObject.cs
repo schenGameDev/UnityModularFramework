@@ -12,23 +12,22 @@ namespace ModularFramework
     /// <summary>
     /// Field will be reset at Reset() and cleaned at OnDestory().
     /// Collections and IResetable must be initialized w/ new()
+    /// Do not use with SceneRef or SceneFlag!!
     /// </summary>
-    public class RuntimeObject : PropertyAttribute  {
+    public class RuntimeObject : GameSystemAttribute {
         #region Static Public
         public static void CleanRuntimeVars(object instance) {
-            foreach(FieldInfo field in instance.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)) {
-                if (GetCustomAttribute(field, typeof(RuntimeObject)) is not RuntimeObject attribute) continue;
-                attribute.CleanField(field,instance);
+            foreach(var (field, attr) in GetAttributes(instance.GetType(), typeof(RuntimeObject)))
+            {
+                ((RuntimeObject)attr).CleanField(field,instance);
             }
-
         }
 
         public static void InitializeRuntimeVars(object instance) {
-            foreach(FieldInfo field in instance.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)) {
-                if (GetCustomAttribute(field, typeof(RuntimeObject)) is not RuntimeObject attribute) continue;
-                attribute.InitializeField(field, instance);
+            foreach(var (field, attr) in GetAttributes(instance.GetType(), typeof(RuntimeObject)))
+            {
+                ((RuntimeObject)attr).InitializeField(field,instance);
             }
-
         }
         #endregion
 

@@ -4,7 +4,7 @@ using UnityEngine.Events;
 using ModularFramework;
 
 [CreateAssetMenu(fileName ="SlowdownManager_SO",menuName ="Game Module/Slowdown")]
-public class SlowdownManagerSO : GameModule, ILive
+public class SlowdownManagerSO : GameModule<SlowdownManagerSO>, ILive
 {
     [Header("Config")]
     public EventChannel<float> NPCSpeedChangeEvent;
@@ -22,6 +22,25 @@ public class SlowdownManagerSO : GameModule, ILive
         updateMode = UpdateMode.EVERY_N_FRAME;
     }
 
+    protected override void OnAwake()
+    {
+        Reset();
+    }
+
+    protected override void OnStart() { }
+
+    protected override void OnUpdate()
+    {
+        if(!Live) return;
+
+        if(_endTime>0 && Time.time >= _endTime) {
+            Reset();
+        }
+    }
+    
+    protected override void OnDestroy() { }
+    protected override void OnDraw() { }
+
     public void TimeFreeze(float time) {
         SlowDown(0, time);
     }
@@ -38,19 +57,9 @@ public class SlowdownManagerSO : GameModule, ILive
         NPCSpeedChangeEvent.Raise(CurrentSpeedModifier);
     }
 
-    protected override void Reset() {
-        base.Reset();
+    private void Reset() {
         CurrentSpeedModifier = 1;
         _endTime = 0;
         NPCSpeedChangeEvent.Raise(1);
-    }
-
-    protected override void Update()
-    {
-        if(!Live) return;
-
-        if(_endTime>0 && Time.time >= _endTime) {
-            Reset();
-        }
     }
 }

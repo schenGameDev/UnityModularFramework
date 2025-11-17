@@ -10,7 +10,7 @@ using Polygon2D;
 /// <summary>
 /// Life cycle: OnAwake(Reset -> Prepare) -> OnUpdate(CalculateVision -> ImplementVision)
 /// </summary>
-public abstract class VisionMap : GameModule, IRegistrySO
+public abstract class VisionMap : GameModule<VisionMap>, IRegistrySO
 {
     [Header("Map Config")]
     [SerializeField] protected Vector2Int center;
@@ -35,7 +35,7 @@ public abstract class VisionMap : GameModule, IRegistrySO
     [SerializeField, ShowField(nameof(isDim))] protected float dimTime = 2;
 
 
-    [RuntimeObject, SceneRef("PLAYER")] protected Transform Player;
+    [SceneRef("PLAYER")] protected Transform Player;
 
     [RuntimeObject] protected float skippedTime;
 
@@ -55,21 +55,16 @@ public abstract class VisionMap : GameModule, IRegistrySO
 
     public void SetActive(bool isEyeOpen) => Active = !Active;
 
-    public override void OnAwake()
+    protected override void OnAwake()
     {
         Prepare();
-    }
-
-
-    protected override void Reset() {
-        base.Reset();
+        Reset();
         Active = true;
     }
 
-    protected abstract void Prepare();
+    protected override void OnStart() { }
 
-    [RuntimeObject] private Flip _flip = new();
-    protected override void Update()
+    protected override void OnUpdate()
     {
         if(!_flip) {
             skippedTime += DeltaTime;
@@ -79,6 +74,18 @@ public abstract class VisionMap : GameModule, IRegistrySO
             skippedTime = DeltaTime;
         }
     }
+    protected override void OnDestroy() { }
+    protected override void OnDraw() { }
+
+
+    protected virtual void Reset()
+    {
+        
+    }
+
+    protected abstract void Prepare();
+
+    [RuntimeObject] private Flip _flip = new();
 
     protected abstract void CalculateVision();
 

@@ -3,11 +3,42 @@ using UnityEngine;
 
 // https://github.com/adammyhre/Unity-Improved-Timers.git
 namespace UnityTimer {
+    public abstract class Timer<T> : Timer where T : Timer<T>
+    {
+        protected Timer(float time) {
+            initialTime = time;
+            mode = Mode.TIME;
+        }
+
+        protected Timer(int frame) {
+            initialFrameCount = frame;
+            mode = Mode.FRAME;
+        }
+
+        public override bool IsFinished => ((T)this).FinishCondition();
+        public override void Tick()
+        {
+            ((T)this).CustomTick();
+        }
+
+        public override void Reset()
+        {
+            if(mode == Mode.TIME) CurrentTime = initialTime;
+            else CurrentFrameCount = initialFrameCount;
+            ((T)this).CustomReset();
+        }
+
+        protected abstract bool FinishCondition();
+        protected abstract void CustomTick();
+        protected abstract void CustomReset();
+
+    }
     public abstract class Timer : IDisposable {
         public float CurrentTime { get; protected set; }
         public int CurrentFrameCount { get; protected set; }
 
         public bool IsRunning { get; private set; }
+        public abstract bool IsFinished { get; }
 
         protected enum Mode {FRAME, TIME}
         protected Mode mode;
@@ -20,16 +51,7 @@ namespace UnityTimer {
         public Action OnTimerStart = delegate { };
         public Action OnTick = delegate { };
         public Action OnTimerStop = delegate { };
-
-        protected Timer(float time) {
-            initialTime = time;
-            mode = Mode.TIME;
-        }
-
-        protected Timer(int frame) {
-            initialFrameCount = frame;
-            mode = Mode.FRAME;
-        }
+        
 
         public void Start() {
             Reset();
@@ -49,19 +71,12 @@ namespace UnityTimer {
             }
         }
 
-        public virtual void Tick() {
-            if (IsRunning) OnTick.Invoke();
-        }
-
-        public abstract bool IsFinished { get; }
+        public abstract void Tick();
 
         public void Resume() => IsRunning = true;
         public void Pause() => IsRunning = false;
 
-        public virtual void Reset() {
-            if(mode == Mode.TIME) CurrentTime = initialTime;
-            else CurrentFrameCount = initialFrameCount;
-        }
+        public abstract void Reset();
 
         public virtual void Reset(float newTime) {
             initialTime = newTime;
@@ -72,8 +87,6 @@ namespace UnityTimer {
             initialFrameCount = newFrameCount;
             Reset();
         }
-
-        bool disposed;
 
         ~Timer() {
             Dispose(false);
@@ -86,14 +99,15 @@ namespace UnityTimer {
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing) {
-            if (disposed) return;
+        private bool _disposed;
+        private void Dispose(bool disposing) {
+            if (_disposed) return;
 
             if (disposing) {
                 TimerManager.DeregisterTimer(this);
             }
 
-            disposed = true;
+            _disposed = true;
         }
     }
 }

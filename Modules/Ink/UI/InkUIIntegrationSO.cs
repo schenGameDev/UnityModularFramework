@@ -9,7 +9,7 @@ using UnityTimer;
 using Void = EditorAttributes.Void;
 
 [CreateAssetMenu(fileName = "InkUIIntegration_SO", menuName = "Game Module/Ink/Ink UI Integration")]
-public class InkUIIntegrationSO : GameModule, IRegistrySO
+public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
 {
     public bool CanSkipOrNext { get; private set; } = true;
 
@@ -68,12 +68,17 @@ public class InkUIIntegrationSO : GameModule, IRegistrySO
         updateMode = UpdateMode.NONE;
     }
     
-    public override void OnStart()
+        
+    protected override void OnAwake() { }
+    protected override void OnStart()
     {
-        base.OnStart();
         CanSkipOrNext = true;
         if(currentSceneName=="") currentSceneName = _inkSystem.Get().GetLastSceneName();
     }
+    
+    protected override void OnUpdate() { }
+    protected override void OnDestroy() { }
+    protected override void OnDraw() { }
 
     private void OnEnable() {
         inkTaskChannel?.AddListener(HandleTask);

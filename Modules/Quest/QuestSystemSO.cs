@@ -8,7 +8,7 @@ using UnityEngine;
 /// load and save quests
 /// </summary>
 [CreateAssetMenu(fileName = "QuestSystem_SO", menuName = "Game Module/Quest/Quest System")]
-public class QuestSystemSO : GameSystem
+public class QuestSystemSO : GameSystem<QuestSystemSO>
 {
     [Header("Config")]
     [SerializeField] private SOBucket<Quest> quests;
@@ -32,9 +32,9 @@ public class QuestSystemSO : GameSystem
         questChannel?.RemoveListener(UpdateQuestStage);
     }
 
-    public override void OnStart()
+    protected override void OnAwake() { }
+    protected override void OnStart()
     {
-        base.OnStart();
         if(!quests) return;
         quests.ForEach(q =>
         {
@@ -48,9 +48,8 @@ public class QuestSystemSO : GameSystem
         LoadQuestProgress();
     }
 
-    public override void OnDestroy()
+    protected override void OnDestroy()
     {
-        base.OnDestroy();
         quests?.ForEach(q => q.Reset());
     }
 

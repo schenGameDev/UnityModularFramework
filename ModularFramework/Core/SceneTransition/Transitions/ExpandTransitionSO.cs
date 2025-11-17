@@ -6,11 +6,11 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [CreateAssetMenu(fileName = "ExpandTransition_SO", menuName = "Game Module/Scene Transition/Expand")]
-public class ExpandTransitionSO : SceneTransitionSO
+public class ExpandTransitionSO : SceneTransitionSO<ExpandTransitionSO>
 {
     [SerializeField] private Image maskPrefab;
 
-    public override void Transition(CancellationToken token, RawImage lastSceneSnapshot)
+    protected override void OnTransition(CancellationToken token, RawImage lastSceneSnapshot)
     {
         Expand(token, lastSceneSnapshot).Forget();
     }

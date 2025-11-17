@@ -20,7 +20,7 @@ using Void = EditorAttributes.Void;
 /// read var from story into memory -> any update go in story -> save story state -> clean all memory
 /// </summary>
 [CreateAssetMenu(fileName = "InkSystem_SO", menuName = "Game Module/Ink/Ink System")]
-public class InkSystemSO : GameSystem
+public class InkSystemSO : GameSystem<InkSystemSO>
 {
     private const string IN_TEXT_CODE_PATTERN = "[{][^{}]+[}]";
     public const string NARRATIVE_TEXT = "NARRATIVE";
@@ -61,7 +61,12 @@ public class InkSystemSO : GameSystem
     Autowire<NoteSystemSO> _noteSystem = new();
     Autowire<QuestSystemSO> _questSystem = new();
 
-    public override void OnDestroy() {
+
+    protected override void OnAwake() { }
+
+    protected override void OnStart() { }
+
+    protected override void OnDestroy() {
         stage = InkStage.END;
     }
 

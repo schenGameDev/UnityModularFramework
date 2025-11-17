@@ -13,7 +13,7 @@ using Void = EditorAttributes.Void;
 /// Manage BGM in game, use one system throughout the game
 /// </summary>
 [CreateAssetMenu(fileName = "MusicSystem_SO", menuName = "Game Module/Sound/Music System")]
-public class MusicSystemSO : GameSystem
+public class MusicSystemSO : GameSystem<MusicSystemSO>
 {
     [Header("Config")]
     public SoundProfileBucket tracks;
@@ -47,13 +47,14 @@ public class MusicSystemSO : GameSystem
         trackChannel?.RemoveListener(PlayTrack);
     }
 
+    protected override void OnAwake() { }
 
-    public override void OnStart()
+    protected override void OnStart()
     {
         BuildPersistentParent();
         InitializeMusic();
     }
-    public override void OnDestroy()
+    protected override void OnDestroy()
     {
         try
         {
@@ -67,7 +68,7 @@ public class MusicSystemSO : GameSystem
     }
 
     void BuildPersistentParent() {
-        PersistentSoundParent = new GameObject("=== Sounds (Permisstent) ===").transform;
+        PersistentSoundParent = new GameObject("=== Sounds (Persistent) ===").transform;
         PersistentSoundParent.position = Vector3.zero;
         //DontDestroyOnLoad(PersistentSoundParent.gameObject);
 

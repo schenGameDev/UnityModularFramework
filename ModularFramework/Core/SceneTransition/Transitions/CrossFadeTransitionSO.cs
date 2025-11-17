@@ -5,9 +5,9 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [CreateAssetMenu(fileName = "CrossFade_SO", menuName = "Game Module/Scene Transition/Cross Fade")]
-public class CrossFadeTransitionSO : SceneTransitionSO
+public class CrossFadeTransitionSO : SceneTransitionSO<CrossFadeTransitionSO>
 {
-    public override void Transition(CancellationToken token, RawImage lastSceneSnapshot)
+    protected override void OnTransition(CancellationToken token, RawImage lastSceneSnapshot)
     {
         FadeOut(token, lastSceneSnapshot).Forget();
     }

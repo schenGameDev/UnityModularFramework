@@ -19,7 +19,7 @@ namespace ModularFramework
     public class GameBuilder : Singleton<GameBuilder>
     {
         public Action SceneTransitionCompleteCallback;
-        public static bool GameStartFromBuilder {get; private set;}
+        [RuntimeObject] public static bool GameStartFromBuilder {get; private set;}
         
         [Header("Scene Manager")]
         
@@ -67,7 +67,7 @@ namespace ModularFramework
             _cts?.Dispose();
             
             foreach(var sys in systems) {
-                sys.OnDestroy();
+                sys.Destroy();
             }
         }
 

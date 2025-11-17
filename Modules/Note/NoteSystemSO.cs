@@ -8,11 +8,10 @@ using UnityEngine;
 /// load and save quests
 /// </summary>
 [CreateAssetMenu(fileName = "NoteSystem_SO", menuName = "Game Module/Note System")]
-public class NoteSystemSO : GameSystem
+public class NoteSystemSO : GameSystem<NoteSystemSO>
 {
-    [Header("Config")]
-    [SerializeField] private Bucket noteBucket;
-    
+    [Header("Config")] [SerializeField] private Bucket noteBucket;
+
     [SerializeField] private EventChannel<string> noteChannel;
     [SerializeField] private EventChannel<string> activityChannel;
     [RuntimeObject] private readonly List<string> _notes = new();
@@ -27,11 +26,13 @@ public class NoteSystemSO : GameSystem
         noteChannel?.RemoveListener(AddNote);
     }
 
-    public override void OnStart()
+    protected override void OnStart()
     {
-        base.OnStart();
         LoadNotes();
     }
+
+    protected override void OnAwake() { }
+    protected override void OnDestroy() { }
 
     public void SaveNotes()
     {

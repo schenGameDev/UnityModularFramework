@@ -34,10 +34,6 @@ public class PointVisionMap : VisionMap
         CreateCurtain();
     }
 
-    protected override void Reset() {
-        base.Reset();
-    }
-
     protected override void CalculateVision()
     {
         UpdateActivePool(skippedTime);

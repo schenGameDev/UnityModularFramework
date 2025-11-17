@@ -6,35 +6,35 @@ namespace UnityTimer {
     /// <summary>
     /// Timer that ticks at a specific frequency. (N times per second)
     /// </summary>
-    public class FrequencyTimer : Timer {
+    public class FrequencyTimer : Timer<FrequencyTimer> {
         public int TicksPerSecond { get; private set; }
-        float timeThreshold;
+        float _timeThreshold;
 
         public FrequencyTimer(int ticksPerSecond) : base(0f) {
             CalculateTimeThreshold(ticksPerSecond);
         }
 
-        public override void Tick() {
+        protected override void CustomTick() {
             if (!IsRunning) return;
-            if (CurrentTime >= timeThreshold) {
-                CurrentTime -= timeThreshold;
+            if (CurrentTime >= _timeThreshold) {
+                CurrentTime -= _timeThreshold;
             }
             base.Tick();
-            if (CurrentTime < timeThreshold) {
+            if (CurrentTime < _timeThreshold) {
                 CurrentTime += Time.deltaTime;
             }
         }
 
-        public override bool IsFinished => !IsRunning;
+        protected override bool FinishCondition() => !IsRunning;
 
         public override void Reset(int newTicksPerSecond) {
             CalculateTimeThreshold(newTicksPerSecond);
             Reset();
         }
-
+        protected override void CustomReset() { }
         void CalculateTimeThreshold(int ticksPerSecond) {
             TicksPerSecond = ticksPerSecond;
-            timeThreshold = 1f / TicksPerSecond;
+            _timeThreshold = 1f / TicksPerSecond;
         }
     }
 }

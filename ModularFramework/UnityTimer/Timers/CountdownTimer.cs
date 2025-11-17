@@ -4,26 +4,25 @@ namespace UnityTimer {
     /// <summary>
     /// Timer that counts down from a specific value to zero.
     /// </summary>
-    public class CountdownTimer : Timer {
+    public class CountdownTimer : Timer<CountdownTimer> {
         public CountdownTimer(float value) : base(value) { }
         public float DeltaTime {get; protected set;}
-        public override void Tick() {
+        protected override void CustomTick() {
             if (!IsRunning) return;
             if(CurrentTime > 0) {
                 CurrentTime -= Time.deltaTime;
                 DeltaTime += Time.deltaTime;
             }
-            base.Tick();
+            OnTick.Invoke();
             if (CurrentTime <= 0) {
                 Stop();
             }
         }
 
-        public override bool IsFinished => CurrentTime <= 0;
+        protected override bool FinishCondition() => CurrentTime <= 0;
 
-        public override void Reset()
+        protected override void CustomReset()
         {
-            base.Reset();
             DeltaTime = 0;
         }
     }

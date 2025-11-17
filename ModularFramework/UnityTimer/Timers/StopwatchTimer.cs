@@ -5,16 +5,18 @@ namespace UnityTimer {
     /// <summary>
     /// Timer that counts up from zero to infinity.  Great for measuring durations.
     /// </summary>
-    public class StopwatchTimer : Timer {
+    public class StopwatchTimer : Timer<StopwatchTimer> {
         public StopwatchTimer() : base(0.0f) { }
 
-        public override void Tick() {
+        protected override void CustomTick() {
             if (IsRunning) {
                 CurrentTime += Time.deltaTime;
-                base.Tick();
+                OnTick.Invoke();
             }
         }
 
-        public override bool IsFinished => false;
+        protected override bool FinishCondition() => false;
+
+        protected override void CustomReset() { }
     }
 }

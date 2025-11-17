@@ -4,7 +4,7 @@ namespace UnityTimer {
     /// <summary>
     /// Timer that counts down from a specific frame value to zero then repeat.
     /// </summary>
-    public class RepeatFrameCountdownTimer : Timer {
+    public class RepeatFrameCountdownTimer : Timer<RepeatFrameCountdownTimer> {
         private int _tickNTimes;
         private int _currentTriggeredTimes;
         public RepeatFrameCountdownTimer(int everyNFrame, int tickNTimes) : base(everyNFrame) {
@@ -12,7 +12,7 @@ namespace UnityTimer {
         }
         public float DeltaTime {get; protected set;}
 
-        public override void Tick() {
+        protected override void CustomTick() {
             if (!IsRunning) return;
 
             if (CurrentFrameCount > 0) {
@@ -32,11 +32,10 @@ namespace UnityTimer {
             }
         }
 
-        public override bool IsFinished => CurrentFrameCount <= 0;
+        protected override bool FinishCondition() => CurrentFrameCount <= 0;
 
-        public override void Reset()
+        protected override void CustomReset()
         {
-            base.Reset();
             DeltaTime = 0;
             _currentTriggeredTimes = 0;
         }

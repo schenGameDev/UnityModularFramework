@@ -6,13 +6,13 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [CreateAssetMenu(fileName = "FillTransition_SO", menuName = "Game Module/Scene Transition/Fill")]
-public class FillTransitionSO : SceneTransitionSO
+public class FillTransitionSO : SceneTransitionSO<FillTransitionSO>
 {
     [SerializeField] private Image maskPrefab;
     [SerializeField] private Image.FillMethod fillMethod;
     [SerializeField, Rename("Start From Left/Bottom/Clockwise")] private bool fromLeftBottomClockwise;
 
-    public override void Transition(CancellationToken token, RawImage lastSceneSnapshot)
+    protected override void OnTransition(CancellationToken token, RawImage lastSceneSnapshot)
     {
         Fill(token, lastSceneSnapshot).Forget();
     }

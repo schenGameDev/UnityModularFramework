@@ -4,14 +4,14 @@ namespace UnityTimer {
     /// <summary>
     /// Timer that counts down from a specific value to zero then repeat.
     /// </summary>
-    public class RepeatCountdownTimer : Timer {
+    public class RepeatCountdownTimer : Timer<RepeatCountdownTimer> {
         private int _tickNTimes;
         private int _currentTriggeredTimes;
         public RepeatCountdownTimer(float everyNSeconds, int tickNTimes) : base(everyNSeconds) {
             _tickNTimes = tickNTimes;
         }
         public float DeltaTime {get; protected set;}
-        public override void Tick() {
+        protected override void CustomTick() {
             if (!IsRunning) return;
 
             if (CurrentTime > 0) {
@@ -31,11 +31,10 @@ namespace UnityTimer {
             }
         }
 
-        public override bool IsFinished => CurrentTime <= 0;
+        protected override bool FinishCondition() => CurrentTime <= 0;
 
-        public override void Reset()
-        {
-            base.Reset();
+        protected override void CustomReset()
+        { 
             DeltaTime = 0;
             _currentTriggeredTimes = 0;
         }

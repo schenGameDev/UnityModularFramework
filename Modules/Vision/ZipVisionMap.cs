@@ -72,13 +72,9 @@ public class ZipVisionMap : VisionMap
     }
 
     protected override void Reset() {
-        base.Reset();
         _minHoleSize = Mathf.Pow(_minHoleLen / stepSize, 2);
         GetWorldBounds();
     }
-
-    public override void OnGizmos() {}
-
 
     #endregion
     #region Trace

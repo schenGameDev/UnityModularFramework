@@ -12,7 +12,7 @@ namespace ModularFramework
     /// The referenced flag will be injected at runtime 
     /// </summary>
     [AttributeUsage(AttributeTargets.Field)]
-    public class SceneFlag : PropertyAttribute
+    public class SceneFlag : GameSystemAttribute
     {
         /// <summary>
         /// The keyword representing the wanted gameObject in scene
@@ -43,7 +43,7 @@ namespace ModularFramework
         
         public static List<string> GetAllSceneFlagKeywords(object instance) {
             List<string> keywords = new List<string>();
-            foreach(FieldInfo field in instance.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
+            foreach(FieldInfo field in instance.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)) {
                 if (GetCustomAttribute(field, typeof(SceneFlag)) is not SceneFlag attribute) continue;
                 Type type = field.FieldType;
                 if (type != typeof(string) && type != typeof(bool) && type != typeof(int) && type != typeof(float) && 
@@ -58,9 +58,9 @@ namespace ModularFramework
         }
         
         public static void InjectSceneFlags(object instance) {
-            foreach(FieldInfo field in instance.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
-                if (GetCustomAttribute(field, typeof(SceneFlag)) is not SceneFlag attribute) continue;
-                attribute.Inject(field, instance);
+            foreach(var (field, attr) in GetAttributes(instance.GetType(), typeof(SceneFlag)))
+            {
+                ((SceneFlag)attr).Inject(field,instance);
             }
         }
     }

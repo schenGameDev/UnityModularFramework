@@ -10,7 +10,7 @@ using static InputSystemSO;
 /// Listen to keyboard, mouse and controller, then dispatch input to matching UI buttons
 /// </summary>
 [CreateAssetMenu(fileName = "UIKeyMapSystem_SO", menuName = "Game Module/Input/UI Key Map")]
-public class UIKeyMapSystemSO : GameSystem, IRegistrySO, ILive
+public class UIKeyMapSystemSO : GameSystem<UIKeyMapSystemSO>, IRegistrySO, ILive
 {
     public enum UIInputKey
     {
@@ -42,9 +42,9 @@ public class UIKeyMapSystemSO : GameSystem, IRegistrySO, ILive
     private bool IsInputAsset => inputAsset != null;
     private string[] InputKeys => GetInputActions(inputAsset);
     
-    public override void OnStart()
+    protected override void OnAwake() { }
+    protected override void OnStart()
     {
-        base.OnStart();
         inputs.ForEach(actionKeyPair =>
         {
             if (actionKeyPair.inputAction == NONE_ACTION)
@@ -66,10 +66,9 @@ public class UIKeyMapSystemSO : GameSystem, IRegistrySO, ILive
             .Add(keyIcon.device, keyIcon.icon));
     }
     
-    public override void OnDestroy()
+    protected override void OnDestroy()
     {
         _actionCache.ForEach(x=>x.Item1.started-=x.Item2);
-        base.OnDestroy();
     }
 
     private void Raise(InputAction.CallbackContext context, UIInputKey key)

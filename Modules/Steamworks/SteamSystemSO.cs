@@ -12,7 +12,7 @@ using Steamworks;
 /// connect to steamworks for updating achievements
 /// </summary>
 [CreateAssetMenu(fileName = "SteamSystemSO_SO", menuName = "Game Module/Steam System")]
-public class SteamSystemSO : GameModule,ILive
+public class SteamSystemSO : GameModule<SteamSystemSO>,ILive
 {
 	[Header("Create steam_appid.txt at root folder"),SerializeField] private uint appId = 2906800;
 	
@@ -22,7 +22,7 @@ public class SteamSystemSO : GameModule,ILive
 
 	public SteamSystemSO()
 	{
-		updateMode = UpdateMode.EVERY_N_FRAME;
+		updateMode = UpdateMode.EVERY_N_SECOND;
 		everyNSecond = 10;
 	}
 	
@@ -37,8 +37,9 @@ public class SteamSystemSO : GameModule,ILive
 		Debug.LogWarning(pchDebugText);
 	}
 
-	public override void OnStart() {
-		base.OnStart();
+	protected override void OnAwake() { }
+
+	protected override void OnStart() {
 		if (!Packsize.Test()) {
 			Debug.LogError("[Steamworks.NET] Packsize Test returned false, the wrong version of Steamworks.NET is being run in this platform.", this);
 		}
@@ -92,20 +93,9 @@ public class SteamSystemSO : GameModule,ILive
 			SteamClient.SetWarningMessageHook(m_SteamAPIWarningMessageHook);
 		}
 	}
-	
 
-	// OnApplicationQuit gets called too early to shutdown the SteamAPI.
-	// Because the SteamManager should be persistent and never disabled or destroyed we can shutdown the SteamAPI here.
-	// Thus it is not recommended to perform any Steamworks work in other OnDestroy functions as the order of execution can not be garenteed upon Shutdown. Prefer OnDisable().
-	public override void OnDestroy() {
-		if (!Initialized) {
-			return;
-		}
-
-		SteamAPI.Shutdown();
-	}
-
-	protected override void Update() {
+	protected override void OnUpdate()
+	{
 		if (!Initialized) {
 			return;
 		}
@@ -113,6 +103,21 @@ public class SteamSystemSO : GameModule,ILive
 		// Run Steam client callbacks
 		SteamAPI.RunCallbacks();
 	}
+
+
+	// OnApplicationQuit gets called too early to shutdown the SteamAPI.
+	// Because the SteamManager should be persistent and never disabled or destroyed we can shutdown the SteamAPI here.
+	// Thus it is not recommended to perform any Steamworks work in other OnDestroy functions as the order of execution can not be garenteed upon Shutdown. Prefer OnDisable().
+	protected override void OnDestroy() {
+		if (!Initialized) {
+			return;
+		}
+
+		SteamAPI.Shutdown();
+	}
+	
+	protected override void OnDraw() { }
+
 #else
 	public static bool Initialized {
 		get {

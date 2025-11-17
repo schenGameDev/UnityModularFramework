@@ -6,7 +6,7 @@ using UnityEngine;
 using ModularFramework;
 
 [CreateAssetMenu(fileName ="LockManager_SO",menuName ="Game Module/Target Lock")]
-public class LockManagerSO : GameModule, IRegistrySO
+public class LockManagerSO : GameModule<LockManagerSO>, IRegistrySO
 {
     [Header("Config")]
     [SerializeField] private float _maxLockDistance = 10;
@@ -27,12 +27,19 @@ public class LockManagerSO : GameModule, IRegistrySO
     [ReadOnly,RuntimeObject] public Transform LockTarget;
 
     [RuntimeObject] private HashSet<Transform> _lockableSet=new();
-    [RuntimeObject,SceneRef("PLAYER")] private Transform Player;
-    [RuntimeObject,SceneFlag("LOCK_CAMERA")] private string _lockCameraName;
+    [SceneRef("PLAYER")] private Transform Player;
+    [SceneFlag("LOCK_CAMERA")] private string _lockCameraName;
 
     public LockManagerSO() {
         updateMode = UpdateMode.EVERY_N_FRAME;
     }
+    
+    protected override void OnAwake() { }
+    protected override void OnStart() { }
+    protected override void OnUpdate() { }
+    protected override void OnDestroy() { }
+    protected override void OnDraw() { }
+    
     
     private void OnEnable() {
         _lockEvent.AddListener(LockUnlock);

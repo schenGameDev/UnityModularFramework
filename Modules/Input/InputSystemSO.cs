@@ -9,7 +9,7 @@ using ModularFramework.Utility;
 using UnityEngine.InputSystem;
 
 [CreateAssetMenu(fileName ="InputSystem_SO",menuName ="Game Module/Input/Input System")]
-public class InputSystemSO : GameSystem,ILive,IRegistrySO {
+public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
     [RuntimeObject] public static InputDeviceType InputDevice { get; private set; } = InputDeviceType.KEYBOARD_MOUSE;
     
     public enum ActionType
@@ -48,11 +48,12 @@ public class InputSystemSO : GameSystem,ILive,IRegistrySO {
     [RuntimeObject] public Vector2 LookDeltaMovement {get; private set;}
     [RuntimeObject] public Vector2 PointerCameraPosition {get; private set;}
     [RuntimeObject] private List<(InputAction,ActionType,Action<InputAction.CallbackContext>)> _actionCache = new();
-    [RuntimeObject] private Transform _player;
+    [SceneRef("PLAYER")] private Transform _player;
 
-    public override void OnStart()
+    protected override void OnAwake() { }
+
+    protected override void OnStart()
     {
-        base.OnStart();
         foreach (var actionChannel in inputs)
         {
             if (actionChannel.input==NONE_ACTION)
@@ -110,7 +111,7 @@ public class InputSystemSO : GameSystem,ILive,IRegistrySO {
         }
     }
     
-    public override void OnDestroy()
+    protected override void OnDestroy()
     {
         _actionCache.ForEach(x=>
         {
@@ -136,7 +137,6 @@ public class InputSystemSO : GameSystem,ILive,IRegistrySO {
         {
             inputAsset.FindAction(viewInput).performed -= OnViewDirection;
         }
-        base.OnDestroy();
     }
     
     private void Raise(InputAction.CallbackContext context, ActionChannel actionChannel)
@@ -227,20 +227,6 @@ public class InputSystemSO : GameSystem,ILive,IRegistrySO {
         List<string> actions = new List<string> {NONE_ACTION};
         inputAsset.Select(x=>x.actionMap.name + "/" + x.name).ForEach(x=>actions.Add(x));
         return actions.ToArray();
-    }
-    
-    public void Register(Transform transform)
-    {
-        if (_player)
-        {
-            Debug.LogWarning("Trying to register a player while player is already active.");
-        }
-        _player = transform;
-    }
-
-    public void Unregister(Transform transform)
-    {
-        _player = null;
     }
 }
 public enum InputDeviceType {KEYBOARD_MOUSE,GAMEPAD}

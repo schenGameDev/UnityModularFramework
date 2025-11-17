@@ -141,7 +141,7 @@ public class PolygonVisionMap : VisionMap
         UpdateBlockersAndHoles();
     }
 
-    public override void OnGizmos()
+    protected override void OnDraw()
     {
         if(!_showGizmos) return;
         Gizmos.color = Color.yellow;

@@ -5,13 +5,13 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [CreateAssetMenu(fileName = "FadeInOut_SO", menuName = "Game Module/Scene Transition/Fade Out And In")]
-public class FadeInOutTransitionSO : SceneTransitionSO
+public class FadeInOutTransitionSO : SceneTransitionSO<FadeInOutTransitionSO>
 {
     protected enum FadeMode { FADE_IN, FADE_OUT, FADE_OUT_IN }
     [SerializeField] private Image maskPrefab;
     [SerializeField] private FadeMode mode = FadeMode.FADE_OUT_IN;
     
-    public override void Transition(CancellationToken token, RawImage lastSceneSnapshot)
+    protected override void OnTransition(CancellationToken token, RawImage lastSceneSnapshot)
     {
         Fade(token, lastSceneSnapshot).Forget();
     }

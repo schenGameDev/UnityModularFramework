@@ -36,15 +36,20 @@ namespace ModularFramework {
                 if(module is IRegistrySO so) {
                     _registryDict.Add(module.GetType(), so);
                 }
-                module.OnAwake();
+                module.Awake();
                 if(!module.CentrallyManaged && module.OperateEveryFrame) {
                     _framelyUpdatedModules.Add(module);
                 }
             }
 
+            foreach (var sys in SYSTEMS)
+            {
+                sys.Awake();
+            }
+
             foreach (var m in PersistentBehaviour.INSTANCES)
             {
-                m.OnSceneLoad(GameBuilder.Instance.NextScene);
+                m.LoadScene(GameBuilder.Instance.NextScene);
             }
             
             Time.timeScale = 1;
@@ -58,7 +63,7 @@ namespace ModularFramework {
             {
                 foreach (var module in modules)
                 {
-                    module.OnStart();
+                    module.Start();
                 }
             }
 
@@ -85,7 +90,7 @@ namespace ModularFramework {
             if (modules == null) return;
             UpdateModuleFrame();
             foreach(var module in _framelyUpdatedModules) {
-                module.OnUpdate(Time.deltaTime);
+                module.Tick(Time.deltaTime);
             }
         }
 
@@ -96,13 +101,13 @@ namespace ModularFramework {
             {
                 foreach (var module in modules)
                 {
-                    module.OnDestroy();
+                    module.Destroy();
                 }
             }
 
             foreach (var m in PersistentBehaviour.INSTANCES)
             {
-                m.OnSceneDestroy(GameBuilder.Instance.NextScene);
+                m.DestroyScene(GameBuilder.Instance.NextScene);
             }
         }
 
@@ -110,7 +115,7 @@ namespace ModularFramework {
         {
             if (!Application.isPlaying || modules == null) return;
             foreach(var module in modules) {
-                module.OnGizmos();
+                module.Draw();
             }
         }
         
@@ -198,7 +203,7 @@ namespace ModularFramework {
                 STATIC_REGISTRY_DICT.Add(sys.GetType(), so);
             }
             
-            sys.OnStart();
+            sys.Start();
             SYSTEMS.Add(sys);
         }
     #endregion
@@ -312,7 +317,7 @@ namespace ModularFramework {
                 return;
             }
 
-            toExec.Module.OnUpdate(toExec.DeltaTime);
+            toExec.Module.Tick(toExec.DeltaTime);
 
             _pendingToAddQueue.ForEach(m=>_execSignalQueue.Enqueue(m));
             _pendingToAddQueue.Clear();
@@ -372,7 +377,7 @@ namespace ModularFramework {
         STATIC_REGISTRY_DICT.Clear();
             
         foreach(var sys in systems) {
-            sys.OnDestroy();
+            sys.Destroy();
         }
     }
     #endregion

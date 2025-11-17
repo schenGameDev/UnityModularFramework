@@ -7,12 +7,12 @@ using UnityEngine.Audio;
 using UnityEngine.Pool;
 
 /// <summary>
-/// Manage all one-shot sound in the scene. It has higher priority than SoundSystem<br/>
+/// Manage all one-shot sound in the scene. It has higher priority than MusicSystem<br/>
 /// 1. Must bootup before any module that calls it.<br/>
 /// 2. Must use the same soundManager throughout the game.
 /// </summary>
 [CreateAssetMenu(fileName = "SoundManager_SO", menuName = "Game Module/Sound/Sound Manager")]
-public class SoundManagerSO : GameModule
+public class SoundManagerSO : GameModule<SoundManagerSO>
 {
     [Header("Config")]
     [SerializeField] SoundPlayer soundPlayerPrefab;
@@ -49,12 +49,17 @@ public class SoundManagerSO : GameModule
         sfxChannel?.RemoveListener(PlaySound);
     }
     
-    public override void OnStart()
+    protected override void OnAwake() { }
+    protected override void OnStart()
     {
-        base.OnStart();
         BuildParent();
         InitializePool();
     }
+    
+    protected override void OnUpdate() { }
+    
+    protected override void OnDestroy() { }
+    protected override void OnDraw() { }
     
     private SoundBuilder CreateSoundBuilder() => new SoundBuilder();
 

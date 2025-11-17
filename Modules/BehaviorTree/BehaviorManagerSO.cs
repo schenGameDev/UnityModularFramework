@@ -5,28 +5,33 @@ using ModularFramework;
 using UnityEngine;
 
 [CreateAssetMenu(fileName ="BehaviorManager_SO",menuName ="Game Module/Behavior Tree/Behavior Manager")]
-public class BehaviorManagerSO : GameModule,IRegistrySO
+public class BehaviorManagerSO : GameModule<BehaviorManagerSO>,IRegistrySO
 {
     [RuntimeObject] private readonly Dictionary<Transform,BTMarker> _btDict = new();
     [RuntimeObject] public SensorSystemSO sensorSystem;
     [RuntimeObject] public PlayerStatsSO playerStats;
-    [RuntimeObject,SceneRef("PLAYER")] public Transform player;
+    [SceneRef("PLAYER")] public Transform player;
     
     public BehaviorManagerSO() {
         updateMode = UpdateMode.EVERY_N_FRAME;
     }
     
-    public override void OnAwake()
+    protected override void OnAwake()
     {
-        base.OnAwake();
         sensorSystem = GameRunner.GetSystem<SensorSystemSO>().OrElseThrow(new Exception("SensorSystem not found."));
         playerStats = GameRunner.GetSystem<PlayerStatsSO>().OrElseThrow(new Exception("PlayerStatsSO not found."));
     }
-    
-    protected override void Update()
+
+    protected override void OnStart() { }
+
+    protected override void OnUpdate()
     {
         _btDict.Values.Where(bt => bt.Live).ForEach(bt => bt.tree.Run());
     }
+    
+    protected override void OnDestroy() { }
+
+    protected override void OnDraw() { }
 
     #region Registry
     public void Register(Transform tf)

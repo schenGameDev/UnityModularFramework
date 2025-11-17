@@ -12,7 +12,7 @@ using ModularFramework.Utility;
 using UnityEngine.Serialization;
 
 [CreateAssetMenu(fileName ="CameraManager_SO",menuName ="Game Module/Camera")]
-public class CameraManagerSO : GameModule,IRegistrySO {
+public class CameraManagerSO : GameModule<CameraManagerSO>,IRegistrySO {
     [Header("Config")]
     [SerializedDictionary("Transition","Acceleration")] public SerializedDictionary<Vector<string>, float> transitionAcceleration;
     [SerializeField] Vector2 positionShakeStrength = new (0.03f,0.03f);
@@ -39,10 +39,17 @@ public class CameraManagerSO : GameModule,IRegistrySO {
         updateMode = UpdateMode.NONE;
     }
 
-    protected override void Reset() {
-        base.Reset();
+
+    protected override void OnAwake()
+    {
         currentMode = CameraType.FIXED;
     }
+        
+    protected override void OnStart() { }
+    protected override void OnUpdate() { }
+    protected override void OnDestroy() { }
+    protected override void OnDraw() { }
+    
 
     [RuntimeObject] OnetimeFlip _isDefaultSet = new();
     public void Register(Transform transform) {
