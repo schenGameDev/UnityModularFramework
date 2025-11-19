@@ -328,6 +328,7 @@ namespace ModularFramework {
         [Button("Refresh Modules")]
         private void AddBootUpParameter() {
             HashSet<string> kw = new(), kw2 = new();
+            references = new();
             foreach(var m in modules) {
                 if(m==null) continue;
                 
