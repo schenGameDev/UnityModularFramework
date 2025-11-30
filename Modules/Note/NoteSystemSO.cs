@@ -32,7 +32,7 @@ public class NoteSystemSO : GameSystem<NoteSystemSO>
     }
 
     protected override void OnAwake() { }
-    protected override void OnDestroy() { }
+    protected override void OnSceneDestroy() { }
 
     public void SaveNotes()
     {

@@ -32,11 +32,12 @@ namespace ModularFramework {
     #region Runtime
         protected override void Awake() {
             base.Awake();
+            LoadSystemsForDev();
             foreach(var module in modules) {
                 if(module is IRegistrySO so) {
                     _registryDict.Add(module.GetType(), so);
                 }
-                module.Awake();
+                module.SceneAwake();
                 if(!module.CentrallyManaged && module.OperateEveryFrame) {
                     _framelyUpdatedModules.Add(module);
                 }
@@ -44,7 +45,7 @@ namespace ModularFramework {
 
             foreach (var sys in SYSTEMS)
             {
-                sys.Awake();
+                sys.SceneAwake();
             }
 
             foreach (var m in PersistentBehaviour.INSTANCES)
@@ -58,7 +59,6 @@ namespace ModularFramework {
         private void Start()
         {
             RegistryBuffer.InjectAll();
-            LoadSystemsForDev();
             if (modules != null)
             {
                 foreach (var module in modules)
@@ -260,7 +260,7 @@ namespace ModularFramework {
     #region Event Channel
         public void RegisterEventChannel(IEventChannel channel) {
             if(eventChannels.AddIfAbsent(channel as ScriptableObject, channel.Live)) {
-                (channel as IResetable)?.Reset();
+                (channel as IResetable)?.ResetState();
             }
         }
 

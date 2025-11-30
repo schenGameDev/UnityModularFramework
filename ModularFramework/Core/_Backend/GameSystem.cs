@@ -15,20 +15,20 @@ namespace ModularFramework
     /// </summary>
     public abstract class GameSystem<T> : GameSystem where T : GameSystem<T>
     {
-        public override void Awake()
+        public override void SceneAwake()
         {
-            base.Awake();
+            base.SceneAwake();
             ((T)this).OnAwake();
         }
         public override void Start()
         {
             base.Start();
-            ((T)this).Start();
+            ((T)this).OnStart();
         }
 
         public override void Destroy()
         {
-            ((T)this).OnDestroy();
+            ((T)this).OnSceneDestroy();
             base.Destroy();
         }
         /// <summary>
@@ -36,12 +36,12 @@ namespace ModularFramework
         /// </summary>
         protected abstract void OnAwake();
         protected abstract void OnStart();
-        protected abstract void OnDestroy();
+        protected abstract void OnSceneDestroy();
     }
 
     public abstract class GameSystem : ScriptableObject
     {
-        public virtual void Awake()
+        public virtual void SceneAwake()
         {
             SceneRef.InjectSceneReferences(this);
             SceneFlag.InjectSceneFlags(this);

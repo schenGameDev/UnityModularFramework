@@ -66,7 +66,7 @@ public class InkSystemSO : GameSystem<InkSystemSO>
 
     protected override void OnStart() { }
 
-    protected override void OnDestroy() {
+    protected override void OnSceneDestroy() {
         stage = InkStage.END;
     }
 

@@ -7,9 +7,9 @@ namespace ModularFramework {
     /// Life cycle: Awake(Reset,Load Ref Keywords) -> Start (link to GameManager) -> Update -> Destroy
     /// </summary>
     public abstract class GameModule<T> : GameModule where T : GameModule<T> {
-        public override void Awake()
+        public override void SceneAwake()
         {
-            base.Awake();
+            base.SceneAwake();
             ((T)this).OnAwake();
         }
         
@@ -27,7 +27,7 @@ namespace ModularFramework {
 
         public override void Destroy()
         {
-            ((T)this).OnDestroy();
+            ((T)this).OnSceneDestroy();
             base.Destroy();
         }
 
@@ -54,7 +54,7 @@ namespace ModularFramework {
         /// <summary>
         /// Trigger in <c>GameRunner</c> Destroy method
         /// </summary>
-        protected abstract void OnDestroy();
+        protected abstract void OnSceneDestroy();
 
         /// <summary>
         /// Trigger in <c>GameRunner</c> OnDrawGizmos method
@@ -80,9 +80,9 @@ namespace ModularFramework {
             NONE,EVERY_N_FRAME,EVERY_N_SECOND
         }
 
-        public override void Awake()
+        public override void SceneAwake()
         {
-            base.Awake();
+            base.SceneAwake();
             OperateEveryFrame = (updateMode == UpdateMode.EVERY_N_FRAME && everyNFrame == 1) || (updateMode == UpdateMode.EVERY_N_SECOND && everyNSecond == 0);
         }
         

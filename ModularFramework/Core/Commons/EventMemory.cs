@@ -20,7 +20,7 @@ namespace ModularFramework.Commons
             _lastTimestamp = Time.time;
         }
         
-        public void Reset()
+        public void ResetState()
         {
             _lastTimestamp = -_expireTime - 1;
         }

@@ -37,7 +37,7 @@ public class LockManagerSO : GameModule<LockManagerSO>, IRegistrySO
     protected override void OnAwake() { }
     protected override void OnStart() { }
     protected override void OnUpdate() { }
-    protected override void OnDestroy() { }
+    protected override void OnSceneDestroy() { }
     protected override void OnDraw() { }
     
     

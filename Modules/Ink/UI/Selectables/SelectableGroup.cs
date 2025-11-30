@@ -21,7 +21,7 @@ public class SelectableGroup : MonoBehaviour, ISelectableGroup
     private void Awake()
     {
         _selectables = GetComponentsInChildren<Selectable>().OrderBy(s => s.index).ToList();
-        Reset();
+        ResetState();
     }
 
     public Action<int> OnSelect {get; set;}
@@ -77,7 +77,7 @@ public class SelectableGroup : MonoBehaviour, ISelectableGroup
         });
     }
 
-    public virtual void Reset()
+    public virtual void ResetState()
     {
         _selectables.ForEach(s =>
         {

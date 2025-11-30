@@ -111,7 +111,7 @@ public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
         }
     }
     
-    protected override void OnDestroy()
+    protected override void OnSceneDestroy()
     {
         _actionCache.ForEach(x=>
         {

@@ -47,7 +47,7 @@ public class CameraManagerSO : GameModule<CameraManagerSO>,IRegistrySO {
         
     protected override void OnStart() { }
     protected override void OnUpdate() { }
-    protected override void OnDestroy() { }
+    protected override void OnSceneDestroy() { }
     protected override void OnDraw() { }
     
 

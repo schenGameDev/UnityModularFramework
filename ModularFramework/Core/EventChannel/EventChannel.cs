@@ -67,7 +67,7 @@ namespace ModularFramework {
             }
         }
 
-        public void Reset()
+        public void ResetState()
         {
             _isRequestable = false;
         }

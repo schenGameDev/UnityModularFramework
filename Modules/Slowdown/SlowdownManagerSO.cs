@@ -38,7 +38,7 @@ public class SlowdownManagerSO : GameModule<SlowdownManagerSO>, ILive
         }
     }
     
-    protected override void OnDestroy() { }
+    protected override void OnSceneDestroy() { }
     protected override void OnDraw() { }
 
     public void TimeFreeze(float time) {

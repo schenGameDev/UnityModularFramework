@@ -14,7 +14,7 @@ namespace ModularFramework.Commons {
             this.value = value;
         }
 
-        public void Reset()
+        public void ResetState()
         {
             value = false;
         }

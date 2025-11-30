@@ -74,10 +74,10 @@ public class GifPlayer : Playable,IResetable
         {
             gameObject.SetActive(false);
         }
-        Reset();
+        ResetState();
     }
     #region IResetable
-    public void Reset()
+    public void ResetState()
     {
         _index = 0;
     }

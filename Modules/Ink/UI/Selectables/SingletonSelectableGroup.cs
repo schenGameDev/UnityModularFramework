@@ -43,7 +43,7 @@ public class SingletonSelectableGroup : Selectable, ISelectableGroup
     }
     
     public Type[][] RegistryTypes => new[] { new[] {typeof(InkUIIntegrationSO)}};
-    public void Reset()
+    public void ResetState()
     {
         gameObject.SetActive(false);
     }

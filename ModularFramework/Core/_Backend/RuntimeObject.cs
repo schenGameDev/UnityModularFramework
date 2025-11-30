@@ -65,7 +65,7 @@ namespace ModularFramework
                 } 
                 else if (value is IResetable resettable) 
                 {
-                    resettable.Reset();
+                    resettable.ResetState();
                 } 
                 else if(type.InheritsOrImplements(typeof(ICollection<>))) 
                 {
@@ -105,7 +105,7 @@ namespace ModularFramework
                     }
                     
                 } else if (value is IResetable resettable) {
-                    resettable.Reset();
+                    resettable.ResetState();
                 } else if(type.InheritsOrImplements(typeof(ICollection<>))) {
                     PurgeCollection(type, value);
                 } else if(type.InheritsOrImplements(typeof(Object)) || type.BaseType == typeof(object) || type.BaseType?.BaseType == typeof(object)) {

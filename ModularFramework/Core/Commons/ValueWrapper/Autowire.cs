@@ -19,6 +19,6 @@ namespace ModularFramework
 
         public static implicit operator T(Autowire<T> instance) => instance.Get();
 
-        public void Reset() => _instance = null;
+        public void ResetState() => _instance = null;
     }
 }

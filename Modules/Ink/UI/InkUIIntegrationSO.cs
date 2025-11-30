@@ -77,7 +77,7 @@ public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
     }
     
     protected override void OnUpdate() { }
-    protected override void OnDestroy() { }
+    protected override void OnSceneDestroy() { }
     protected override void OnDraw() { }
 
     private void OnEnable() {
@@ -102,7 +102,7 @@ public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
     public void Clean()
     {
         // disable all persistent overhaul
-        _selectableGroups[DEFAULT_CHOICE_GROUP].Reset();
+        _selectableGroups[DEFAULT_CHOICE_GROUP].ResetState();
         _dialogBoxes[DEFAULT_DIALOG_BOX].Clean();
     }
     #endregion
@@ -219,7 +219,7 @@ public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
         if(_dialogBox is ChatBubbleQueue) _dialogBox.Print(text,AutoPlay, line.dialogBoxSubId);
         else _dialogBox.Print(text,AutoPlay);
         
-        _skipped.Reset();
+        _skipped.ResetState();
        
         SetupSpeaker(line);
         
@@ -284,7 +284,7 @@ public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
     
     private void ResetSelectableGroup(string groupName) {
         if(!_selectableGroups.TryGetValue(groupName, out var selectableGroup)) return;
-        selectableGroup.Reset();
+        selectableGroup.ResetState();
     }
     
     public void SelectChoice(int index) {

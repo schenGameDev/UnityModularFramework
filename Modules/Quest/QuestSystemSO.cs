@@ -48,7 +48,7 @@ public class QuestSystemSO : GameSystem<QuestSystemSO>
         LoadQuestProgress();
     }
 
-    protected override void OnDestroy()
+    protected override void OnSceneDestroy()
     {
         quests?.ForEach(q => q.Reset());
     }

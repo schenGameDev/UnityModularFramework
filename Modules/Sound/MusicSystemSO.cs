@@ -54,7 +54,7 @@ public class MusicSystemSO : GameSystem<MusicSystemSO>
         BuildPersistentParent();
         InitializeMusic();
     }
-    protected override void OnDestroy()
+    protected override void OnSceneDestroy()
     {
         try
         {
