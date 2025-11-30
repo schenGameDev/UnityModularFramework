@@ -74,7 +74,7 @@ public abstract class VisionMap : GameModule<VisionMap>, IRegistrySO
             skippedTime = DeltaTime;
         }
     }
-    protected override void OnDestroy() { }
+    protected override void OnSceneDestroy() { }
     protected override void OnDraw() { }
 
 

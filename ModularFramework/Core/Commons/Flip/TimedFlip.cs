@@ -12,7 +12,7 @@ namespace ModularFramework.Commons
         public TimedFlip(float time)
         {
             _timer = new CountdownTimer(time);
-            _timer.OnTimerStop += Reset;
+            _timer.OnTimerStop += ResetState;
         }
         public override bool Get() {
             return value;

@@ -58,7 +58,7 @@ public class SoundManagerSO : GameModule<SoundManagerSO>
     
     protected override void OnUpdate() { }
     
-    protected override void OnDestroy() { }
+    protected override void OnSceneDestroy() { }
     protected override void OnDraw() { }
     
     private SoundBuilder CreateSoundBuilder() => new SoundBuilder();

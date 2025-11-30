@@ -108,7 +108,7 @@ public class SteamSystemSO : GameModule<SteamSystemSO>,ILive
 	// OnApplicationQuit gets called too early to shutdown the SteamAPI.
 	// Because the SteamManager should be persistent and never disabled or destroyed we can shutdown the SteamAPI here.
 	// Thus it is not recommended to perform any Steamworks work in other OnDestroy functions as the order of execution can not be garenteed upon Shutdown. Prefer OnDisable().
-	protected override void OnDestroy() {
+	protected override void OnSceneDestroy() {
 		if (!Initialized) {
 			return;
 		}

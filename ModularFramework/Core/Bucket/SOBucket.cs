@@ -14,7 +14,7 @@ namespace ModularFramework {
         private Dictionary<string,T> _dictionary = new();
 
         public Optional<T> Get(string name) {
-            if(_dictionary.IsEmpty()) Reset();
+            if(_dictionary.IsEmpty()) ResetState();
 
             if(_dictionary.TryGetValue(name, out T value)) {
                 return new Optional<T> (value);
@@ -28,7 +28,7 @@ namespace ModularFramework {
 
         void Clear() =>  _dictionary.Clear();
 
-        void Reset() {
+        void ResetState() {
             if(_items == null) {
                 _dictionary = new();
             } else {
@@ -37,7 +37,7 @@ namespace ModularFramework {
         }
 
         public bool ContainsKey(string name) {
-            if(_dictionary.IsEmpty()) Reset();
+            if(_dictionary.IsEmpty()) ResetState();
             return _dictionary.ContainsKey(name);
         }
 

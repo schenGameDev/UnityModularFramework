@@ -66,7 +66,7 @@ public class UIKeyMapSystemSO : GameSystem<UIKeyMapSystemSO>, IRegistrySO, ILive
             .Add(keyIcon.device, keyIcon.icon));
     }
     
-    protected override void OnDestroy()
+    protected override void OnSceneDestroy()
     {
         _actionCache.ForEach(x=>x.Item1.started-=x.Item2);
     }

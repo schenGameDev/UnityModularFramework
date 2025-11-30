@@ -19,9 +19,9 @@ public class TimedSelectableGroup : SelectableGroup
         _timer.Start();
     }
 
-    public override void Reset()
+    public override void ResetState()
     {
-        base.Reset();
+        base.ResetState();
         _timer?.Stop();
         _timer?.Dispose();
         _timer = null;
