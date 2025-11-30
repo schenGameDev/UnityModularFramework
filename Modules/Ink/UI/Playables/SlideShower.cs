@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using EditorAttributes;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SlideShower : Playable
+public class SlideShower : PlayableGroup
 {
     // manually fade in/out each slide
     // Play next profile without End last profile: cross-fade, using next profile inTime as reference
@@ -13,8 +15,8 @@ public class SlideShower : Playable
     [SerializeField] private Image backImage;
     
     private SlideShowProfile _lastProfile;
-    [SavableState] private int _index = 0;
     private CancellationTokenSource _cts;
+    private Dictionary<string, SlideShowProfile> _profiles = new ();
 
     private void Awake()
     {
@@ -23,6 +25,7 @@ public class SlideShower : Playable
         {
             profiles.ForEach(p=> p.Initialize(defaultColor));
         }
+        _profiles = profiles.ToDictionary(p => p.name, p => p);
         if (disableOnAwake)
         {
             SetImage(frontImage, null);
@@ -33,9 +36,9 @@ public class SlideShower : Playable
     public override void Play(Action<string> callback=null, string parameter=null)
     {
         base.Play(callback, parameter);
-        _index = parameter.IsEmpty()? _index : int.Parse(parameter);
-        
-        _lastProfile = profiles[_index++];
+        CurrentState = parameter.IsEmpty()? CurrentState : parameter;
+        if(CurrentState ==  null) return;
+        _lastProfile = _profiles[CurrentState];
         SetImage(frontImage, _lastProfile);
         DisposeToken();
         _cts = _lastProfile.Enter(frontImage, _lastProfile==null? null : backImage, DisposeToken);
@@ -78,6 +81,8 @@ public class SlideShower : Playable
             _cts = null;
         }
     }
+    
+    public override IEnumerable<string> GetStates() => profiles.Select(p => p.name);
 
     #region Editor
     [Header("Test")]
@@ -90,19 +95,12 @@ public class SlideShower : Playable
     }
 
     #endregion
-
-    #region ISavable
-    public override void Load()
-    {
-        _index -= 1;
-        base.Load();
-    } 
-    #endregion
 }
 
 [Serializable]
 public class SlideShowProfile
 {
+    public string name;
     public Sprite sprite;
     public Color color = Color.clear;
     [SerializeReference] private SlideTransitionBase transition;

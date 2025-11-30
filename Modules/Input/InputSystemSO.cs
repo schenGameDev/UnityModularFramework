@@ -96,6 +96,7 @@ public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
                     break;
                 case ActionType.VECTOR2:
                     i.performed += a;
+                    i.canceled += a;
                     break;    
             }
             _actionCache.Add((i, actionChannel.type, a));
@@ -104,6 +105,7 @@ public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
         if (moveInput!=NONE_ACTION)
         {
             inputAsset.FindAction(moveInput).performed += OnMove;
+            inputAsset.FindAction(moveInput).canceled += OnStop;
         }
         if (viewInput!=NONE_ACTION)
         {
@@ -126,12 +128,14 @@ public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
                     break;
                 case ActionType.VECTOR2:
                     x.Item1.performed -= x.Item3;
+                    x.Item1.canceled -= x.Item3;
                     break;    
             }
         });
         if (moveInput!=NONE_ACTION)
         {
             inputAsset.FindAction(moveInput).performed -= OnMove;
+            inputAsset.FindAction(moveInput).canceled -= OnStop;
         }
         if (viewInput!=NONE_ACTION)
         {
@@ -158,12 +162,13 @@ public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
                 if(context.canceled) actionChannel.boolChannel?.Raise(false);
                 break;
             case ActionType.VECTOR2:
-                actionChannel.vector2Channel?.Raise(context.ReadValue<Vector2>());
+                actionChannel.vector2Channel?.Raise(context.canceled? 
+                    Vector2.zero : context.ReadValue<Vector2>());
                 break;    
         }
     }
 
-    public void OnMove(InputAction.CallbackContext context)
+    private void OnMove(InputAction.CallbackContext context)
     {
         if(!Live) return;
         CheckInputDevice(context);
@@ -175,7 +180,15 @@ public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
         }
     }
     
-    public void OnViewDirection(InputAction.CallbackContext context)
+    private void OnStop(InputAction.CallbackContext context)
+    {
+        if(!Live) return;
+        CheckInputDevice(context);
+        
+        moveDirectionChannel?.Raise(Vector3.zero);
+    }
+    
+    private void OnViewDirection(InputAction.CallbackContext context)
     {
         if(!Live) return;
 

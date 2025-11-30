@@ -15,8 +15,6 @@ namespace ModularFramework {
 
     public abstract class EventChannel<T> : ScriptableObject, IEventChannel, IResetable
     {
-        protected static string NO_EVENT_READER = "no event reader registered.";
-
         protected UnityAction<T> action;
         private T _lastSend;
         [SerializeField] private bool log;
@@ -49,7 +47,7 @@ namespace ModularFramework {
 
         protected virtual bool IsEventSubscribed() {
             if(action==null) {
-                DebugUtil.DebugWarn(NO_EVENT_READER);
+                DebugUtil.DebugWarn(EventChannel.NO_EVENT_READER, name);
                 return false;
             }
             return true;
@@ -75,7 +73,7 @@ namespace ModularFramework {
 
     [CreateAssetMenu(menuName = "Event Channel/Event Channel",fileName = "Channel")]
     public class EventChannel : ScriptableObject,IEventChannel {
-        protected static string NO_EVENT_READER = "no event reader registered.";
+        public static string NO_EVENT_READER = "no event reader registered.";
 
         protected UnityAction action;
         [SerializeField] private bool _log;
@@ -96,7 +94,7 @@ namespace ModularFramework {
 
         protected virtual bool IsEventSubscribed() {
             if(action==null) {
-                DebugUtil.DebugWarn(NO_EVENT_READER);
+                DebugUtil.DebugWarn(NO_EVENT_READER, name);
                 return false;
             }
             return true;

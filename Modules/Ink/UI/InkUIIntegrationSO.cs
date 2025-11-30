@@ -145,7 +145,18 @@ public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
 
         foreach(var playable in transform.GetComponents<Playable>())
         {
-            if (_playables.TryAdd(playable.playbaleName, playable))
+            if (playable is PlayableGroup playableGroup)
+            {
+                foreach (var state in playableGroup.GetStates())
+                {
+                    if (_playables.TryAdd(state, playable))
+                    {
+                        found = true;
+                    }
+                }
+                enabled = !playable.disableOnAwake;
+            } 
+            else if (_playables.TryAdd(playable.playbaleName, playable))
             {
                 found = true;
                 enabled = !playable.disableOnAwake;
@@ -174,7 +185,17 @@ public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
         }
         if (transform.TryGetComponent<Playable>(out var playable))
         {
-            _playables.Remove(playable.playbaleName);
+            if (playable is PlayableGroup playableGroup)
+            {
+                foreach (var state in playableGroup.GetStates())
+                {
+                    _playables.Remove(state);
+                }
+            }
+            else
+            {
+                _playables.Remove(playable.playbaleName);
+            }
         }
     }
     #endregion
@@ -311,9 +332,7 @@ public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
         
         if (taskName == InkConstants.TASK_PLAY_CG)
         {
-            var arr = parameter.Split('_', 2);
-            if(arr.Length == 1) _playables[arr[0]]?.Play(callback);
-            else _playables[arr[0]]?.Play(callback, arr[1]);
+            _playables[parameter]?.Play(callback, parameter);
             return;
         } 
         if (taskName == InkConstants.TASK_HIDE_CG)
