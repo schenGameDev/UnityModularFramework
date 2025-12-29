@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "displayName": "Unity Modular Framework",
   "description": "Unity modular framework realized through ScriptableObject",
-  "unity": "6000.0",
+  "unity": "6000.3",
   "author": {
     "name": "schenGameDev",
     "url": "https://github.com/schenGameDev"

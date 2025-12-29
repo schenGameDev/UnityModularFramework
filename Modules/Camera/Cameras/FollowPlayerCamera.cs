@@ -26,11 +26,11 @@ public class FollowPlayerCamera : MovingCameraBase
 
     private Autowire<InputSystemSO> _inputSystem = new();
 
-    private Vector2 _lookDeltaMovement => _inputSystem.Get().LookDeltaMovement;
+    private Vector2 _lookDeltaMovement;
 
     public Vector3 FreeMoveViewDirection => focusPoint.forward;
     
-    public override Type[][] RegistryTypes =>new[] {new[] {typeof(CameraManagerSO)}, new[] {typeof(InputSystemSO)}};
+    public override Type[][] RegistryTypes =>new[] {new[] {typeof(CameraManagerSO)}};
 
     public FollowPlayerCamera() {
         type = CameraType.FOLLOW;

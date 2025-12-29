@@ -24,9 +24,18 @@ namespace ModularFramework
 
         public void Inject(FieldInfo field, object instance)
         {
-            if (!GameRunner.Instance) return;
+            if (!GameRunner.Instance)
+            {
+                Debug.LogError($"{field.Name} inject failed. GameRunner instance not found.");
+                return;
+            }
             Type type = field.FieldType;
             GameObject go = GameRunner.Instance.GetInSceneGameObject(Keyword);
+            if (go == null)
+            {
+                Debug.LogError($"{Keyword} not found in scene. Please make sure the keyword is linked to a gameObject in GameRunner.");
+                return;
+            }
             field.SetValue(instance, type == typeof(Transform)? go.transform : go);
         }
         

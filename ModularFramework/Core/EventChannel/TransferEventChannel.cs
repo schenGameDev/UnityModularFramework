@@ -25,14 +25,14 @@ namespace ModularFramework {
 
     [CreateAssetMenu(menuName = "Event Channel/Transfer Channel",fileName = "Channel")]
     public class TransferEventChannel : EventChannel {
-        [SerializeField] EventChannel[] _receivers;
+        [SerializeField] EventChannel[] receivers;
         protected override void Invoke()
         {
-            _receivers.ForEach(r => r.Raise());
+            receivers.ForEach(r => r.Raise());
         }
 
         protected override bool IsEventSubscribed() {
-            if(_receivers==null || _receivers.IsEmpty()) {
+            if(receivers==null || receivers.IsEmpty()) {
                 DebugUtil.DebugWarn(NO_EVENT_READER);
                 return false;
             }

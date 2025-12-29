@@ -76,14 +76,14 @@ namespace ModularFramework {
         public static string NO_EVENT_READER = "no event reader registered.";
 
         protected UnityAction action;
-        [SerializeField] private bool _log;
+        [SerializeField] private bool log;
         [field: SerializeField] public bool Live { get; set; } = true;
         public void Raise()
         {
             if(Live && IsEventSubscribed()) {
-                if(_log) DebugUtil.DebugLog("Triggered", name);
+                if(log) DebugUtil.DebugLog("Triggered", name);
                 Invoke();
-            } else if(_log) {
+            } else if(log) {
                 DebugUtil.DebugLog("Blocked", name);
             }
         }

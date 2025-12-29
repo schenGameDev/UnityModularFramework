@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using EditorAttributes;
 using Unity.Mathematics;
 using UnityEngine;
@@ -9,48 +8,31 @@ using ModularFramework.Utility;
 using UnityEngine.InputSystem;
 
 [CreateAssetMenu(fileName ="InputSystem_SO",menuName ="Game Module/Input/Input System")]
-public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
+public partial class InputSystemSO : GameSystem<InputSystemSO>,ILive {
     [RuntimeObject] public static InputDeviceType InputDevice { get; private set; } = InputDeviceType.KEYBOARD_MOUSE;
     
-    public enum ActionType
-    {
-        PRESS,HOLD,VECTOR2
-    }
-    
-    public const string NONE_ACTION = "None";
-    
-    [Serializable]
-    private class ActionChannel
-    {
-        [Dropdown(nameof(InputKeys))] public string input;
-        public ActionType type;
-        [ShowField(nameof(type), ActionType.PRESS)] public EventChannel channel;
-        [ShowField(nameof(type), ActionType.HOLD),Rename("channel")] public EventChannel<bool> boolChannel;
-        [ShowField(nameof(type), ActionType.VECTOR2),Rename("channel")] public EventChannel<Vector2> vector2Channel;
-    }
-    
-    
     [SerializeField] private InputActionAsset inputAsset;
-    [SerializeField, ShowField(nameof(IsInputAsset))] private ActionChannel[] inputs;
-    [SerializeField, ShowField(nameof(IsInputAsset)),Dropdown(nameof(InputKeys)),Rename("Move")] 
-    private string moveInput;
-    public EventChannel<Vector3> moveDirectionChannel;
-    [SerializeField, ShowField(nameof(IsInputAsset)),Dropdown(nameof(InputKeys)),Rename("View")] 
-    private string viewInput;
-    public EventChannel<Vector3> viewDirectionChannel;
-    private bool IsInputAsset => inputAsset != null;
-    private string[] InputKeys => GetInputActions(inputAsset);
+    [SerializeField, ShowField(nameof(IsInputAsset))] 
+    private ActionChannel[] inputs =
+    {
+        new (ActionTiming.PERFORMED | ActionTiming.CANCELED, "Move Vector2"),
+        new (ActionTiming.PERFORMED, "View Vector2"),
+        new (ActionTiming.STARTED, "Press Button"),
+        new (ActionTiming.STARTED | ActionTiming.CANCELED, "Hold Button")
+    };
+
     private Vector2 PlayerCameraPosition => Camera.main.WorldToScreenPoint( _player.transform.position);
     public CameraAngle CameraMode {get; set;}
     
-    [field: SerializeField,ReadOnly,RuntimeObject] public bool Live { get; set; }
-    
-    [RuntimeObject] public Vector2 LookDeltaMovement {get; private set;}
+    [field: SerializeField,RuntimeObject] public bool Live { get; set; }
     [RuntimeObject] public Vector2 PointerCameraPosition {get; private set;}
-    [RuntimeObject] private List<(InputAction,ActionType,Action<InputAction.CallbackContext>)> _actionCache = new();
+    [RuntimeObject] private List<(InputAction,Action<InputAction.CallbackContext>)> _actionCache = new();
     [SceneRef("PLAYER")] private Transform _player;
 
-    protected override void OnAwake() { }
+    protected override void OnAwake()
+    {
+        inputAsset.Enable();
+    }
 
     protected override void OnStart()
     {
@@ -60,7 +42,7 @@ public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
             {
                 continue;
             }
-            if (!actionChannel.channel && !actionChannel.boolChannel && !actionChannel.vector2Channel)
+            if (!actionChannel.channel)
             {
                 Debug.LogError($"No channel in action {actionChannel.input}");
                 continue;
@@ -73,43 +55,28 @@ public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
                 Debug.LogError($"Can't find action {actionChannel.input}");
                 continue;
             }
-            switch (actionChannel.type)
+
+            if (!ValidateActionChannel(actionChannel, i))
             {
-                case ActionType.PRESS or ActionType.HOLD when 
-                    i.type != InputActionType.Button:
-                    Debug.LogError($"Input action {actionChannel.input} is not a button");
-                    continue;
-                case ActionType.VECTOR2 when i.type != InputActionType.Value:
-                    Debug.LogError($"Input action {actionChannel.input} is not value");
-                    continue;
+                continue;
             }
 
             Action<InputAction.CallbackContext> a = context => Raise(context, actionChannel);
-            switch (actionChannel.type)
+            if(IsActiveTiming(actionChannel.timing, ActionTiming.STARTED))
             {
-                case ActionType.PRESS:
-                    i.started += a;
-                    break;
-                case ActionType.HOLD:
-                    i.started += a;
-                    i.canceled += a;
-                    break;
-                case ActionType.VECTOR2:
-                    i.performed += a;
-                    i.canceled += a;
-                    break;    
+                i.started += a;
             }
-            _actionCache.Add((i, actionChannel.type, a));
-        }
+            if(IsActiveTiming(actionChannel.timing, ActionTiming.PERFORMED))
+            {
+                i.performed += a;
+            }
 
-        if (moveInput!=NONE_ACTION)
-        {
-            inputAsset.FindAction(moveInput).performed += OnMove;
-            inputAsset.FindAction(moveInput).canceled += OnStop;
-        }
-        if (viewInput!=NONE_ACTION)
-        {
-            inputAsset.FindAction(viewInput).performed += OnViewDirection;
+            if (IsActiveTiming(actionChannel.timing, ActionTiming.CANCELED))
+            {
+                i.canceled += a;
+            }
+            
+            _actionCache.Add((i, a));
         }
     }
     
@@ -117,30 +84,10 @@ public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
     {
         _actionCache.ForEach(x=>
         {
-            switch (x.Item2)
-            {
-                case ActionType.PRESS:
-                    x.Item1.started -= x.Item3;
-                    break;
-                case ActionType.HOLD:
-                    x.Item1.started -= x.Item3;
-                    x.Item1.canceled -= x.Item3;
-                    break;
-                case ActionType.VECTOR2:
-                    x.Item1.performed -= x.Item3;
-                    x.Item1.canceled -= x.Item3;
-                    break;    
-            }
+            x.Item1.started -= x.Item2;
+            x.Item1.performed -= x.Item2; 
+            x.Item1.canceled -= x.Item2;
         });
-        if (moveInput!=NONE_ACTION)
-        {
-            inputAsset.FindAction(moveInput).performed -= OnMove;
-            inputAsset.FindAction(moveInput).canceled -= OnStop;
-        }
-        if (viewInput!=NONE_ACTION)
-        {
-            inputAsset.FindAction(viewInput).performed -= OnViewDirection;
-        }
     }
     
     private void Raise(InputAction.CallbackContext context, ActionChannel actionChannel)
@@ -152,68 +99,56 @@ public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
         
         CheckInputDevice(context);
         
-        switch (actionChannel.type)
+        switch (actionChannel.channel)
         {
-            case ActionType.PRESS:
-                actionChannel.channel?.Raise();
+            case EventChannel<ActionTiming> ch1:
+                ch1.Raise(GetActionTiming(context));
                 break;
-            case ActionType.HOLD:
-                if(context.started) actionChannel.boolChannel?.Raise(true);
-                if(context.canceled) actionChannel.boolChannel?.Raise(false);
+            case EventChannel<bool> ch2:
+                ch2.Raise(context.started || context.performed);
                 break;
-            case ActionType.VECTOR2:
-                actionChannel.vector2Channel?.Raise(context.canceled? 
-                    Vector2.zero : context.ReadValue<Vector2>());
-                break;    
-        }
-    }
-
-    private void OnMove(InputAction.CallbackContext context)
-    {
-        if(!Live) return;
-        CheckInputDevice(context);
-
-        var moveDirection = CameraToWorldSpace(context.ReadValue<Vector2>());
-        moveDirectionChannel?.Raise(moveDirection);
-        if(this.CameraMode == CameraAngle.FOLLOW) {
-            viewDirectionChannel.Raise(moveDirection);
+            case EventChannel ch3:
+                ch3.Raise();
+                break;
+            case EventChannel<Vector3> ch4:
+                ch4.Raise(context.canceled? Vector2.zero : context.ReadValue<Vector2>());
+                break;  
+            case EventChannel<Vector2> ch5:
+                ch5.Raise(context.canceled? Vector2.zero : context.ReadValue<Vector2>());
+                break;
         }
     }
     
-    private void OnStop(InputAction.CallbackContext context)
+    public Vector3 GetViewWorldDirection(Vector2 cameraVector)
     {
-        if(!Live) return;
-        CheckInputDevice(context);
-        
-        moveDirectionChannel?.Raise(Vector3.zero);
-    }
-    
-    private void OnViewDirection(InputAction.CallbackContext context)
-    {
-        if(!Live) return;
-
-        if(CameraMode == CameraAngle.FOLLOW) return;
-
-        CheckInputDevice(context);
-
-        var readValue = context.ReadValue<Vector2>();
         Vector3 viewDirection;
-        if(InputDevice==InputDeviceType.GAMEPAD && math.any(readValue)) {
-            viewDirection = CameraToWorldSpace(readValue);
+        if(InputDevice==InputDeviceType.GAMEPAD && math.any(cameraVector)) {
+            viewDirection = CameraDirectionToWorldSpace(cameraVector);
         } else {
-            PointerCameraPosition = readValue;
-            viewDirection = CameraToWorldSpace(PointerCameraPosition - PlayerCameraPosition);
+            PointerCameraPosition = cameraVector;
+            viewDirection = CameraDirectionToWorldSpace(PointerCameraPosition - PlayerCameraPosition);
         }
-        viewDirectionChannel.Raise(viewDirection);
+        return viewDirection;
     }
 
-    private Vector3 CameraToWorldSpace(Vector2 cameraVector) {
+    public Vector3 CameraDirectionToWorldSpace(Vector2 cameraVector) {
         var dir = CameraMode switch
         {
             CameraAngle.SIDE => new Vector3(cameraVector.x, 0, 0),
             _ => new Vector3(cameraVector.x, 0, cameraVector.y),
         };
         return dir.normalized;
+    }
+    
+    private static bool IsActiveTiming(ActionTiming mask, ActionTiming currentTiming) 
+        => (mask & currentTiming) != ActionTiming.NONE;
+
+    private static ActionTiming GetActionTiming(InputAction.CallbackContext context)
+    {
+        if (context.started) return ActionTiming.STARTED;
+        if (context.performed) return ActionTiming.PERFORMED;
+        if (context.canceled) return ActionTiming.CANCELED;
+        return ActionTiming.NONE;
     }
     
     public static bool CheckInputDevice(InputAction.CallbackContext context) {
@@ -224,7 +159,7 @@ public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
             DebugUtil.DebugLog("Switch to Gamepad");
             return true;
         } 
-        if (InputDevice != InputDeviceType.KEYBOARD_MOUSE && (context.control.device is Keyboard || context.control.device is Mouse))
+        if (InputDevice != InputDeviceType.KEYBOARD_MOUSE && context.control.device is Keyboard or Mouse)
         {
             InputDevice = InputDeviceType.KEYBOARD_MOUSE;
             Cursor.visible = true;
@@ -234,15 +169,8 @@ public class InputSystemSO : GameSystem<InputSystemSO>,ILive {
 
         return false;
     }
-
-    public static string[] GetInputActions(InputActionAsset inputAsset)
-    {
-        List<string> actions = new List<string> {NONE_ACTION};
-        inputAsset.Select(x=>x.actionMap.name + "/" + x.name).ForEach(x=>actions.Add(x));
-        return actions.ToArray();
-    }
 }
-public enum InputDeviceType {KEYBOARD_MOUSE,GAMEPAD}
+
 public enum CameraAngle {
     TOP,FOLLOW,SIDE
 }

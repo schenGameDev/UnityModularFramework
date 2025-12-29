@@ -34,15 +34,19 @@ public class UIKeyMapSystemSO : GameSystem<UIKeyMapSystemSO>, IRegistrySO, ILive
     
     [SerializeField, DataTable, ShowField(nameof(IsInputAsset))] private ActionKeyPair[] inputs;
     [SerializeField, DataTable, ShowField(nameof(IsInputAsset))] private KeyIcon[] icons;
-    [field: SerializeField,ReadOnly,RuntimeObject] public bool Live { get; set; }
+    
+    [field: RuntimeObject] public bool Live { get; set; }
     
     [RuntimeObject] private Dictionary<UIInputKey,List<ButtonKeyMapper>> _listeners = new();
     [RuntimeObject] private List<(InputAction,Action<InputAction.CallbackContext>)> _actionCache = new();
     [RuntimeObject] private Dictionary<UIInputKey, Dictionary<InputDeviceType,Sprite>> _iconMap = new();
     private bool IsInputAsset => inputAsset != null;
     private string[] InputKeys => GetInputActions(inputAsset);
-    
-    protected override void OnAwake() { }
+
+    protected override void OnAwake()
+    {
+        inputAsset.Enable();
+    }
     protected override void OnStart()
     {
         inputs.ForEach(actionKeyPair =>
