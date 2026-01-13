@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using ModularFramework;
+using ModularFramework.Utility;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,6 +28,18 @@ public class ButtonKeyMapper : MonoBehaviour,IMark
         icon.sprite = keyIcon;
         icon.gameObject.SetActive(true);
     }
+    
+    #region IRegistrySO
+    public List<Type> RegisterSelf(HashSet<Type> alreadyRegisteredTypes)
+    {
+        if (alreadyRegisteredTypes.Contains(typeof(UIKeyMapSystemSO))) return new ();
+        SingletonRegistry<UIKeyMapSystemSO>.Instance?.Register(transform);
+        return  new () {typeof(UIKeyMapSystemSO)};
+    }
 
-    public Type[][] RegistryTypes => new []{new []{typeof(UIKeyMapSystemSO)}};
+    public void UnregisterSelf()
+    {
+        SingletonRegistry<UIKeyMapSystemSO>.Instance?.Unregister(transform);
+    }
+    #endregion
 }

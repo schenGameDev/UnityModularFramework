@@ -1,7 +1,6 @@
-using System;
-using UnityEngine;
 using ModularFramework;
-using UnityEngine.Serialization;
+using ModularFramework.Utility;
+using UnityEngine;
 
 /// <summary>
 /// Class <c>Sensible</c> marks a gameobject to be constantly monitored by sensor Manager during gameplay
@@ -13,8 +12,13 @@ public class Sensible : Marker {
     public bool isVisible; // player insensible to certain monster, force out of invisible if touched
 
 
-    public Sensible()
+    public override void RegisterAll()
     {
-        RegistryTypes = new[] { new[] {typeof(SensorSystemSO)}};
+        SingletonRegistry<SensorSystemSO>.Instance?.Register(transform);
+    }
+
+    protected override void UnregisterAll()
+    {
+        SingletonRegistry<SensorSystemSO>.Instance?.Unregister(transform);
     }
 }

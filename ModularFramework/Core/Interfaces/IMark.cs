@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 
 namespace ModularFramework
 {
     public interface IMark
     {
-        public Type[][] RegistryTypes { get; }
+        public List<Type> RegisterSelf(HashSet<Type> alreadyRegisteredTypes);
+        public void UnregisterSelf();
     }
 }

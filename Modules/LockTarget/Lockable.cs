@@ -1,29 +1,20 @@
-using System;
 using EditorAttributes;
+using ModularFramework;
+using ModularFramework.Utility;
 using UnityEngine;
 
+[DisallowMultipleComponent]
 public class Lockable : Sensible
 {
     [ReadOnly,SerializeField] private bool _locked;
 
-    private LockManagerSO _lockManager;
+    private Autowire<LockManagerSO> _lockManager = new ();
 
     private bool _notLockable=false;
-
-    public Lockable()
-    {
-        RegistryTypes = new[] {new[]{typeof(SensorSystemSO)}, new[]{typeof(LockManagerSO)}};
-    }
-
-    protected override void Start()
-    {
-        base.Start();
-        _lockManager = GetRegistry<LockManagerSO>().Get();
-    }
-
+    
     private void OnBecameInvisible() {
         if(_locked && DisToScreenCenter()>=1) {
-            _lockManager.TargetLost();
+            _lockManager.Get().TargetLost();
         }
     }
 
@@ -50,12 +41,24 @@ public class Lockable : Sensible
     public void Lock(bool isLock) => _locked = isLock;
 
     public void BecomeUnLockable() { // unlockable but not destroyed yet
-        if(_locked && _lockManager.LockTarget != null) {
+        if(_locked && _lockManager.Get().LockTarget != null) {
             _locked = false;
-            _lockManager.LockTarget = null;
-            _lockManager.IsLock = false;
+            _lockManager.Get().LockTarget = null;
+            _lockManager.Get().IsLock = false;
         }
 
         _notLockable = true;
+    }
+
+    public override void RegisterAll()
+    {
+        base.RegisterAll();
+        SingletonRegistry<LockManagerSO>.Instance?.Register(transform);
+    }
+
+    protected override void UnregisterAll()
+    {
+        base.UnregisterAll();
+        SingletonRegistry<LockManagerSO>.Instance?.Unregister(transform);
     }
 }

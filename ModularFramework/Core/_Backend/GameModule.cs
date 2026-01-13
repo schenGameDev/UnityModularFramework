@@ -1,4 +1,5 @@
 using EditorAttributes;
+using ModularFramework.Utility;
 using UnityEngine;
 using UnityTimer;
 
@@ -94,14 +95,14 @@ namespace ModularFramework {
             {
                 var timer = new RepeatFrameCountdownTimer(everyNFrame, 2);
                 timer.OnTick += () =>  {
-                    if(CentrallyManaged) GameRunner.Instance?.AddToExecQueue(this, timer.DeltaTime);
+                    if(CentrallyManaged) SingletonRegistry<GameRunner>.Get().Do(builder=>builder.AddToExecQueue(this, timer.DeltaTime));
                     else Tick(timer.DeltaTime);
                 };
                 Timer = timer;
             } else {
                 var timer = new RepeatCountdownTimer(everyNSecond, 2);
                 timer.OnTick += () =>  {
-                    if(CentrallyManaged) GameRunner.Instance?.AddToExecQueue(this, timer.DeltaTime);
+                    if(CentrallyManaged) SingletonRegistry<GameRunner>.Get().Do(builder=>builder.AddToExecQueue(this, timer.DeltaTime));
                     else Tick(timer.DeltaTime);
                 };
                 Timer = timer;

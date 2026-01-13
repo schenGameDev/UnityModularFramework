@@ -20,6 +20,8 @@ public class QuestSystemSO : GameSystem<QuestSystemSO>
     [RuntimeObject] public int failedQuestCount;
     [RuntimeObject] public int completedQuestCount;
 
+    private Autowire<GameBuilder> _builder = new();
+
     private void OnEnable()
     {
         questMilestoneChannel?.AddListener(UpdateMilestone);
@@ -121,7 +123,7 @@ public class QuestSystemSO : GameSystem<QuestSystemSO>
         int score = 5 + completedQuestCount - failedQuestCount;
         if (score == 0)
         {
-            GameBuilder.Instance.LoadScene("End");
+            _builder.Get().LoadScene("End");
         }
         else if (score <= 2)
         {

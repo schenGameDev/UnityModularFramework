@@ -1,17 +1,20 @@
+using ModularFramework.Utility;
+
 namespace ModularFramework
 {
     /// <summary>
-    /// automatically retrieve module/system. It must be initialized with new().
+    /// A lazy-loading wrapper that automatically retrieves and caches singleton instances of modules or systems.<br/>
+    /// Must be initialized with new() and used with [RuntimeObject] attribute in GameModule classes.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class Autowire<T> : IResetable where T : GameSystem
+    public class Autowire<T> : IResetable where T : class
     {
         private T _instance;
         public T Get()
         {
-            if (!_instance)
+            if (_instance != null)
             {
-                _instance = GameRunner.Instance?.GetModuleOrSystem<T>().OrElse(null);
+                _instance = SingletonRegistry<T>.Instance;
             }
 
             return _instance;

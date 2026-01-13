@@ -1,10 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using EditorAttributes;
 using ModularFramework;
 using ModularFramework.Utility;
 using Pathfinding;
-using UnityEditor.Playables;
 using UnityEngine;
 
 public class AstarAI : MonoBehaviour
@@ -138,7 +135,7 @@ public class AstarAI : MonoBehaviour
     }
 
     private void Update () {
-        if(GameRunner.Instance.IsPause) return;
+        if(SingletonRegistry<GameRunner>.TryGet(out var runner) && runner.IsPause) return;
         RecalculatePath();
 
         if (_path == null) {

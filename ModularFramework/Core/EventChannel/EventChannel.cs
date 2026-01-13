@@ -1,15 +1,15 @@
+using ModularFramework.Utility;
 using UnityEngine;
 using UnityEngine.Events;
-using ModularFramework.Utility;
 
 namespace ModularFramework {
     public interface IEventChannel : ILive {
         public void Register() {
-            GameRunner.Instance?.RegisterEventChannel(this);
+            SingletonRegistry<GameRunner>.Get().Do(runner => runner.RegisterEventChannel(this));
         }
 
         public void Unregister() {
-            GameRunner.Instance?.UnregisterEventChannel(this);
+            SingletonRegistry<GameRunner>.Get().Do(runner => runner.UnregisterEventChannel(this));
         }
     }
 

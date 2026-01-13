@@ -1,8 +1,12 @@
-using System.Collections.Generic;
+using ModularFramework.Utility;
 using UnityEngine;
 
 namespace ModularFramework
 {
+    /// <summary>
+    /// MonoBehaviour that lives in the Builder.unity Scene. It persists across scene loads and provides type-safe scene load/destroy callbacks
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public abstract class PersistentBehaviour<T> : PersistentBehaviour where T : PersistentBehaviour<T>
     {
         public override void LoadScene(string sceneName)
@@ -21,16 +25,17 @@ namespace ModularFramework
     
     public abstract class PersistentBehaviour : MonoBehaviour
     {
-        public static readonly HashSet<PersistentBehaviour> INSTANCES = new();
         private void Awake()
         {
-            INSTANCES.Add(this);
-            LoadScene(GameBuilder.Instance? GameBuilder.Instance.NextScene : "");
+            Registry<PersistentBehaviour>.TryAdd(this);
+            SingletonRegistry<GameBuilder>.Get()
+                .Do(builder => LoadScene(builder.NextScene)).
+                OrElseDo(() => LoadScene(""));
         }
 
         private void OnDestroy()
         {
-            INSTANCES.Remove(this);
+            Registry<PersistentBehaviour>.Remove(this);
         }
 
         public abstract void LoadScene(string sceneName);

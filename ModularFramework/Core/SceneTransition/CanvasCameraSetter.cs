@@ -6,6 +6,7 @@ namespace ModularFramework
     public class CanvasCameraSetter : MonoBehaviour
     {
         [SerializeField] private Canvas[] canvases;
+        private GameBuilder _gameBuilder = new Autowire<GameBuilder>();
         
         private void Awake()
         {
@@ -15,7 +16,7 @@ namespace ModularFramework
             foreach (var canvas in canvases)
             {
                 canvas.renderMode = RenderMode.ScreenSpaceCamera;
-                canvas.worldCamera = GameBuilder.Instance.MainCamera;
+                canvas.worldCamera = _gameBuilder?.MainCamera;
             }
             
         }

@@ -1,13 +1,14 @@
-using ModularFramework;
 using UnityEngine;
 
 namespace ModularFramework
 {
     public class SceneController : MonoBehaviour
     {
+        private Autowire<GameBuilder> _builder = new();
+        
         public void GoToScene(string sceneName)
         {
-            GameBuilder.Instance.LoadScene(sceneName);
+            _builder.Get().LoadScene(sceneName);
         }
 
         public void QuitGame()

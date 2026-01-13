@@ -60,6 +60,7 @@ public class InkSystemSO : GameSystem<InkSystemSO>
     Autowire<MusicSystemSO> _musicSystem = new();
     Autowire<NoteSystemSO> _noteSystem = new();
     Autowire<QuestSystemSO> _questSystem = new();
+    Autowire<GameBuilder> _builder = new();
 
 
     protected override void OnAwake() { }
@@ -136,7 +137,7 @@ public class InkSystemSO : GameSystem<InkSystemSO>
                 _currentChoice = NextChoice();
                 if(_currentChoice == null || _currentChoice.choices.Count == 0) {
                     stage = InkStage.END;
-                    GameBuilder.Instance.LoadScene("Menu");
+                    _builder.Get().LoadScene("Menu");
                     return stage;
                 } 
                 InkTextAction.Invoke(Either<InkLine,InkChoice>.FromRight(_currentChoice));
@@ -311,7 +312,7 @@ public class InkSystemSO : GameSystem<InkSystemSO>
         Debug.Log($"Task {taskHandler}:{parameter} Started");
         if (taskHandler == InkConstants.TASK_CHANGE_SCENE)
         {
-            GameBuilder.Instance.LoadScene(parameter,()=>SceneLoaded(parameter,TaskComplete));
+            _builder.Get().LoadScene(parameter,()=>SceneLoaded(parameter,TaskComplete));
             return;
         }
         
@@ -633,7 +634,7 @@ public class InkSystemSO : GameSystem<InkSystemSO>
 
     public void LoadScene()
     {
-        GameBuilder.Instance.LoadScene(GetLastSceneName(),LoadHistory);
+        _builder.Get().LoadScene(GetLastSceneName(),LoadHistory);
     }
 
     // [Button]

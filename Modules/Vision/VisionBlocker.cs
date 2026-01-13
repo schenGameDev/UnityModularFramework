@@ -1,11 +1,11 @@
-using System;
-using System.Linq;
-using ModularFramework;
-using static ModularFramework.Utility.MathUtil;
-using EditorAttributes;
-using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
+using EditorAttributes;
+using ModularFramework;
+using ModularFramework.Utility;
 using UnityEditor;
+using UnityEngine;
+using static ModularFramework.Utility.MathUtil;
 
 public class VisionBlocker : Marker {
     [SerializeField] private bool _static = false;
@@ -14,10 +14,6 @@ public class VisionBlocker : Marker {
     [SerializeField] private Vector2[] _vertices;
 
     private Vector2 _initialPos;
-
-    public VisionBlocker() {
-        RegistryTypes = new[] { new[] {typeof(ZipVisionMap), typeof(PointVisionMap),typeof(PolygonVisionMap)}};
-    }
 
     protected override void Start() {
         base.Start();
@@ -81,5 +77,39 @@ public class VisionBlocker : Marker {
             text.normal.textColor = Color.red;
             Handles.Label(verticePos + textPos, (++i).ToString(), text);
         }
+    }
+    
+    public override void RegisterAll()
+    {
+        IRegistrySO instance = SingletonRegistry<ZipVisionMap>.Instance;
+        if (instance != null)
+        {
+            instance.Register(transform);
+            return;
+        }
+        
+        instance = SingletonRegistry<PointVisionMap>.Instance;
+        if (instance != null)
+        {
+            instance.Register(transform);
+            return;
+        }
+        
+        instance = SingletonRegistry<PolygonVisionMap>.Instance;
+        if (instance != null)
+        {
+            instance.Register(transform);
+            return;
+            
+        }
+        
+        Debug.LogError("No VisionMap registry found to register VisionBlocker.");
+    }
+
+    protected override void UnregisterAll()
+    {
+        SingletonRegistry<ZipVisionMap>.Instance?.Unregister(transform);
+        SingletonRegistry<PointVisionMap>.Instance?.Unregister(transform);
+        SingletonRegistry<PolygonVisionMap>.Instance?.Unregister(transform);
     }
 }

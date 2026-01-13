@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EditorAttributes;
 using ModularFramework;
+using ModularFramework.Utility;
 using UnityEngine;
 
 [RequireComponent(typeof(Marker), typeof(CanvasGroup))]
@@ -10,8 +11,6 @@ public class SelectableGroup : MonoBehaviour, ISelectableGroup
 {
     [field: SerializeField] public string ChoiceGroupName { get; private set; }
     [field:SerializeField] public bool EnableOnAwake { get; private set; }
-
-    public Type[][] RegistryTypes => new[] { new[] { typeof(InkUIIntegrationSO) } };
 
     private List<Selectable> _selectables;
     [ReadOnly] public bool hasSelected;
@@ -98,4 +97,18 @@ public class SelectableGroup : MonoBehaviour, ISelectableGroup
         _cg.alpha = hide ? 0 : 1;
         _cg.blocksRaycasts = !hide;
     }
+    
+    #region IRegistrySO
+    public List<Type> RegisterSelf(HashSet<Type> alreadyRegisteredTypes)
+    {
+        if (alreadyRegisteredTypes.Contains(typeof(InkUIIntegrationSO))) return new ();
+        SingletonRegistry<InkUIIntegrationSO>.Instance?.Register(transform);
+        return new () {typeof(InkUIIntegrationSO)};
+    }
+
+    public void UnregisterSelf()
+    {
+        SingletonRegistry<InkUIIntegrationSO>.Instance?.Unregister(transform);
+    }
+    #endregion
 }

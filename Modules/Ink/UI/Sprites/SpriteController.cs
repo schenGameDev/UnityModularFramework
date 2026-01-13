@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using ModularFramework;
+using ModularFramework.Utility;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,8 +22,6 @@ public class SpriteController : MonoBehaviour,IMark
     private SpriteRenderer _sr;
     private Image _img;
     private bool _isSpriteRenderer;
-
-    public Type[][] RegistryTypes => new[] { new[]{typeof(InkUIIntegrationSO)}};
 
     protected void Awake() {
         _sr = GetComponent<SpriteRenderer>();
@@ -139,4 +139,18 @@ public class SpriteController : MonoBehaviour,IMark
         _cts = new CancellationTokenSource();
         Fade(false, fadeTime, _cts.Token).Forget();
     }
+    
+    #region IRegistrySO
+    public List<Type> RegisterSelf(HashSet<Type> alreadyRegisteredTypes)
+    {
+        if (alreadyRegisteredTypes.Contains(typeof(InkUIIntegrationSO))) return new ();
+        SingletonRegistry<InkUIIntegrationSO>.Instance?.Register(transform);
+        return new () {typeof(InkUIIntegrationSO)};
+    }
+
+    public void UnregisterSelf()
+    {
+        SingletonRegistry<InkUIIntegrationSO>.Instance?.Unregister(transform);
+    }
+    #endregion
 }

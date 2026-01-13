@@ -1,16 +1,12 @@
+using ModularFramework.Utility;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace ModularFramework
 {
-    [RequireComponent(typeof(Canvas))]
+    [RequireComponent(typeof(Canvas)),DisallowMultipleComponent]
     public class CanvasMarker : Marker
     {
-        public CanvasMarker()
-        {
-            RegistryTypes = new[] { new[] {typeof(UISystem)}};
-        }
-        
         public bool alwaysVisible = false;
         [SerializeField] public bool disableWhenHide = true;
         public bool compatibleWithOtherCanvas = false;
@@ -29,5 +25,15 @@ namespace ModularFramework
         
         [SerializeField] private UnityEvent onVisible;
         [SerializeField] private UnityEvent onHide;
+
+        public override void RegisterAll()
+        {
+            SingletonRegistry<UISystem>.Instance?.Register(transform);
+        }
+
+        protected override void UnregisterAll()
+        {
+            SingletonRegistry<UISystem>.Instance?.Unregister(transform);
+        }
     }
 }

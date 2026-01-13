@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using EditorAttributes;
 using ModularFramework.Commons;
 using Unity.Cinemachine;
+using Unity.Cinemachine.TargetTracking;
 using UnityEngine;
 
 [RequireComponent(typeof(CinemachineRotateWithFollowTarget),typeof(CinemachineFollow))]
@@ -62,7 +63,7 @@ public abstract class MovingCameraBase : CameraBase {
         var follow = GetComponent<CinemachineFollow>();
         if (follow) {
             follow.FollowOffset = offset;
-            follow.TrackerSettings.BindingMode = Unity.Cinemachine.TargetTracking.BindingMode.LockToTarget;
+            follow.TrackerSettings.BindingMode = BindingMode.LockToTarget;
             follow.TrackerSettings.PositionDamping = Vector3.zero;
             follow.TrackerSettings.RotationDamping = Vector3.zero;
         }
@@ -76,9 +77,9 @@ public abstract class MovingCameraBase : CameraBase {
     protected override void MatchPrevCamPosition()
     {
         base.MatchPrevCamPosition();
-        var prevName = cameraManager.PrevCamera.name;
+        var prevName = cameraManager.Get().PrevCamera.name;
         var curName = this.gameObject.name;
-        if(cameraManager.transitionAcceleration.TryGetValue(new Vector<string>(prevName,curName), out float accModifier)) {
+        if(cameraManager.Get().transitionAcceleration.TryGetValue(new Vector<string>(prevName,curName), out float accModifier)) {
             TempChangeAcceleration(accModifier);
         }
     }

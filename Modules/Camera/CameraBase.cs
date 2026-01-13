@@ -1,11 +1,13 @@
-using Unity.Cinemachine;
-using EditorAttributes;
-using Random = UnityEngine.Random;
-using ModularFramework;
-using UnityEngine;
 using System;
-using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 using System.Threading;
+using Cysharp.Threading.Tasks;
+using EditorAttributes;
+using ModularFramework;
+using ModularFramework.Utility;
+using Unity.Cinemachine;
+using UnityEngine;
+using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(CinemachineCamera), typeof(Marker))]
 public abstract class CameraBase : MonoBehaviour,IMark
@@ -18,7 +20,7 @@ public abstract class CameraBase : MonoBehaviour,IMark
     [SerializeField] protected Color gizmosColor = Color.blue;
     public bool IsDefaultCamera;
 
-    protected CameraManagerSO cameraManager;
+    protected Autowire<CameraManagerSO> cameraManager = new ();
 
     [ReadOnly] public CameraType type;
 
@@ -29,8 +31,6 @@ public abstract class CameraBase : MonoBehaviour,IMark
 #region General
     [SerializeField,Rename("POV Change Speed During Transition")] float _povDelta = 20;
     [ReadOnly] public Vector3 Momentum;
-    
-    public virtual Type[][] RegistryTypes =>new[] {new[]{typeof(CameraManagerSO)}};
 
     public virtual void OnEnter(CameraTransitionType transitionType)
     {
@@ -45,7 +45,6 @@ public abstract class CameraBase : MonoBehaviour,IMark
     
     protected virtual void Start()
     {
-        cameraManager = GetComponent<Marker>().GetRegistry<CameraManagerSO>().Get();
         _vc = GetComponent<CinemachineCamera>();
         _pov = _vc.Lens.FieldOfView;
         POV = _pov;
@@ -81,8 +80,8 @@ public abstract class CameraBase : MonoBehaviour,IMark
 
 #region Transition
     protected virtual void MatchPrevCamPosition() {
-        if(!cameraManager.PrevCamera) return;
-        var prevCam = cameraManager.PrevCamera.GetComponent<CameraBase>();
+        if(!cameraManager.Get().PrevCamera) return;
+        var prevCam = cameraManager.Get().PrevCamera.GetComponent<CameraBase>();
         if(prevCam.focusPoint && focusPoint) {
             var t = FindFocusPointPositionAndFwdDirectionByCamera(prevCam.LastCamPos, prevCam.LastCamRot);
             focusPoint.SetPositionAndRotation(t.Item1, t.Item2);
@@ -158,6 +157,19 @@ public abstract class CameraBase : MonoBehaviour,IMark
     }
 #endregion
 
+    #region IRegistrySO
+    public virtual List<Type> RegisterSelf(HashSet<Type> alreadyRegisteredTypes)
+    {
+        if (alreadyRegisteredTypes.Contains(typeof(CameraManagerSO))) return new ();
+        SingletonRegistry<CameraManagerSO>.Instance?.Register(transform);
+        return new (){typeof(CameraManagerSO)};
+    }
+
+    public virtual void UnregisterSelf()
+    {
+        SingletonRegistry<CameraManagerSO>.Instance?.Unregister(transform);
+    }
+    #endregion
     #region Editor
     protected abstract Transform CameraFocusSpawnPoint();
 

@@ -16,9 +16,9 @@ namespace ModularFramework
     /// can only have ONE in all scenes, usually in the always present UI scene <br/>
     /// load scenes async and initialize Systems
     /// </summary>
-    public class GameBuilder : Singleton<GameBuilder>
+    public class GameBuilder : MonoBehaviour
     {
-        public Action SceneTransitionCompleteCallback;
+        public static Action SceneTransitionCompleteCallback;
         [RuntimeObject] public static bool GameStartFromBuilder {get; private set;}
         
         [Header("Scene Manager")]
@@ -40,18 +40,17 @@ namespace ModularFramework
         
         public Camera MainCamera { get; private set; }
 
-        protected override void Awake()
+        protected void Awake()
         {
-            base.Awake();
+            SingletonRegistry<GameBuilder>.TryRegister(this);
             GameStartFromBuilder = true;
             if (systems == null) return;
             
-            GameRunner.SYSTEMS.Clear();
-            GameRunner.STATIC_REGISTRY_DICT.Clear();
+            Registry<GameSystem>.Clear();
             
             foreach (var sys in systems)
             {
-                GameRunner.InjectSystem(sys);
+                GameRunner.InjectSystem(sys, true);
             }
         }
 

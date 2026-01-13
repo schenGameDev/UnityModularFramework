@@ -1,8 +1,7 @@
-using System;
 using EditorAttributes;
+using ModularFramework;
 using Unity.Mathematics;
 using UnityEngine;
-using ModularFramework;
 using Void = EditorAttributes.Void;
 
 public class FollowPlayerCamera : MovingCameraBase
@@ -29,8 +28,6 @@ public class FollowPlayerCamera : MovingCameraBase
     private Vector2 _lookDeltaMovement;
 
     public Vector3 FreeMoveViewDirection => focusPoint.forward;
-    
-    public override Type[][] RegistryTypes =>new[] {new[] {typeof(CameraManagerSO)}};
 
     public FollowPlayerCamera() {
         type = CameraType.FOLLOW;

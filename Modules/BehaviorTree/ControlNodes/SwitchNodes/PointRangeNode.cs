@@ -13,8 +13,8 @@ public class PointRangeNode : SwitchNode
     {
         _minSqr = MinMaxRange.x>0? MinMaxRange.x*MinMaxRange.x : 0;
         _maxSqr = MinMaxRange.y>0 && MinMaxRange.y>MinMaxRange.x? MinMaxRange.y*MinMaxRange.y : _minSqr;
-        _targetTf = tree.Manager.sensorSystem.GetTransform(TargetName, false);
-        _centerTf = tree.Manager.sensorSystem.GetTransform(CenterName,false);
+        _targetTf = tree.Manager.sensorSystem.Get().GetTransform(TargetName, false);
+        _centerTf = tree.Manager.sensorSystem.Get().GetTransform(CenterName,false);
     }
     protected override bool IsSwitchState() {
         if(tree== null) return false;

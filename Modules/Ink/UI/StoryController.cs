@@ -15,14 +15,14 @@ public class StoryController : MonoBehaviour
     
     public void StartStory(string storyName)
     {
-        GameRunner.GetSystem<InkSystemSO>()
+        SingletonRegistry<InkSystemSO>.Get()
             .Do(so =>
             {
                 so.StartStory(storyName);
                 so.LoadScene();
                 so.Next();
             });
-        GameRunner.GetSystem<NoteSystemSO>().Do(sys => sys.LoadNotes());
+        SingletonRegistry<NoteSystemSO>.Get().Do(sys => sys.LoadNotes());
     }
     
     public void SkipOrNext()
@@ -47,7 +47,7 @@ public class StoryController : MonoBehaviour
     
     public bool CanSave()
     {
-        var inkSys = GameRunner.GetSystem<InkSystemSO>();
+        var inkSys = SingletonRegistry<InkSystemSO>.Get();
         return inkSys.HasValue && inkSys.Get().CanSave;
     } 
 }

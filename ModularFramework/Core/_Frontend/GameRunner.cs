@@ -1,19 +1,15 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using AYellowpaper.SerializedCollections;
 using EditorAttributes;
-using ModularFramework.Commons;
 using ModularFramework.Utility;
 using UnityEditor;
 using UnityEngine;
 using UnityTimer;
 
 namespace ModularFramework {
-    public class GameRunner : Singleton<GameRunner>
+    public class GameRunner : MonoBehaviour
     {
-        public static readonly List<GameSystem> SYSTEMS = new();
-
         [Header("Game Modules")]
         [SerializeField,HideLabel,HelpBox("In boot-up order", MessageMode.None)]
         [OnValueChanged(nameof(AddBootUpParameter))] private GameModule[] modules;
@@ -28,29 +24,27 @@ namespace ModularFramework {
         public Transform Player => references["PLAYER"].transform;
 
         readonly List<GameModule> _framelyUpdatedModules = new();
+        private Autowire<GameBuilder> _builder = new();
 
     #region Runtime
-        protected override void Awake() {
-            base.Awake();
+        protected void Awake() {
+            SingletonRegistry<GameRunner>.TryRegister(this);
             LoadSystemsForDev();
             foreach(var module in modules) {
-                if(module is IRegistrySO so) {
-                    _registryDict.Add(module.GetType(), so);
-                }
                 module.SceneAwake();
                 if(!module.CentrallyManaged && module.OperateEveryFrame) {
                     _framelyUpdatedModules.Add(module);
                 }
             }
 
-            foreach (var sys in SYSTEMS)
+            foreach (var sys in Registry<GameSystem>.All)
             {
                 sys.SceneAwake();
             }
 
-            foreach (var m in PersistentBehaviour.INSTANCES)
+            foreach (var m in Registry<PersistentBehaviour>.All)
             {
-                m.LoadScene(GameBuilder.Instance.NextScene);
+                m.LoadScene(_builder.Get().NextScene);
             }
             
             Time.timeScale = 1;
@@ -78,11 +72,8 @@ namespace ModularFramework {
         private void SceneReady()
         {
             _timer.Dispose();
-            if (GameBuilder.Instance)
-            {
-                GameBuilder.Instance.SceneTransitionCompleteCallback?.Invoke();
-                GameBuilder.Instance.SceneTransitionCompleteCallback = null;
-            }
+            GameBuilder.SceneTransitionCompleteCallback?.Invoke();
+            GameBuilder.SceneTransitionCompleteCallback = null;
         }
 
         private void Update()
@@ -105,9 +96,9 @@ namespace ModularFramework {
                 }
             }
 
-            foreach (var m in PersistentBehaviour.INSTANCES)
+            foreach (var m in Registry<PersistentBehaviour>.All)
             {
-                m.DestroyScene(GameBuilder.Instance.NextScene);
+                m.DestroyScene(_builder.Get().NextScene);
             }
         }
 
@@ -136,127 +127,21 @@ namespace ModularFramework {
     public GameObject GetInSceneGameObject(string keyword) => references[keyword];
     
     #endregion
-
-    #region Module
-
-        private readonly Dictionary<Type, GameModule> _moduleQuickAccessDict = new();
-        public Optional<T> GetModule<T>() where T : GameModule
+    
+    #region System
+        public static void InjectSystem<T>(T sys, bool cleanExisting = false) where T : GameSystem
         {
-            Type type = typeof(T);
-            GameModule module;
-            if (_moduleQuickAccessDict.TryGetValue(type, out module))
+            if(cleanExisting) SingletonRegistry<T>.Clear();
+            if (!SingletonRegistry<T>.TryRegister(sys))
             {
-                return module ==null? Optional<T>.None() : (T) module;
-            }
-            module = modules.First(m => (m as T) != null);
-            if(module == null) module = GetSystem<T>().OrElse(null);
-            if(module != null) {
-                _moduleQuickAccessDict.Add(type, module);
-                return (T) module;
-            }
-
-            _moduleQuickAccessDict.Add(type, null);
-            return Optional<T>.None();
-        }
-        
-        public Optional<T> GetModuleOrSystem<T>() where T : GameSystem
-        {
-            Type type = typeof(T);
-            if (type.IsSubclassOf(typeof(GameModule)))
-            {
-                GameModule module;
-                if (_moduleQuickAccessDict.TryGetValue(type, out module))
-                {
-                    return module ==null? Optional<T>.None() : (T)(GameSystem) module;
-                }
-                module = modules.First(m => (m as T) != null);
-                
-                if(module != null) {
-                    _moduleQuickAccessDict.Add(type, module);
-                    return (T)(GameSystem) module;
-                }
-            }
+                Debug.LogWarning("System of type " + sys.GetType().Name + " already exists");
+            } 
             
-            return GetSystem<T>();
+            sys.Start();
+            Registry<GameSystem>.TryAdd(sys);
         }
     #endregion
     
-    #region System
-        public static Optional<T> GetSystem<T>() where T : GameSystem {
-            GameSystem sys = SYSTEMS.FirstOrDefault(m => m.GetType() == typeof(T));
-            if(sys) {
-                return (T) sys;
-            }
-            Debug.LogWarning("System of type " + typeof(T) + " not found");
-            return Optional<T>.None();
-        }
-
-        public static void InjectSystem<T>(T sys) where T : GameSystem
-        {
-            if (SYSTEMS.Any(s=> s.GetType() == sys.GetType()))
-            {
-                Debug.LogWarning("System of type " + sys.GetType().Name + " already exists");
-                return;
-            }
-            if(sys is IRegistrySO so) 
-            {
-                STATIC_REGISTRY_DICT.Add(sys.GetType(), so);
-            }
-            
-            sys.Start();
-            SYSTEMS.Add(sys);
-        }
-    #endregion
-
-    #region Registry
-        private readonly Dictionary<Type,IRegistrySO> _registryDict = new();
-        public static readonly Dictionary<Type,IRegistrySO> STATIC_REGISTRY_DICT = new();
-        public bool Register(Type registryType, Transform marker) {
-            if(_registryDict.TryGetValue(registryType, out var registry)) {
-                registry.Register(marker);
-                return true;
-            }
-            return false;
-        }
-        public bool Unregister(Type registryType, Transform marker) {
-            if(_registryDict.TryGetValue(registryType, out var registry)) {
-                registry.Unregister(marker);
-                return true;
-            }
-            return false;
-        }
-        public Optional<T> GetRegistry<T>() where T : ScriptableObject,IRegistrySO {
-            if(_registryDict.TryGetValue(typeof(T), out var registry)) {
-                return (T) registry;
-            }
-            return GetSystemRegistry<T>();
-        }
-        
-        public static Optional<T> GetSystemRegistry<T>() where T : ScriptableObject,IRegistrySO
-        {
-            if(STATIC_REGISTRY_DICT.TryGetValue(typeof(T), out var registry)) {
-                return (T) registry;
-            }
-            DebugUtil.Error("Registry of type " + typeof(T) + " not found");
-            return Optional<T>.None();
-        }
-        public static bool RegisterSystem(Type registryType, Transform marker) {
-            if(STATIC_REGISTRY_DICT.TryGetValue(registryType, out var registry)) {
-                registry.Register(marker);
-                return true;
-            }
-            return false;
-        }
-        public static bool UnregisterSystem(Type registryType, Transform marker) {
-            if(STATIC_REGISTRY_DICT.TryGetValue(registryType, out var registry)) {
-                registry.Unregister(marker);
-                return true;
-            }
-            return false;
-        }
-
-    #endregion
-
     #region Event Channel
         public void RegisterEventChannel(IEventChannel channel) {
             if(eventChannels.AddIfAbsent(channel as ScriptableObject, channel.Live)) {
@@ -363,12 +248,11 @@ namespace ModularFramework {
         if(GameBuilder.GameStartFromBuilder) return;
         if (systems == null) return;
             
-        SYSTEMS.Clear();
-        STATIC_REGISTRY_DICT.Clear();
+        Registry<GameSystem>.Clear();
             
         foreach (var sys in systems)
         {
-            InjectSystem(sys);
+            InjectSystem(sys,true);
         }
     }
 
@@ -376,9 +260,8 @@ namespace ModularFramework {
     {
         if(GameBuilder.GameStartFromBuilder) return;
         if (systems == null) return;
-        SYSTEMS.Clear();
-        STATIC_REGISTRY_DICT.Clear();
-            
+        
+        Registry<GameSystem>.Clear();
         foreach(var sys in systems) {
             sys.Destroy();
         }

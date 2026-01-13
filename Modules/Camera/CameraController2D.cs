@@ -1,9 +1,9 @@
-using ModularFramework;
+using ModularFramework.Utility;
 using UnityEngine;
 using UnityTimer;
 
 [RequireComponent(typeof(Camera))]
-public class CameraController2D : Singleton<CameraController2D>
+public class CameraController2D : MonoBehaviour
 {
     [SerializeField] private float time = 0.5f;
     [SerializeField] private float maxZoom = 8;
@@ -19,9 +19,9 @@ public class CameraController2D : Singleton<CameraController2D>
     private CountdownTimer _timer;
 
     
-    protected override void Awake()
+    protected void Awake()
     {
-        base.Awake();
+        SingletonRegistry<CameraController2D>.TryRegister(this);
         _camera = GetComponent<Camera>();
         _defaultZoom = _camera.orthographicSize;
         _defaultCenter = _camera.transform.position;

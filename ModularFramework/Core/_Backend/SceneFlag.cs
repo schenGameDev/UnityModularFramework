@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ModularFramework.Utility;
 using UnityEngine;
 
 namespace ModularFramework
@@ -25,8 +26,8 @@ namespace ModularFramework
 
         public void Inject(FieldInfo field, object instance)
         {
-            if (!GameRunner.Instance) return;
-            string value = GameRunner.Instance.GetInSceneFlag(Keyword);
+            if (!SingletonRegistry<GameRunner>.TryGet(out var runner)) return;
+            string value = runner.GetInSceneFlag(Keyword);
             Type type = field.FieldType;
             if (type == typeof(string)) field.SetValue(instance, value);
             else if (type == typeof(int)) field.SetValue(instance, int.Parse(value));

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 
 namespace ModularFramework.Commons {
-    public struct Optional<T> {
+    public struct @Optional<T> {
         private static readonly Optional<T> NoValue = new Optional<T>();
 
         readonly bool hasValue;

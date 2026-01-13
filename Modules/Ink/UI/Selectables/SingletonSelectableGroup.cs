@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ModularFramework;
 using ModularFramework.Utility;
 using TMPro;
@@ -42,7 +43,6 @@ public class SingletonSelectableGroup : Selectable, ISelectableGroup
         SetUp(choice.hide? $"<color=\"grey\">{text}</color> <color=\"red\">{subtext}</color>" : text);
     }
     
-    public Type[][] RegistryTypes => new[] { new[] {typeof(InkUIIntegrationSO)}};
     public void ResetState()
     {
         gameObject.SetActive(false);
@@ -82,4 +82,17 @@ public class SingletonSelectableGroup : Selectable, ISelectableGroup
         OnSelect += _ => onSelect();
     }
     
+    #region IRegistrySO
+    public List<Type> RegisterSelf(HashSet<Type> alreadyRegisteredTypes)
+    {
+        if (alreadyRegisteredTypes.Contains(typeof(InkUIIntegrationSO))) return new ();
+        SingletonRegistry<InkUIIntegrationSO>.Instance?.Register(transform);
+        return new () {typeof(InkUIIntegrationSO)};
+    }
+
+    public void UnregisterSelf()
+    {
+        SingletonRegistry<InkUIIntegrationSO>.Instance?.Unregister(transform);
+    }
+    #endregion
 }

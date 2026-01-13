@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using ModularFramework.Utility;
 using UnityEngine;
 
 namespace ModularFramework
@@ -24,13 +25,13 @@ namespace ModularFramework
 
         public void Inject(FieldInfo field, object instance)
         {
-            if (!GameRunner.Instance)
+            if (!SingletonRegistry<GameRunner>.TryGet(out var runner))
             {
                 Debug.LogError($"{field.Name} inject failed. GameRunner instance not found.");
                 return;
             }
             Type type = field.FieldType;
-            GameObject go = GameRunner.Instance.GetInSceneGameObject(Keyword);
+            GameObject go = runner.GetInSceneGameObject(Keyword);
             if (go == null)
             {
                 Debug.LogError($"{Keyword} not found in scene. Please make sure the keyword is linked to a gameObject in GameRunner.");

@@ -2,14 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ModularFramework;
+using ModularFramework.Utility;
 using UnityEngine;
-using UnityTimer;
 
 [RequireComponent(typeof(Marker))]
 public class ChatBubbleQueue : TextPrinterBase,IMark,ISavable
 {
-    public Type[][] RegistryTypes => new[] { new []{typeof(InkUIIntegrationSO)}};
-    
     [SerializeField] private int maxBubbles = 5;
     [SerializeField] private TextPrinter[] bubblePrefabs;
 
@@ -97,5 +95,19 @@ public class ChatBubbleQueue : TextPrinterBase,IMark,ISavable
         }
     }
 
+    #endregion
+    
+    #region IRegistrySO
+    public List<Type> RegisterSelf(HashSet<Type> alreadyRegisteredTypes)
+    {
+        if (alreadyRegisteredTypes.Contains(typeof(InkUIIntegrationSO))) return new ();
+        SingletonRegistry<InkUIIntegrationSO>.Instance?.Register(transform);
+        return new(){typeof(InkUIIntegrationSO)};
+    }
+
+    public void UnregisterSelf()
+    {
+        SingletonRegistry<InkUIIntegrationSO>.Instance?.Unregister(transform);
+    }
     #endregion
 }

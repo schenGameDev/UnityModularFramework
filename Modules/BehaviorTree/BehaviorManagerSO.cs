@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ModularFramework;
@@ -8,19 +7,15 @@ using UnityEngine;
 public class BehaviorManagerSO : GameModule<BehaviorManagerSO>,IRegistrySO
 {
     [RuntimeObject] private readonly Dictionary<Transform,BTMarker> _btDict = new();
-    [RuntimeObject] public SensorSystemSO sensorSystem;
-    [RuntimeObject] public PlayerStatsSO playerStats;
+    [RuntimeObject] public Autowire<SensorSystemSO> sensorSystem;
+    [RuntimeObject] public Autowire<PlayerStatsSO> playerStats;
     [SceneRef("PLAYER")] public Transform player;
     
     public BehaviorManagerSO() {
         updateMode = UpdateMode.EVERY_N_FRAME;
     }
-    
-    protected override void OnAwake()
-    {
-        sensorSystem = GameRunner.GetSystem<SensorSystemSO>().OrElseThrow(new Exception("SensorSystem not found."));
-        playerStats = GameRunner.GetSystem<PlayerStatsSO>().OrElseThrow(new Exception("PlayerStatsSO not found."));
-    }
+
+    protected override void OnAwake() { }
 
     protected override void OnStart() { }
 

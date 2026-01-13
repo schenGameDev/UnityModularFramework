@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using EditorAttributes;
 using ModularFramework;
+using ModularFramework.Utility;
 using Unity.Mathematics;
 using UnityEngine;
-using ModularFramework.Utility;
 using Void = EditorAttributes.Void;
 
 public class LockTargetCamera : MovingCameraBase
@@ -38,19 +39,11 @@ public class LockTargetCamera : MovingCameraBase
     [HideInInspector,SerializeField,Rename("Roll Slow Within"),Suffix("deg")]  private float closeUpNoRollAngle = 5;
 
     [HideInInspector,SerializeField,Range(0,1)] private float focusRadius=0.3f;
-    private LockManagerSO _lockManager;
-    
-    public override Type[][] RegistryTypes => new[] {new[]{typeof(CameraManagerSO)} , new[]{typeof(LockManagerSO)}};
+    private Autowire<LockManagerSO> _lockManager = new ();
 
     public LockTargetCamera() {
         type = CameraType.LOCK;
         cameraOffSet = new(0,0,-3);
-    }
-
-    protected override void Start()
-    {
-        base.Start();
-        _lockManager = GetComponent<Marker>().GetRegistry<LockManagerSO>().Get();
     }
 
     protected override void Update()
@@ -77,7 +70,7 @@ public class LockTargetCamera : MovingCameraBase
     private float _targetOffCenterRatio;
 
     [ReadOnly,SerializeField] private bool isMovingToCenter = true;
-    public bool LostTarget() => !_lockManager.LockTarget;
+    public bool LostTarget() => !_lockManager.Get().LockTarget;
     private bool IsTargetInFocusRadius() => IsTargetInScreenRadius(focusRadius);
     private bool IsTargetInScreenCenter() => IsTargetInScreenRadius(0.05f);
 
@@ -96,7 +89,7 @@ public class LockTargetCamera : MovingCameraBase
             return;
         }
 
-        var targetToPlayer = _lockManager.LockTarget.position - player.position;
+        var targetToPlayer = _lockManager.Get().LockTarget.position - player.position;
         var dist = targetToPlayer.magnitude;
         var camHeight = GetCameraHeight(dist);
 
@@ -154,8 +147,8 @@ public class LockTargetCamera : MovingCameraBase
     
     private float GetOffCenterRatio()
     {
-        if(!_lockManager.LockTarget) return 0;
-        Vector2 targetScreenPos = Camera.main.WorldToScreenPoint(_lockManager.LockTarget.position);
+        if(!_lockManager.Get().LockTarget) return 0;
+        Vector2 targetScreenPos = Camera.main.WorldToScreenPoint(_lockManager.Get().LockTarget.position);
         var screenCenter = new Vector2(Screen.width / 2, Screen.height / 2);
         var screenEdgeDistance = math.min(screenCenter.x, screenCenter.y);
         return Vector2.Distance(targetScreenPos, screenCenter) /  screenEdgeDistance;
@@ -183,9 +176,9 @@ public class LockTargetCamera : MovingCameraBase
 
     private float _rollAccModifier = 1;
     private void RollCamera() {
-        if(!_lockManager.LockTarget) return;
-        var sqrDist = (_lockManager.LockTarget.position - player.position).sqrMagnitude;
-        var dir = _lockManager.LockTarget.position - focusPoint.position;
+        if(!_lockManager.Get().LockTarget) return;
+        var sqrDist = (_lockManager.Get().LockTarget.position - player.position).sqrMagnitude;
+        var dir = _lockManager.Get().LockTarget.position - focusPoint.position;
 
         if(sqrDist > minViewAngleOutOfDistance.y * minViewAngleOutOfDistance.y &&
            dir.y < 0) {
@@ -207,7 +200,7 @@ public class LockTargetCamera : MovingCameraBase
 
     public override void OnEnter(CameraTransitionType transitionType) {
         base.OnEnter(transitionType);
-        var targetToPlayer = _lockManager.LockTarget.position - player.position;
+        var targetToPlayer = _lockManager.Get().LockTarget.position - player.position;
         UpdateCurrentOffset(targetToPlayer.magnitude);
         if(transitionType != CameraTransitionType.NONE) MatchPrevCamPosition();
         if(transitionType == CameraTransitionType.MATCH_LAST_ROT) {
@@ -218,6 +211,25 @@ public class LockTargetCamera : MovingCameraBase
 
     protected override Transform CameraFocusSpawnPoint() => player;
 
-    public bool LockTargetExist() => _lockManager.LockTargetExist();
+    public bool LockTargetExist() => _lockManager.Get().LockTargetExist();
+    
+    
+    #region IRegistrySO
+    public override List<Type> RegisterSelf(HashSet<Type> alreadyRegisteredTypes)
+    {
+        List<Type> types = base.RegisterSelf(alreadyRegisteredTypes);
+        if (alreadyRegisteredTypes.Contains(typeof(LockManagerSO))) return types;
+        
+        SingletonRegistry<LockManagerSO>.Instance?.Register(transform);
+        types.Add(typeof(LockManagerSO));
+        return types;
+    }
+
+    public override void UnregisterSelf()
+    {
+        base.UnregisterSelf();
+        SingletonRegistry<LockManagerSO>.Instance?.Unregister(transform);
+    }
+    #endregion
 
 }

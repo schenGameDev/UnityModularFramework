@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using EditorAttributes;
 using ModularFramework;
+using ModularFramework.Utility;
 using UnityEngine;
 
 [RequireComponent(typeof(Marker))]
@@ -8,7 +10,6 @@ public abstract class Playable : MonoBehaviour,IMark,ISavable
 {
     [Rename("name")]public string playbaleName;
     public bool disableOnAwake = true;
-    public Type[][] RegistryTypes => new[] { new []{typeof(InkUIIntegrationSO)}};
     
     protected Action<string> OnTaskComplete;
     
@@ -30,5 +31,19 @@ public abstract class Playable : MonoBehaviour,IMark,ISavable
         if(gameObject.activeSelf) Play();
     }
 
+    #endregion
+    
+    #region IRegistrySO
+    public List<Type> RegisterSelf(HashSet<Type> alreadyRegisteredTypes)
+    {
+        if (alreadyRegisteredTypes.Contains(typeof(InkUIIntegrationSO))) return new ();
+        SingletonRegistry<InkUIIntegrationSO>.Instance?.Register(transform);
+        return new () {typeof(InkUIIntegrationSO)};
+    }
+
+    public void UnregisterSelf()
+    {
+        SingletonRegistry<InkUIIntegrationSO>.Instance?.Unregister(transform);
+    }
     #endregion
 }
