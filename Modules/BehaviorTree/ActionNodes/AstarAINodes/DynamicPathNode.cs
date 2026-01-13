@@ -1,40 +1,41 @@
+using System.Collections.Generic;
 using ModularFramework.Utility;
 using UnityEngine;
 
 public class DynamicPathNode : AstarAINode
 {
-    [SerializeField] private string _targetName;
-    [SerializeField] private string _pathName;
-    [SerializeField] private bool _recalculateAtEachWaypoint;
+    [SerializeField] private bool recalculateAtEachWaypoint;
 
 
     private Vector3 _finalTarget;
     private int _currentIndex = -1;
-    private Vector3[] _currentPath;
     private bool _started = false;
-    public override string Description() => "Follow target with a path";
-
+    private Vector3[] _currentPath;
+    private List<Transform> _targets = new();
+    
     protected override void OnEnter()
     {
         base.OnEnter();
         _started = false;
         _currentIndex = -1;
-        _currentPath = tree.Me.GetComponent<WaypointCollection>().GetPath(_pathName);
+        _currentPath = enemyMove.Path;
+        _targets = tree.blackboard.Get<Transform>(BTBlackboard.KEYWORD_TARGET);
+        
     }
 
 
     protected override State OnUpdate()
     {
-        if(string.IsNullOrEmpty(_targetName)) return State.Failure;
+        if(_targets == null || _targets.Count == 0) return State.Failure;
 
         if(!_started) {
-            var targetTf = tree.Manager.sensorSystem.GetTransform(_targetName, false);
+            var targetTf = _targets[0];
             if(targetTf) {
                 _started = true;
                 _finalTarget = targetTf.position;
             }
-        } else if(_recalculateAtEachWaypoint && (tree.AI.FixedTargetReached || tree.AI.PathNotFound)) {
-            var targetTf = tree.Manager.sensorSystem.GetTransform(_targetName, false);
+        } else if(recalculateAtEachWaypoint && (tree.AI.TargetReached || tree.AI.PathNotFound)) {
+            var targetTf = _targets[0];
             if(targetTf) {
                 _finalTarget = targetTf.position;
             }
@@ -42,12 +43,12 @@ public class DynamicPathNode : AstarAINode
         }
 
         if(_started) {
-            if(_currentIndex==-1 || tree.AI.FixedTargetReached || tree.AI.PathNotFound) {
+            if(_currentIndex==-1 || tree.AI.TargetReached || tree.AI.PathNotFound) {
                 _currentIndex++;
                 if(_currentIndex==_currentPath.Length) {
-                    return tree.AI.FixedTargetReached ? State.Success : State.Failure;
+                    return tree.AI.TargetReached ? State.Success : State.Failure;
                 }
-                tree.AI.SetNewTarget(GetWaypoint(_finalTarget, _currentPath[_currentIndex]), speed, false);
+                tree.AI.SetNewTarget(GetWaypoint(_finalTarget, _currentPath[_currentIndex]), enemyMove.speed, false);
             }
         }
 
@@ -68,7 +69,7 @@ public class DynamicPathNode : AstarAINode
         if(!_started) {
             _started = true;
             _finalTarget = target;
-        } else if(_recalculateAtEachWaypoint) {
+        } else if(recalculateAtEachWaypoint) {
             _finalTarget = target;
         }
     }
@@ -83,5 +84,10 @@ public class DynamicPathNode : AstarAINode
         v.y=0;
         v = rot * v;
         return self + v;
+    }
+
+    DynamicPathNode()
+    {
+        description = "Follow target with a path relative to target";
     }
 }

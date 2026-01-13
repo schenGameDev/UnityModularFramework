@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class DelayExitNode : DecoratorNode
 {
-    public float Duration=1;
+    public float duration=1;
     private float _startTime;
     private bool _childComplete, _start;
     private State _childState;
@@ -19,12 +19,12 @@ public class DelayExitNode : DecoratorNode
                 _startTime = Time.time;
                 _start = true;
             } else {
-                if(Time.time - _startTime > Duration) {
+                if(Time.time - _startTime > duration) {
                     return _childState;
                 }
             }
         } else {
-            _childState = Child.Run();
+            _childState = child.Run();
             _childComplete = _childState != State.Running;
         }
 
@@ -34,9 +34,12 @@ public class DelayExitNode : DecoratorNode
     public override BTNode Clone()
     {
         var clone = base.Clone() as DelayExitNode;
-        clone.Duration = Duration;
+        clone.duration = duration;
         return clone;
     }
 
-    public override string Description() => "Child exit delay for duration";
+    DelayExitNode()
+    {
+        description = "Child delays exit for random duration";
+    }
 }

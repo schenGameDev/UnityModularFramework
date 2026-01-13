@@ -1,19 +1,16 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class ActionNode : BTNode
 {
-    [SerializeField] private string _animFlags;
+    public override List<BTNode> GetChildren() => new();
+    public override bool AddChild(BTNode newChild) => false;
+    public override bool RemoveChild(BTNode childToRemove) => false;
+    public override void ClearChildren() { }
+    public override void CascadeExit() => Exit();
 
-    protected BTMarker runner = null;
+    public override OutputPortDefinition[] OutputPortDefinitions => Array.Empty<OutputPortDefinition>();
 
-    private void GetRunner() {
-        runner = tree.Me.GetComponent<BTMarker>();
-    }
-
-    protected override void OnEnter()
-    {
-        if(!runner) GetRunner();
-        if(!string.IsNullOrWhiteSpace(_animFlags)) runner.PlayAnim(_animFlags);
-    }
-
+    public override Color HeaderColor => new Color32(55, 171, 173, 255);
 }

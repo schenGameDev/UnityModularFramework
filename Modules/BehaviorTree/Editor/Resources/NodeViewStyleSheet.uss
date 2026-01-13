@@ -12,10 +12,25 @@
 
 #input {
     align-items: center;
+    padding-top: 3px;
 }
 
 #output {
+    padding-bottom: 3px;
     align-items: center;
+}
+
+.port {
+    min-width: 35px;
+    min-height: 20px;
+}
+
+.port .connectorText {
+    font-size: 8px;
+}
+
+.port .connectorBox {
+    border-width: 2px;
 }
 
 #selection-border {
@@ -75,23 +90,6 @@
 #divider {
     min-height: 1px;
     background-color: rgb(105, 104, 104);
-}
-
-.action #input {
-    background-color: rgb(61, 234, 51);
-}
-
-.decorator #input {
-    background-color: rgb(234, 170, 14);
-}
-
-.control #input {
-    background-color: rgb(63, 128, 247);
-}
-
-.root #input {
-    background-color: rgb(251, 68, 68);
-    min-height: 22px;
 }
 
 #node-state {

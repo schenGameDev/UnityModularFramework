@@ -1,0 +1,42 @@
+using System.Collections.Generic;
+using System.Linq;
+using EditorAttributes;
+using UnityEngine;
+
+public class FindTagInRangeNode : FindTargetInRangeNode<Transform>
+{
+    [TagDropdown] public string tag;
+        
+    private List<Transform> targets = new ();
+    protected override void OnEnter()
+    {
+        targets.Clear();
+        base.OnEnter();
+        if (targets is { Count: > 0 })
+        {
+            tree.blackboard.Add(BTBlackboard.KEYWORD_TARGET, targets);
+        }
+    }
+    protected override bool Condition()
+    {
+        if (enemyRange == null) return  false;
+        var tfWithTag = GameObject.FindGameObjectsWithTag(tag).Select(go => go.transform);
+        var filteredTargets = ITransformTargetFilter.Filter(tfWithTag, tree.Me, enemyRange.targetFilters);
+        targets = enemyRange.targetSelector.GetStrategy(tree.Me)(filteredTargets).ToList();
+        return targets is { Count: > 0 };
+    }
+    
+
+    public override BTNode Clone()
+    {
+        var clone = base.Clone() as FindTagInRangeNode;
+        clone.tag=tag;
+        return clone;
+    }
+
+    FindTagInRangeNode()
+    {
+        description = "Find the closest target with Tag in/out of host range\n\n" +
+                      "<b>Sends</b>: 'Target' to blackboard";
+    }
+}

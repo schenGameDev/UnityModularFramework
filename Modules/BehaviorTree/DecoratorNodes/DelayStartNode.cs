@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class DelayStartNode : DecoratorNode
 {
-    public float Duration=1;
+    public float duration=1;
     private float _startTime;
 
     protected override void OnEnter() {
@@ -10,8 +10,8 @@ public class DelayStartNode : DecoratorNode
     }
     protected override State OnUpdate()
     {
-        if(Time.time - _startTime > Duration) {
-            return Child.Run();
+        if(Time.time - _startTime > duration) {
+            return child.Run();
         }
         return State.Running;
     }
@@ -19,9 +19,12 @@ public class DelayStartNode : DecoratorNode
     public override BTNode Clone()
     {
         var clone = base.Clone() as DelayStartNode;
-        clone.Duration = Duration;
+        clone.duration = duration;
         return clone;
     }
 
-    public override string Description() => "Child start delay for duration";
+    protected DelayStartNode()
+    {
+        description  = "Child start delay for duration";
+    }
 }

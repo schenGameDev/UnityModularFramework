@@ -2,19 +2,23 @@ using UnityEngine;
 
 public class RandomDelayStartNode : DelayStartNode
 {
-    public Vector2 MinMaxDuration;
+    public Vector2 minMaxDuration;
 
     protected override void OnEnter() {
         base.OnEnter();
-        Duration = Random.Range(MinMaxDuration.x, MinMaxDuration.y);
+        duration = Random.Range(minMaxDuration.x, minMaxDuration.y);
     }
 
     public override BTNode Clone()
     {
         var clone = base.Clone() as RandomDelayStartNode;
-        clone.MinMaxDuration = MinMaxDuration;
+        clone.minMaxDuration = minMaxDuration;
         return clone;
     }
 
-    public override string Description() => "Child start delay for random duration";
+    RandomDelayStartNode()
+    {
+        description = "Child delays start for random duration";
+    }
+    
 }

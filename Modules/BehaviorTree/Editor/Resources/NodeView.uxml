@@ -1,5 +1,5 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
-    <Style src="project://database/Assets/Scripts/BehaviorTree/Editor/Resources/NodeViewStyleSheet.uss?fileID=7433441132597879392&amp;guid=8a7b4bab72c8cc245bbe183229145fcc&amp;type=3#NodeViewStyleSheet" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="True">
+    <Style src="NodeViewStyleSheet.uss" />
     <ui:VisualElement name="node-state" style="flex-grow: 1;" />
     <ui:VisualElement name="node-border">
         <ui:VisualElement name="contents">

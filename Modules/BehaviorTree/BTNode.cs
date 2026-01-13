@@ -1,40 +1,134 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using EditorAttributes;
+using ModularFramework;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using Void = EditorAttributes.Void;
 
 public abstract class BTNode : ScriptableObject
 {
     public enum State {
         Running,Success,Failure
     }
-
-    public State NodeState = State.Running;
-    [HideInInspector] public string Guid;
-    [HideInInspector] public Vector2 Position;
+    
+    public string title;
+    
+    [Title(nameof(description))]
+    private Void _descriptionHolder;
+    protected string description;
+    
+    [ReadOnly] public State nodeState;
+    [ReadOnly] public string guid;
+    [HideInInspector] public Vector2 position;
     [HideInInspector] public BehaviorTreeSO tree;
+    
+    
+    #region BT Editor
+    
 
-    public abstract string Description();
     public virtual bool IsNodeChildrenFull() => false;
+    public abstract List<BTNode> GetChildren();
+    public abstract bool AddChild(BTNode newChild);
+    public abstract bool RemoveChild(BTNode childToRemove);
+    public abstract void ClearChildren();
 
-    public bool Started = false;
+    public void Initialize(string guid)
+    {
+        var typeName = GetType().Name;
+        if (string.IsNullOrEmpty(guid))
+        {
+            Debug.LogError($"{GetType()} has empty guid");
+            name = typeName;
+        }
+        else
+        {
+            name = guid;
+        }
+        
+        title = typeName.EndsWith("Node") ? typeName[..^4] : typeName;
+        this.guid = guid;
+    }
+    
+    public virtual bool IsParentTypeAllowed(BTNode parentNode)
+    {
+        return AllowedParentTypes.Count <= 0 || AllowedParentTypes.Any(t => parentNode.GetType() == t || parentNode.GetType().IsSubclassOf(t));
+    }
+    
+    public bool IsChildTypeAllowed(BTNode childNode)
+    {
+        return AllowedChildTypes.Count <= 0 || AllowedChildTypes.Any(t => childNode.GetType() == t || childNode.GetType().IsSubclassOf(t));
+    }
+    
+    protected virtual List<Type> AllowedParentTypes => new();
+    protected virtual List<Type> AllowedChildTypes => new();
+    
+    public abstract Color HeaderColor { get; }
+    
+    public abstract OutputPortDefinition[] OutputPortDefinitions { get; }
+    [HideInInspector] public string parentPortName;
+    public int GetOutputPortIndex(string portName)
+    { 
+        if(string.IsNullOrEmpty(portName)) return 0;
+        var index = Array.FindIndex(OutputPortDefinitions, def => def.portName == portName);
+        return index >= 0 ? index : 0;
+    }
+    
+    protected List<BTNode> GetChildByPortName(string portName)
+    {
+        return GetChildren().Where(child => child.parentPortName == portName).ToList();
+    }
+
+    
+    public class OutputPortDefinition
+    {
+        public string portName;
+        public Port.Capacity portCapacity;
+
+        public OutputPortDefinition(Port.Capacity portCapacity, string portName="")
+        {
+            this.portName = portName;
+            this.portCapacity = portCapacity;
+        }
+    }
+    #endregion
+
+    #region Runtime
+    [ReadOnly] public bool started = false;
     public virtual State Run() {
-        if(!Started) {
+        if(!started) {
             OnEnter();
-            Started = true;
+            started = true;
         }
 
-        NodeState = OnUpdate();
+        nodeState = OnUpdate();
 
-        if(NodeState != State.Running) {
+        if(nodeState != State.Running) {
             OnExit();
-            Started = false;
+            started = false;
         }
 
-        return NodeState;
+        return nodeState;
     }
 
     public virtual void Exit() {
         OnExit();
-        Started = false;
+        started = false;
+    }
+
+    public abstract void CascadeExit();
+
+    public List<BTNode> RecursiveGetChildren(Func<BTNode, bool> stopCondition = null)
+    {
+        List<BTNode> children = new List<BTNode>();
+        foreach (var child in GetChildren())
+        {
+            children.Add(child);
+            if(stopCondition!=null && stopCondition(child)) continue;
+            children.AddRange(child.RecursiveGetChildren(stopCondition));
+        }
+        return children;
     }
 
     protected virtual void OnEnter() {}
@@ -46,8 +140,36 @@ public abstract class BTNode : ScriptableObject
         return Instantiate(this);
     }
 
-    public virtual void Register() {
 
+    protected T GetComponentInMe<T>()
+    {
+        if (!tree.Me.TryGetComponent<T>(out var component))
+        {
+            Debug.LogError($"{typeof(T)} component not found on " + tree.Me.name);
+        }
+        return component;
     }
-
+    
+    protected T GetComponentInMe<T>(string uniqueId) where T : Component
+    {
+        if (string.IsNullOrEmpty(uniqueId))
+        {
+            return GetComponentInMe<T>();
+        }
+        foreach (var component in tree.Me.GetComponents<IMultiComponent<T>>())
+        {
+            if (component.UniqueId == uniqueId)
+            {
+                return component as T;
+            }
+        }
+        Debug.LogError($"{typeof(T)} component with UniqueId '{uniqueId}' not found on " + tree.Me.name);
+        return null;
+    }
+    #endregion
+    
+    public override string ToString()
+    {
+        return string.IsNullOrEmpty(title)? name : title;
+    }
 }

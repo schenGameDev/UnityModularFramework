@@ -1,13 +1,14 @@
-using System;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+
 [UxmlElement]
 public partial class InspectorView : VisualElement
 {
     // public new class UxmlFactory : UxmlFactory<InspectorView, UxmlTraits> {}
 
     private Editor _editor;
+    private NodeView _currentNodeView;
 
     public InspectorView() {
         var styleSheet = Resources.Load<StyleSheet>("BehaviorTreeEditorStyleSheet");
@@ -17,12 +18,38 @@ public partial class InspectorView : VisualElement
     internal void UpdateSelection(NodeView nodeView)
     {
         Clear();
-        UnityEngine.Object.DestroyImmediate(_editor);
+        Object.DestroyImmediate(_editor);
         _editor = Editor.CreateEditor(nodeView.Node);
         IMGUIContainer container = new (() => {
             if(_editor.target)
                 _editor.OnInspectorGUI();
-            });
+        });
+        
+        _currentNodeView = nodeView;
+        
+        var resetButton = new Button(ResetNode) { text = "Reset" };
+        Add(resetButton);
+        
         Add(container);
+    }
+    
+    private void ResetNode()
+    {
+        if (_currentNodeView?.Node == null) return;
+        
+        Undo.RecordObject(_currentNodeView.Node, "Reset Node");
+        
+        var node = _currentNodeView.Node;
+        var type = node.GetType();
+        var newInstance = ScriptableObject.CreateInstance(type) as BTNode;
+        newInstance.Initialize(node.guid);
+        
+        EditorUtility.CopySerialized(newInstance, node);
+        ScriptableObject.DestroyImmediate(newInstance);
+        
+        EditorUtility.SetDirty(node);
+        AssetDatabase.SaveAssets();
+        if(_editor) Object.DestroyImmediate(_editor);
+        _editor = Editor.CreateEditor(node);
     }
 }

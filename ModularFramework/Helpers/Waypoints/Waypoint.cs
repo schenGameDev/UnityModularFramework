@@ -1,8 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
+using ModularFramework;
 using UnityEngine;
 
-public class Waypoint : MonoBehaviour
+public class Waypoint : MonoBehaviour, IMultiComponent<Waypoint>
 {
     [Header("Config")]
     public Color GizmosColor = Color.red;
@@ -23,4 +22,6 @@ public class Waypoint : MonoBehaviour
             SpawnPos = transform.position;
         }
     }
+
+    [field:SerializeField] public string UniqueId { get; private set; }
 }

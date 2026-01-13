@@ -6,9 +6,8 @@ using UnityEngine;
 [CreateAssetMenu(fileName ="BehaviorManager_SO",menuName ="Game Module/Behavior Tree/Behavior Manager")]
 public class BehaviorManagerSO : GameModule<BehaviorManagerSO>,IRegistrySO
 {
-    [RuntimeObject] private readonly Dictionary<Transform,BTMarker> _btDict = new();
+    [RuntimeObject] private readonly Dictionary<Transform,BTRunner> _btDict = new();
     [RuntimeObject] public Autowire<SensorSystemSO> sensorSystem;
-    [RuntimeObject] public Autowire<PlayerStatsSO> playerStats;
     [SceneRef("PLAYER")] public Transform player;
     
     public BehaviorManagerSO() {
@@ -31,7 +30,7 @@ public class BehaviorManagerSO : GameModule<BehaviorManagerSO>,IRegistrySO
     #region Registry
     public void Register(Transform tf)
     {
-        if(!tf.TryGetComponent<BTMarker>(out var marker)) return;
+        if(!tf.TryGetComponent<BTRunner>(out var marker)) return;
         var tree = marker.tree.Clone();
         tree.Me = tf;
         tree.Initialize();

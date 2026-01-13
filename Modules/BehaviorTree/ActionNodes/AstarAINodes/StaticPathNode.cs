@@ -2,29 +2,28 @@ using UnityEngine;
 
 public class StaticPathNode : AstarAINode
 {
-    [SerializeField] private string _pathName;
+    [SerializeField] private string pathName;
     private Vector3[] _currentPath;
 
 
     private int _currentIndex = 0;
     private Vector3 _target;
 
-    public override string Description() => "Follow a static path";
-
     protected override void OnEnter()
     {
         base.OnEnter();
         _currentIndex = 0;
-        _currentPath = tree.Me.GetComponent<WaypointCollection>().GetPath(_pathName);
+        _currentPath = tree.Me.GetComponent<WaypointCollection>().GetPath(pathName);
         SetTarget();
+        enemyMove.Move();
     }
 
 
     protected override State OnUpdate()
     {
-        if(tree.AI.PathNotFound || tree.AI.FixedTargetReached) {
+        if(tree.AI.PathNotFound || tree.AI.TargetReached) {
             _currentIndex++;
-            if(IsEndOfPath()) return tree.AI.FixedTargetReached? State.Success : State.Failure;
+            if(IsEndOfPath()) return tree.AI.TargetReached? State.Success : State.Failure;
             SetTarget();
         }
 
@@ -33,7 +32,7 @@ public class StaticPathNode : AstarAINode
 
     private void SetTarget() {
         _target = _currentPath[_currentIndex];
-        tree.AI.SetNewTarget(_target, speed, true);
+        tree.AI.SetNewTarget(_target, enemyMove.speed, true);
     }
 
     private bool IsEndOfPath() => _currentIndex ==_currentPath.Length;
@@ -41,5 +40,10 @@ public class StaticPathNode : AstarAINode
     public override BTNode Clone() {
         StaticPathNode node = Instantiate(this);
         return node;
+    }
+    
+    StaticPathNode()
+    {
+        description = "Follow a static path relative to oneself";
     }
 }

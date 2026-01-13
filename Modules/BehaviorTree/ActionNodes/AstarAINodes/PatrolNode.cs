@@ -3,8 +3,8 @@ using UnityEngine;
 public class PatrolNode : AstarAINode
 {
     private enum Type {BACK_AND_FORTH,LOOP}
-    [SerializeField] private Type _type;
-    [SerializeField] private string _pathName;
+    [SerializeField] private Type patrolType;
+    [SerializeField] private string pathName;
     private Vector3[] _currentPath;
 
 
@@ -12,23 +12,23 @@ public class PatrolNode : AstarAINode
     private bool _positiveDirection = true;
     private Vector3 _target;
 
-    public override string Description() => "Patrol along path";
 
     protected override void OnEnter()
     {
         base.OnEnter();
         _currentIndex = 0;
         _positiveDirection =true;
-        _currentPath = tree.Me.GetComponent<WaypointCollection>().GetPath(_pathName);
+        _currentPath = tree.Me.GetComponent<WaypointCollection>().GetPath(pathName);
         SetTarget();
+        enemyMove.Move();
     }
 
 
     protected override State OnUpdate()
     {
-        switch(_type) {
+        switch(patrolType) {
             case Type.BACK_AND_FORTH:
-                if(tree.AI.PathNotFound || tree.AI.FixedTargetReached) {
+                if(tree.AI.PathNotFound || tree.AI.TargetReached) {
                     if(_positiveDirection) _currentIndex++;
                     else _currentIndex--;
 
@@ -41,7 +41,7 @@ public class PatrolNode : AstarAINode
                 }
                 break;
             case Type.LOOP:
-                if(tree.AI.PathNotFound || tree.AI.FixedTargetReached) {
+                if(tree.AI.PathNotFound || tree.AI.TargetReached) {
                     _currentIndex++;
                     if(IsEndOfPath()) _currentIndex=0;
                     SetTarget();
@@ -54,7 +54,7 @@ public class PatrolNode : AstarAINode
 
     private void SetTarget() {
         _target = _currentPath[_currentIndex];
-        tree.AI.SetNewTarget(_target, speed, true);
+        tree.AI.SetNewTarget(_target, enemyMove.speed, true);
     }
 
     private bool IsEndOfPath() => (_positiveDirection && _currentIndex ==_currentPath.Length) ||
@@ -63,5 +63,10 @@ public class PatrolNode : AstarAINode
     public override BTNode Clone() {
         PatrolNode node = Instantiate(this);
         return node;
+    }
+    
+    PatrolNode()
+    {
+        description = "Patrol along path relative to oneself";
     }
 }

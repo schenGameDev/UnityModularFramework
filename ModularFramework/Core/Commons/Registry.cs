@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ModularFramework.Commons;
 
-namespace ModularFramework.Utility
+namespace ModularFramework
 {
     public static class Registry<T> where T : class
     {

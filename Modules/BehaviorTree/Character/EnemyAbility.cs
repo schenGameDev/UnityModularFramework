@@ -1,0 +1,187 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using EditorAttributes;
+using ModularFramework;
+using Sisus.ComponentNames;
+using UnityEngine;
+using UnityModularFramework;
+using UnityTimer;
+using Void = EditorAttributes.Void;
+
+[AddComponentMenu("Enemy/Ability", 0), RequireComponent(typeof(Enemy))]
+public class EnemyAbility : MonoBehaviour, IMultiComponent<EnemyAbility>, IReady
+{
+    [Header("Targeting")]
+    [SerializeReference] public ITransformTargetSelector targetSelector;
+    public RangeFilter rangeFilter;
+    
+    [Tooltip("Number of targets"),Min(0)] 
+    public int targetNumber = 1;
+    [Tooltip("if targets move out of range at time of release, they will not be targeted")]
+    public bool verifyRangeAtDamageTime = true;
+    
+    [Header("Casting")]
+    [SerializeReference,OnValueChanged(nameof(RenameComponent))] 
+    private AbilitySO ability;
+    [SerializeField,Tooltip("Casting animation")] 
+    private string animFlag;
+    
+    [Header("Cooldown")]
+    [SerializeField,Min(0)] private float cooldown;
+    
+    [Header("Runtime")]
+    [ShowInInspector, ReadOnly] private bool _isCastingAbility;
+    
+    [SerializeField, HorizontalGroup(nameof(showGizmos), nameof(gizmosColor))]
+    private Void gizmosGroup;
+    [HideProperty] private bool showGizmos = true;
+    [HideProperty, ShowField(nameof(showGizmos)),HideLabel] private Color gizmosColor = Color.red;
+
+    [ReadOnly,ShowInInspector] protected bool isReady = true;
+    
+    public bool Ready => isReady;
+
+    private List<IDamageable> _targets;
+    private Action<bool> _abilityReleaseCallback;
+    private BTRunner _runner;
+    private CountdownTimer _cooldownTimer;
+    private Vector3 _initialAimPosition;
+
+    private void Awake()
+    {
+        _runner = GetComponent<BTRunner>();
+        if (targetSelector == null)
+        {
+            Debug.LogWarning($"No Target Selector assigned to Ability {AbilityName}!");
+        }
+    }
+
+    private void Start()
+    {
+        if (cooldown > 0)
+        {
+            _cooldownTimer = new CountdownTimer(cooldown);
+            _cooldownTimer.OnTimerStart += () => isReady = false;
+            _cooldownTimer.OnTimerStop += () => isReady = true;
+        }
+    }
+
+    public void Cast(List<IDamageable> targets, Action<bool> callback)
+    {
+        if (_isCastingAbility)
+        {
+            Debug.LogWarning($"Casting {AbilityName} is already active, cannot cast again");
+            callback(false);
+            return;
+        }
+
+        if (!isReady)
+        {
+            Debug.LogWarning($"Ability {AbilityName} is not ready yet (on cooldown)");
+            callback(false);
+            return;
+        }
+        
+        _targets = targets;
+        if (_targets != null && _targets.Count > 0)
+        {
+            _initialAimPosition = _targets[0].Transform.position;
+            _runner.FaceTarget(_initialAimPosition);
+        }
+        _isCastingAbility = true;
+        _abilityReleaseCallback = callback;
+        _runner.PlayAnim(animFlag, Release);
+        AimAtTargets();
+        ShowAbilityImpactArea();
+    }
+    
+    private void Release()
+    {
+        ShowAbilityImpactArea(false);
+        _targets = verifyRangeAtDamageTime
+            ? _targets.Where(t =>
+            {
+                if (!RangeFilter.WithinGroundRange(transform, t.Transform, rangeFilter.minMaxRange))
+                {
+                    t.AimedAtBy(false, transform);
+                    return false;
+                }
+                
+                return true;
+            }).ToList() 
+            : _targets;
+        if (_targets.Count == 0)
+        {
+            Debug.LogWarning($"{AbilityName} Missed, targets not within range");
+            if (ability is ProjectileAbilitySO p) p.DryFire(this, _initialAimPosition, CastComplete);
+            else if (ability is GroundEffectAbilitySO g) g.DryFire(this, _initialAimPosition, CastComplete);
+            else CastComplete();
+            return;
+        }
+        ability.Release(this, _targets, CastComplete);
+    }
+    /// <summary>
+    /// for continuous casting end: one effect ends, complete the cast
+    /// </summary>
+    private void CastComplete() 
+    {
+        _runner.StopAnim(animFlag);
+        _abilityReleaseCallback?.Invoke(true);
+        AimAtTargets(false);
+        _isCastingAbility = false;
+        _abilityReleaseCallback = null;
+        _cooldownTimer?.Start();
+    }
+
+
+
+    public void Interrupt()
+    {
+        _runner.StopAnim(animFlag);
+        _abilityReleaseCallback?.Invoke(false);
+        AimAtTargets(false);
+        _isCastingAbility = false;
+        _abilityReleaseCallback = null;
+        _cooldownTimer?.Start();
+    }
+    
+    private void AimAtTargets(bool on = true)
+    {
+        foreach (var target in _targets)
+        {
+           target.AimedAtBy(on, transform);
+        }
+    }
+
+    private void ShowAbilityImpactArea(bool on = true)
+    {
+        
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (showGizmos && (_isCastingAbility || !Application.isPlaying))
+        {
+            Gizmos.color = gizmosColor;
+            var pointsCollection = rangeFilter.GetRangeSector(transform);
+            foreach (var points in pointsCollection)
+            {
+                for (int i = 0; i < points.Count; i++)
+                {
+                    Gizmos.DrawLine(points[i], points[(i + 1) % points.Count]);
+                }
+            }
+            
+        }
+    }
+
+    public bool TargetAtSelf => ability != null && ability.targetSelf;
+    
+    private string AbilityName => ability == null 
+        ? "Unassigned" 
+        : ability.name.StartsWith("Ability_") ? ability.name[8..] : ability.name;
+    
+    public string UniqueId => AbilityName;
+    private void RenameComponent() => this.SetName( $"Ability: {AbilityName}" + (ability && ability.continuousCasting? " (Continuous)" : "") );
+}

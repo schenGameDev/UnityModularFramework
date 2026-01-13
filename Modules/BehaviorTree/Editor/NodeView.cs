@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -7,28 +8,32 @@ using UnityEngine.UIElements;
 public class NodeView : Node {
     public Action<NodeView> OnNodeSelected;
     public Port InputPort;
-    public Port OutputPort;
+    public Port[] OutputPorts;
     public BTNode Node;
-    public NodeView(BTNode node) : base("Assets/Scripts/BehaviorTree/Editor/Resources/NodeView.uxml") {
+    public NodeView(BTNode node) : base(AssetDatabase.GetAssetPath(Resources.Load<VisualTreeAsset>("NodeView"))) {
         //styleSheets.Add(Resources.Load<StyleSheet>("NodeViewStyleSheet"));
         Node = node;
-        title = node.name;
+        title = node.ToString();
 
-        viewDataKey = Node.Guid;
-        style.left = Node.Position.x;
-        style.top = Node.Position.y;
+        viewDataKey = Node.guid;
+        style.left = Node.position.x;
+        style.top = Node.position.y;
 
         CreateInputPorts();
         CreateOutputPorts();
-        SetupClasses();
     }
+    
+    public NodeView(BTNode node, SingletonNode.NodePosition nodePosition) : base(AssetDatabase.GetAssetPath(Resources.Load<VisualTreeAsset>("NodeView"))) {
+        //styleSheets.Add(Resources.Load<StyleSheet>("NodeViewStyleSheet"));
+        Node = node;
+        title = node.ToString();
 
-    private void SetupClasses()
-    {
-        if(Node is ActionNode) AddToClassList("action");
-        else if(Node is ControlNode) AddToClassList("control");
-        else if(Node is DecoratorNode) AddToClassList("decorator");
-        else if(Node is RootNode) AddToClassList("root");
+        viewDataKey = nodePosition.guid;
+        style.left = nodePosition.position.x;
+        style.top = nodePosition.position.y;
+
+        CreateInputPorts();
+        CreateOutputPorts();
     }
 
 
@@ -40,9 +45,9 @@ public class NodeView : Node {
 
         if(!Application.isPlaying) return;
 
-        switch(Node.NodeState) {
+        switch(Node.nodeState) {
             case BTNode.State.Running:
-                if(Node.Started) AddToClassList("running");
+                if(Node.started) AddToClassList("running");
                 break;
             case BTNode.State.Success:
                 AddToClassList("success");
@@ -53,16 +58,16 @@ public class NodeView : Node {
         }
     }
 
+    public void UpdateTitle()
+    {
+        if(Application.isPlaying) return;
+        title = Node.ToString();
+    }
+
     private void CreateInputPorts()
     {
-        if (Node is ActionNode) {
+        if (Node is not RootNode) {
             InputPort = InstantiatePort(Orientation.Vertical, Direction.Input, Port.Capacity.Single, typeof(bool));
-        } else if (Node is DecoratorNode) {
-            InputPort = InstantiatePort(Orientation.Vertical, Direction.Input, Port.Capacity.Single, typeof(bool));
-        } else if (Node is ControlNode) {
-            InputPort = InstantiatePort(Orientation.Vertical, Direction.Input, Port.Capacity.Single, typeof(bool));
-        } else if(Node is RootNode) {
-            ;
         }
 
         if(InputPort!=null) {
@@ -70,22 +75,28 @@ public class NodeView : Node {
             InputPort.style.flexDirection = FlexDirection.Column;
             inputContainer.Add(InputPort);
         }
+        
+        inputContainer.style.backgroundColor = Node.HeaderColor;
+        inputContainer.style.minHeight = 24;
     }
 
     private void CreateOutputPorts()
     {
-        if (Node is DecoratorNode) {
-            OutputPort = InstantiatePort(Orientation.Vertical, Direction.Output, Port.Capacity.Single, typeof(bool));
-        } else if (Node is ControlNode) {
-            OutputPort = InstantiatePort(Orientation.Vertical, Direction.Output, Port.Capacity.Multi, typeof(bool));
-        } else if (Node is RootNode) {
-            OutputPort = InstantiatePort(Orientation.Vertical, Direction.Output, Port.Capacity.Single, typeof(bool));
+        List<Port> outputPorts = new List<Port>();
+        foreach (var def in Node.OutputPortDefinitions)
+        {
+            var port = InstantiatePort(Orientation.Vertical, Direction.Output, def.portCapacity, typeof(bool));
+            port.portName = def.portName;
+            port.style.flexDirection = FlexDirection.ColumnReverse;
+            outputPorts.Add(port);
+            outputContainer.Add(port);
         }
-
-        if(OutputPort!=null) {
-            OutputPort.portName = "";
-            OutputPort.style.flexDirection = FlexDirection.ColumnReverse;
-            outputContainer.Add(OutputPort);
+        
+        OutputPorts = outputPorts.ToArray();
+        if (outputPorts.Count > 1)
+        {
+            outputContainer.style.flexDirection = FlexDirection.Row;
+            outputContainer.style.justifyContent = Justify.SpaceBetween;
         }
     }
 
@@ -93,8 +104,8 @@ public class NodeView : Node {
     {
         base.SetPosition(newPos);
         Undo.RecordObject(Node, "Behavior Tree Node (Set Position)");
-        Node.Position.x = newPos.xMin;
-        Node.Position.y = newPos.yMin;
+        Node.position.x = newPos.xMin;
+        Node.position.y = newPos.yMin;
         EditorUtility.SetDirty(Node);
     }
 
@@ -104,17 +115,5 @@ public class NodeView : Node {
         if(OnNodeSelected!=null) {
             OnNodeSelected.Invoke(this);
         }
-    }
-
-    public void SortChildren() {
-        ControlNode control = Node as ControlNode;
-        if(control) {
-            control.Children.Sort(SortByHorizontalPosition);
-        }
-    }
-
-    private int SortByHorizontalPosition(BTNode left, BTNode right)
-    {
-        return left.Position.x < right.Position.x? -1 : 1;
     }
 }

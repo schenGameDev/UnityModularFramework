@@ -1,26 +1,30 @@
-using UnityEditor;
-using System.Collections.Generic;
-using UnityEngine;
 using System;
-using ModularFramework;
+using System.Collections.Generic;
+using System.Linq;
+using EditorAttributes;
+using UnityEditor;
+using UnityEngine;
 
 [CreateAssetMenu(fileName = "BehaviorTree_SO", menuName = "Game Module/Behavior Tree/Behavior Tree")]
 public class BehaviorTreeSO : ScriptableObject
 {
-    public BTNode Root;
-    public BehaviorManagerSO Manager { get; set; }
+    [ReadOnly] public BTNode root;
+    [ReadOnly] public BTBlackboard blackboard;
+    [HideInInspector] public BTRunner runner;
+    
     public Transform Me { get; set; }
     public AstarAI AI { get; private set; }
+    public List<BTNode> nodes = new();
     
-    public List<BTNode> Nodes = new();
+    #if UNITY_EDITOR
 
+    #region Editor
     public BTNode CreateNode(Type type) {
         BTNode node = CreateInstance(type) as BTNode;
-        node.name = type.Name;
-        node.Guid = GUID.Generate().ToString();
+        node.Initialize(GUID.Generate().ToString());
         Undo.RecordObject(this,"Behavior Tree (Create Node)");
 
-        Nodes.Add(node);
+        nodes.Add(node);
 
         if(!Application.isPlaying) {
             AssetDatabase.AddObjectToAsset(node, this);
@@ -30,114 +34,182 @@ public class BehaviorTreeSO : ScriptableObject
         AssetDatabase.SaveAssets();
         return node;
     }
+    
+    public BTNode DuplicateNode(BTNode originalNode) {
+        if(originalNode is RootNode) return null;
+        BTNode node = CreateInstance(originalNode.GetType()) as BTNode;
+        EditorUtility.CopySerialized(originalNode, node);
+        node.guid = GUID.Generate().ToString();
+        node.parentPortName = null;
+        node.ClearChildren();
+        Undo.RecordObject(this,"Behavior Tree (Duplicate Node)");
+
+        nodes.Add(node);
+
+        if(!Application.isPlaying) {
+            AssetDatabase.AddObjectToAsset(node, this);
+        }
+        EditorUtility.SetDirty(node);
+
+        Undo.RegisterCreatedObjectUndo(node,"Behavior Tree (Duplicate Node)");
+        AssetDatabase.SaveAssets();
+        return node;
+    }
+
+    public void CreateBlackboard()
+    {
+        blackboard = CreateInstance(typeof(BTBlackboard)) as BTBlackboard;
+        blackboard.name = "Blackboard";
+        
+        Undo.RecordObject(this,"Behavior Tree (Create Blackboard)");
+
+        if(!Application.isPlaying) {
+            AssetDatabase.AddObjectToAsset(blackboard, this);
+        }
+
+        Undo.RegisterCreatedObjectUndo(blackboard,"Behavior Tree (Create Blackboard)");
+        AssetDatabase.SaveAssets();
+    }
 
     public void DeleteNode(BTNode node) {
         Undo.RecordObject(this,"Behavior Tree (Delete Node)");
-        Nodes.Remove(node);
+        nodes.Remove(node);
+        foreach (var n in nodes)
+        {
+            n.RemoveChild(node);
+        }
         //AssetDatabase.RemoveObjectFromAsset(node);
         Undo.DestroyObjectImmediate(node);
+        AssetDatabase.SaveAssets();
+    }
+
+    public void DeleteSingletonNode(SingletonNode node, string guid)
+    {
+        if (node.nodePositions.Count <= 1)
+        {
+            DeleteNode(node);
+            return;
+        }
+        
+        Undo.RecordObject(this,"Behavior Tree (Delete Node)");
+        node.nodePositions.RemoveAll(np =>
+            {
+                if (np.guid == guid)
+                {
+                    if (!string.IsNullOrEmpty(np.parentGuid)) {
+                        nodes.Where(n => n.guid == np.parentGuid)
+                            .ForEach(n => n.RemoveChild(node));
+                    }
+                    return true;
+                }
+                return false;
+            });
 
         AssetDatabase.SaveAssets();
     }
 
-    public void AddChild(BTNode parent, BTNode child) {
-        DecoratorNode decorator = parent as DecoratorNode;
-        if(decorator) {
-            Undo.RecordObject(decorator,"Behavior Tree Node (Add Child)");
-            decorator.Child = child;
-            EditorUtility.SetDirty(decorator);
-            return;
-        }
-
-        RootNode root = parent as RootNode;
-        if(root) {
-            Undo.RecordObject(root,"Behavior Tree Node (Add Child)");
-            root.Child = child;
-            EditorUtility.SetDirty(root);
-            return;
-        }
-
-        ControlNode control = parent as ControlNode;
-        if(control) {
-            Undo.RecordObject(control,"Behavior Tree Node (Add Child)");
-            control.Children.Add(child);
-            EditorUtility.SetDirty(control);
-        }
+    public void AddChild(BTNode parent, BTNode child, String parentPortName) {
+        Undo.RecordObject(parent,"Behavior Tree Node (Add Child)");
+        parent.AddChild(child);
+        child.parentPortName = parentPortName;
+        EditorUtility.SetDirty(parent);
+        AssetDatabase.SaveAssets();
     }
 
     public void RemoveChild(BTNode parent, BTNode child) {
-        DecoratorNode decorator = parent as DecoratorNode;
-        if(decorator) {
-            Undo.RecordObject(decorator,"Behavior Tree Node (Remove Child)");
-            decorator.Child = null;
-            EditorUtility.SetDirty(decorator);
-            return;
-        }
+        Undo.RecordObject(parent,"Behavior Tree Node (Remove Child)");
+        parent.RemoveChild(child);
+        child.parentPortName = null;
 
-        RootNode root = parent as RootNode;
-        if(root) {
-            Undo.RecordObject(root,"Behavior Tree Node (Remove Child)");
-            root.Child = null;
-            EditorUtility.SetDirty(root);
-            return;
+        if (child is SingletonNode s)
+        {
+            s.Remove(parent.guid);
         }
-
-        ControlNode control = parent as ControlNode;
-        if(control) {
-            Undo.RecordObject(control,"Behavior Tree Node (Remove Child)");
-            control.Children.Remove(child);
-            EditorUtility.SetDirty(control);
+        
+        EditorUtility.SetDirty(parent);
+        AssetDatabase.SaveAssets();
+    }
+    
+    [Button]
+    public void Fix()
+    {
+        this.nodes.RemoveAll(n => n == null);
+        RemoveExtraRootFromNodes();
+        string assetPath = AssetDatabase.GetAssetPath(this);
+        // remove unused nodes
+        BTNode[] nodes = AssetDatabase.LoadAllAssetsAtPath(assetPath).OfType<BTNode>().ToArray();
+        foreach (var n in nodes)
+        {
+            if(!this.nodes.Contains(n)) DestroyImmediate(n,true);
+            else
+            {
+                n.name = n.guid;
+            }
         }
+        // keep only one blackboard
+        BTBlackboard[] blackboards = AssetDatabase.LoadAllAssetsAtPath(assetPath).OfType<BTBlackboard>().ToArray();
+        if (blackboards.Length > 0 && blackboard == null)
+        {
+            blackboard = blackboards[0];
+        }
+        foreach (var b in blackboards)
+        {
+            if(blackboard != b) DestroyImmediate(b, true);
+        }
+        blackboard.Clear();
+        // remove duplicates
+        foreach (var controlNode in this.nodes.OfType<ControlNode>())
+        {
+            controlNode.Children = controlNode.Children.Where(x=> x!=null).Distinct().ToList();
+        }
+        
+        AssetDatabase.SaveAssets();
     }
 
-
-    public List<BTNode> GetChildren(BTNode parent) {
-        DecoratorNode decorator = parent as DecoratorNode;
-        if(decorator && decorator.Child !=null) {
-            return new() {decorator.Child};
+    private void RemoveExtraRootFromNodes()
+    {
+        RootNode[] roots = nodes.OfType<RootNode>().ToArray();
+        if (roots.Length > 0 && root == null)
+        {
+            root = roots[0];
         }
-
-        RootNode root = parent as RootNode;
-        if(root && root.Child !=null) {
-            return new() {root.Child};
+        
+        foreach (var r in roots)
+        {
+            if(root != r) DeleteNode(r);
         }
-
-        ControlNode control = parent as ControlNode;
-        if(control) {
-            return control.Children;
-        }
-
-        return new();
     }
+    #endregion
+#endif
 
     public void Initialize() {
         AI = Me.GetComponent<AstarAI>();
-        Nodes.ForEach(n =>
+        runner = Me.GetComponent<BTRunner>();
+        nodes.ForEach(n =>
         {
             n.tree = this;
-            n.Register();
         });
     }
 
     public BehaviorTreeSO Clone() {
         var clone = Instantiate(this);
-        clone.Root = Root.Clone();
-        clone.Nodes = new List<BTNode>();
-        Traverse(clone.Root, (n) => {
-            clone.Nodes.Add(n);
+        clone.root = root.Clone();
+        clone.nodes = new List<BTNode>();
+        Traverse(clone.root, (n) => {
+            clone.nodes.Add(n);
         } );
+        if(blackboard) clone.blackboard = Instantiate(blackboard);
         return clone;
     }
 
     void Traverse(BTNode node, Action<BTNode> visitor) {
         if(node) {
             visitor.Invoke(node);
-            var children = GetChildren(node);
-            children.ForEach(n => Traverse(n, visitor));
+            node.GetChildren().ForEach(n => Traverse(n, visitor));
         }
     }
 
     public void Run() {
-        Root.Run();
+        root.Run();
     }
 }
