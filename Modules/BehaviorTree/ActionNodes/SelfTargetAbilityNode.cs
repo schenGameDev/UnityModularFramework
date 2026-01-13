@@ -4,14 +4,14 @@ public class SelfTargetAbilityNode : ActionNode
 {
     [SerializeField] private string abilityName;
     
-    private EnemyAbility _enemyAbility;
+    private BTAbility _btAbility;
     private State _abilityEndState = State.Running;
 
     protected override void OnEnter()
     {
         base.OnEnter();
-        _enemyAbility ??= GetComponentInMe<EnemyAbility>(abilityName);
-        if (!_enemyAbility.TargetAtSelf)
+        _btAbility ??= GetComponentInMe<BTAbility>(abilityName);
+        if (!_btAbility.TargetAtSelf)
         {
             Debug.LogError($"{ToString()} requires {abilityName} to target self");
         }
@@ -26,7 +26,7 @@ public class SelfTargetAbilityNode : ActionNode
     }
 
     private void CastAbility() {
-        _enemyAbility.Cast(null, OnCastComplete);
+        _btAbility.Cast(null, OnCastComplete);
     }
     
     private void OnCastComplete(bool success) {

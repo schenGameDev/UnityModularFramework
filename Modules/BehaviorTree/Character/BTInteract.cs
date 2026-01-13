@@ -4,8 +4,8 @@ using ModularFramework;
 using Sisus.ComponentNames;
 using UnityEngine;
 
-[RequireComponent(typeof(Enemy))]
-public abstract class EnemyInteract: MonoBehaviour, IMultiComponent<EnemyInteract>
+[AddComponentMenu("Behavior Tree/Interact"), RequireComponent(typeof(BTRunner))]
+public abstract class BTInteract: MonoBehaviour, IMultiComponent<BTInteract>
 {
     [SerializeField,OnValueChanged(nameof(RenameComponent))] protected string interactName;
     [SerializeField] private string animFlag;

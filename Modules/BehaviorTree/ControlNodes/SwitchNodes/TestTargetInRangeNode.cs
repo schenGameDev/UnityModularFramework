@@ -4,14 +4,14 @@ using UnityEngine;
 public class TestTargetInRangeNode : SwitchNode
 {
     public string rangeName;
-    private EnemyRange _enemyRange;
+    private BTRange _btRange;
     
     protected override bool Condition()
     {
-        _enemyRange??= GetComponentInMe<EnemyRange>(rangeName);
-        if (_enemyRange == null)
+        _btRange??= GetComponentInMe<BTRange>(rangeName);
+        if (_btRange == null)
         {
-            Debug.LogError($"EnemyRange of {_enemyRange} component not found on {tree.Me.name}");
+            Debug.LogError($"EnemyRange of {_btRange} component not found on {tree.Me.name}");
             return false;
         }
         return IsTargetInRange();
@@ -19,14 +19,14 @@ public class TestTargetInRangeNode : SwitchNode
     
     private bool IsTargetInRange()
     {
-        if (_enemyRange == null)
+        if (_btRange == null)
         {
             Debug.LogError($"EnemyRange of {rangeName} component not found on {tree.Me.name}");
             return false;
         }
         var targets = tree.blackboard.Get<Transform>(BTBlackboard.KEYWORD_TARGET);
         if (targets == null) return false;
-        targets = ITransformTargetFilter.Filter(targets, tree.Me, _enemyRange.targetFilters)?.ToList();
+        targets = ITransformTargetFilter.Filter(targets, tree.Me, _btRange.targetFilters)?.ToList();
         return targets?.Count > 0;
     }
 

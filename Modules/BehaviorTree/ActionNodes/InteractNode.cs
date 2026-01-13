@@ -4,13 +4,13 @@ public class InteractNode : ActionNode
 {
     [SerializeField] private string interactName;
     
-    private EnemyInteract _enemyInteract;
+    private BTInteract _btInteract;
     private State _interactEndState = State.Running;
 
     protected override void OnEnter()
     {
         base.OnEnter();
-        _enemyInteract ??= GetComponentInMe<EnemyInteract>(interactName);
+        _btInteract ??= GetComponentInMe<BTInteract>(interactName);
         _interactEndState = State.Running;
         Interact();
     }
@@ -22,7 +22,7 @@ public class InteractNode : ActionNode
 
     private void Interact() {
         var target = tree.blackboard.Get<Transform>(BTBlackboard.KEYWORD_TARGET)?[0];
-        _enemyInteract.Interact(target, OnInteractComplete);
+        _btInteract.Interact(target, OnInteractComplete);
     }
     
     private void OnInteractComplete(bool success) {

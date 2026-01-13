@@ -9,8 +9,8 @@ public abstract class FindTargetInAbilityRangeNode<TTarget> : SwitchNode,IReady 
     public string abilityName;
     public bool faceTargetBeforeCheck = true;
     
-    private EnemyAbility _enemyAbility;
-    public bool Ready => _enemyAbility is null || _enemyAbility.Ready;
+    private BTAbility _btAbility;
+    public bool Ready => _btAbility is null || _btAbility.Ready;
     private List<TTarget> targets = new ();
     protected override void OnEnter()
     {
@@ -24,8 +24,8 @@ public abstract class FindTargetInAbilityRangeNode<TTarget> : SwitchNode,IReady 
     }
 
     protected override bool Condition() {
-        _enemyAbility ??= GetComponentInMe<EnemyAbility>(abilityName);
-        if (_enemyAbility == null)
+        _btAbility ??= GetComponentInMe<BTAbility>(abilityName);
+        if (_btAbility == null)
         {
             Debug.LogError($"EnemyAbility of {abilityName} component not found on {tree.Me.name}");
             return false;
@@ -40,20 +40,20 @@ public abstract class FindTargetInAbilityRangeNode<TTarget> : SwitchNode,IReady 
         {
             var rangeFilterWithoutViewCone = new RangeFilter()
             {
-                rangeType = _enemyAbility.rangeFilter.rangeType,
-                minMaxRange = _enemyAbility.rangeFilter.minMaxRange,
+                rangeType = _btAbility.rangeFilter.rangeType,
+                minMaxRange = _btAbility.rangeFilter.minMaxRange,
                 viewAngle = 360
             };
             
             
-            var potentialTargets = Registry<TTarget>.Get(_enemyAbility.targetSelector.GetStrategy<TTarget>(tree.Me, _enemyAbility.targetNumber), 
+            var potentialTargets = Registry<TTarget>.Get(_btAbility.targetSelector.GetStrategy<TTarget>(tree.Me, _btAbility.targetNumber), 
                 ((ITransformTargetFilter)rangeFilterWithoutViewCone).GetStrategy<TTarget>(tree.Me)).ToList(); 
             if (potentialTargets.Count == 0) return false;
             tree.runner.FaceTarget(potentialTargets[0].transform, false);
         }
         
-        targets = Registry<TTarget>.Get(_enemyAbility.targetSelector.GetStrategy<TTarget>(tree.Me, _enemyAbility.targetNumber), 
-            ((ITransformTargetFilter)_enemyAbility.rangeFilter).GetStrategy<TTarget>(tree.Me)).ToList(); 
+        targets = Registry<TTarget>.Get(_btAbility.targetSelector.GetStrategy<TTarget>(tree.Me, _btAbility.targetNumber), 
+            ((ITransformTargetFilter)_btAbility.rangeFilter).GetStrategy<TTarget>(tree.Me)).ToList(); 
         if (targets == null || targets.Count == 0) return false;
         return true;
     }

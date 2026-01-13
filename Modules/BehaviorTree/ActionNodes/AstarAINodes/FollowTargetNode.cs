@@ -15,14 +15,14 @@ public class FollowTargetNode : AstarAINode
             _target = targets[0];
             if (isStaticTarget)
             {
-                tree.AI.SetNewTarget(GetCloseToMePosition(_target.position), enemyMove.speed,true);
+                tree.AI.SetNewTarget(GetCloseToMePosition(_target.position), BtMove.speed,true);
             }
             else
             {
-                tree.AI.SetNewTarget(_target, enemyMove.speed,true);
+                tree.AI.SetNewTarget(_target, BtMove.speed,true);
             }
             
-            enemyMove.Move();
+            BtMove.Move();
         }
         else
         {

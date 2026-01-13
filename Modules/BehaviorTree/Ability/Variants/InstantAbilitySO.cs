@@ -11,7 +11,7 @@ public class InstantAbilitySO : AbilitySO
                       "Can be used for melee attacks, instant spells, laser, buffs, etc.";
     }
 
-    protected override void Apply(EnemyAbility me, List<IDamageable> targets, Action onComplete)
+    protected override void Apply(BTAbility me, List<IDamageable> targets, Action onComplete)
     {
         if(applyOnSelf) Execute(me.GetComponent<IDamageable>(), onComplete);
         else Execute(targets, onComplete);

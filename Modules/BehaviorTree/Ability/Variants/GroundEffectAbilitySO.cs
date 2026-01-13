@@ -18,7 +18,7 @@ public class GroundEffectAbilitySO : AbilitySO
     private IPositionCalculator positionCalculator;
     [SerializeField] bool matchCasterRotation = true;
 
-    protected override void Apply(EnemyAbility me, List<IDamageable> targets, Action onComplete)
+    protected override void Apply(BTAbility me, List<IDamageable> targets, Action onComplete)
     {
         Vector3 rotatedOffset = me.transform.rotation * groundEffectSpawnOffset;
         Quaternion rotatedRotation = matchCasterRotation? me.transform.rotation : Quaternion.identity;
@@ -44,7 +44,7 @@ public class GroundEffectAbilitySO : AbilitySO
         }
     }
     
-    public void DryFire(EnemyAbility me, Vector3 targetPos, Action onComplete)
+    public void DryFire(BTAbility me, Vector3 targetPos, Action onComplete)
     {
         PlayVisualSoundEffects(me, null);
         if (!continuousCasting)

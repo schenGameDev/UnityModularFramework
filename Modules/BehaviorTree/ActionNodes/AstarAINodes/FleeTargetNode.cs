@@ -11,8 +11,8 @@ public class FleeTargetNode : AstarAINode
         base.OnEnter();
         _target = tree.blackboard.Get<Transform>(BTBlackboard.KEYWORD_TARGET)?[0];
         if(_target) {
-            tree.AI.SetNewTargetUnFixed(GetFleeTarget(_target.position),enemyMove.speed,true);
-            enemyMove.Move();
+            tree.AI.SetNewTargetUnFixed(GetFleeTarget(_target.position),BtMove.speed,true);
+            BtMove.Move();
         }
     }
 

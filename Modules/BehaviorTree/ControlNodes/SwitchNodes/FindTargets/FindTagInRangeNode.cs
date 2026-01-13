@@ -19,10 +19,10 @@ public class FindTagInRangeNode : FindTargetInRangeNode<Transform>
     }
     protected override bool Condition()
     {
-        if (enemyRange == null) return  false;
+        if (BtRange == null) return  false;
         var tfWithTag = GameObject.FindGameObjectsWithTag(tag).Select(go => go.transform);
-        var filteredTargets = ITransformTargetFilter.Filter(tfWithTag, tree.Me, enemyRange.targetFilters);
-        targets = enemyRange.targetSelector.GetStrategy(tree.Me)(filteredTargets).ToList();
+        var filteredTargets = ITransformTargetFilter.Filter(tfWithTag, tree.Me, BtRange.targetFilters);
+        targets = BtRange.targetSelector.GetStrategy(tree.Me)(filteredTargets).ToList();
         return targets is { Count: > 0 };
     }
     

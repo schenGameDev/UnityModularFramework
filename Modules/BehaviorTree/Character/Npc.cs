@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[DisallowMultipleComponent]
-public class Enemy : MonoBehaviour,IDamageable
+[AddComponentMenu("NPC/NPC", 0), DisallowMultipleComponent]
+public class Npc : Character,IDamageable
 {
     public int maxHealth = 500;
     
@@ -69,7 +69,7 @@ public class Enemy : MonoBehaviour,IDamageable
 
     private void Die()
     {
-        Debug.Log("Enemy has died.");
+        Debug.Log("NPC has died.");
 
         foreach (var effect in _activeEffects)
         {

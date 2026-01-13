@@ -9,8 +9,8 @@ public class WanderNode : AstarAINode
     {
         base.OnEnter();
         Vector3 movePos = GetNewDestination();
-        tree.AI.SetNewTarget(movePos, enemyMove.speed, true);
-        enemyMove.Move();
+        tree.AI.SetNewTarget(movePos, BtMove.speed, true);
+        BtMove.Move();
     }
 
     private Vector3 GetNewDestination() {

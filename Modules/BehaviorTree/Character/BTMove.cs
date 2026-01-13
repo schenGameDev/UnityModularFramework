@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityModularFramework;
 using UnityTimer;
 
-[AddComponentMenu("Enemy/Move", 0), RequireComponent(typeof(Enemy))]
-public class EnemyMove : MonoBehaviour,IMultiComponent<EnemyMove>,IReady
+[AddComponentMenu("Behavior Tree/Move", 0), RequireComponent(typeof(BTRunner))]
+public class BTMove : MonoBehaviour,IMultiComponent<BTMove>,IReady
 {
     public string UniqueId => moveName;
 

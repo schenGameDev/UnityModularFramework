@@ -15,7 +15,7 @@ public class StaticPathNode : AstarAINode
         _currentIndex = 0;
         _currentPath = tree.Me.GetComponent<WaypointCollection>().GetPath(pathName);
         SetTarget();
-        enemyMove.Move();
+        BtMove.Move();
     }
 
 
@@ -32,7 +32,7 @@ public class StaticPathNode : AstarAINode
 
     private void SetTarget() {
         _target = _currentPath[_currentIndex];
-        tree.AI.SetNewTarget(_target, enemyMove.speed, true);
+        tree.AI.SetNewTarget(_target, BtMove.speed, true);
     }
 
     private bool IsEndOfPath() => _currentIndex ==_currentPath.Length;

@@ -7,15 +7,15 @@ public class AbilityNode : ActionNode,IReady
 {
     [ShowInInspector,ReadOnly] private string _abilityName;
     
-    private EnemyAbility _enemyAbility;
+    private BTAbility _btAbility;
     private State _abilityEndState = State.Running;
-    public bool Ready => _enemyAbility is null || _enemyAbility.Ready;
+    public bool Ready => _btAbility is null || _btAbility.Ready;
 
     protected override void OnEnter()
     {
         base.OnEnter();
         _abilityName ??= tree.blackboard.Get(BTBlackboard.KEYWORD_ABILITY_NAME);
-        _enemyAbility ??= GetComponentInMe<EnemyAbility>(_abilityName);
+        _btAbility ??= GetComponentInMe<BTAbility>(_abilityName);
         if (_abilityName == null)
         {
             Debug.LogError($"AbilityName not found in blackboard for {title} Node");
@@ -31,7 +31,7 @@ public class AbilityNode : ActionNode,IReady
 
     private void CastAbility() {
         var targets = tree.blackboard.Get<Transform>(BTBlackboard.KEYWORD_TARGET);
-        _enemyAbility.Cast(targets?.Select(t => t.GetComponent<IDamageable>()).ToList(), OnCastComplete);
+        _btAbility.Cast(targets?.Select(t => t.GetComponent<IDamageable>()).ToList(), OnCastComplete);
     }
     
     private void OnCastComplete(bool success) {

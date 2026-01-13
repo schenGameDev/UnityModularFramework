@@ -18,7 +18,7 @@ public class DynamicPathNode : AstarAINode
         base.OnEnter();
         _started = false;
         _currentIndex = -1;
-        _currentPath = enemyMove.Path;
+        _currentPath = BtMove.Path;
         _targets = tree.blackboard.Get<Transform>(BTBlackboard.KEYWORD_TARGET);
         
     }
@@ -48,7 +48,7 @@ public class DynamicPathNode : AstarAINode
                 if(_currentIndex==_currentPath.Length) {
                     return tree.AI.TargetReached ? State.Success : State.Failure;
                 }
-                tree.AI.SetNewTarget(GetWaypoint(_finalTarget, _currentPath[_currentIndex]), enemyMove.speed, false);
+                tree.AI.SetNewTarget(GetWaypoint(_finalTarget, _currentPath[_currentIndex]), BtMove.speed, false);
             }
         }
 

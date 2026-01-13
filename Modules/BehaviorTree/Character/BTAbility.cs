@@ -9,8 +9,8 @@ using UnityModularFramework;
 using UnityTimer;
 using Void = EditorAttributes.Void;
 
-[AddComponentMenu("Enemy/Ability", 0), RequireComponent(typeof(Enemy))]
-public class EnemyAbility : MonoBehaviour, IMultiComponent<EnemyAbility>, IReady
+[AddComponentMenu("Behavior Tree/Ability"), RequireComponent(typeof(BTRunner))]
+public class BTAbility : MonoBehaviour, IMultiComponent<BTAbility>, IReady
 {
     [Header("Targeting")]
     [SerializeReference] public ITransformTargetSelector targetSelector;

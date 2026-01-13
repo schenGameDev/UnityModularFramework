@@ -4,24 +4,24 @@ public abstract class AstarAINode : ActionNode,IReady
 {
     public string moveName;
     protected bool isActive;
-    protected EnemyMove enemyMove;
-    public bool Ready => enemyMove is null || enemyMove.Ready;
+    protected BTMove BtMove;
+    public bool Ready => BtMove is null || BtMove.Ready;
 
     protected override void OnEnter()
     {
         base.OnEnter();
         isActive = true;
-        if (!string.IsNullOrEmpty(moveName) && enemyMove == null)
+        if (!string.IsNullOrEmpty(moveName) && BtMove == null)
         {
-            enemyMove = GetComponentInMe<EnemyMove>(moveName);
+            BtMove = GetComponentInMe<BTMove>(moveName);
         }
-        enemyMove?.Move();
+        BtMove?.Move();
     }
 
     protected override void OnExit()
     {
         tree.AI.Stop();
-        enemyMove?.Stop();
+        BtMove?.Stop();
         isActive = false;
     }
 

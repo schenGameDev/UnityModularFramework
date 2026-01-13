@@ -23,7 +23,7 @@ public abstract class AbilitySO : ScriptableObject
     
     [SerializeReference] public List<IEffectFactory<IDamageable>> effects = new();
 
-    public void Release(EnemyAbility me, List<IDamageable> targets, Action onComplete)
+    public void Release(BTAbility me, List<IDamageable> targets, Action onComplete)
     {
         PlayVisualSoundEffects(me, targets);
         Apply(me, targets, continuousCasting? onComplete : null);
@@ -33,9 +33,9 @@ public abstract class AbilitySO : ScriptableObject
         }
     }
 
-    protected abstract void Apply(EnemyAbility me, List<IDamageable> targets, Action onComplete);
+    protected abstract void Apply(BTAbility me, List<IDamageable> targets, Action onComplete);
 
-    protected virtual void PlayVisualSoundEffects(EnemyAbility me, List<IDamageable> targets)
+    protected virtual void PlayVisualSoundEffects(BTAbility me, List<IDamageable> targets)
     {
         
     }

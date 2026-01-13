@@ -15,7 +15,7 @@ public class TeleportNode : AstarAINode
         _target = isTargetMe? tree.Me : tree.blackboard.Get<Transform>(BTBlackboard.KEYWORD_TARGET)?[0];
         if (_target)
         {
-            enemyMove?.Move();
+            BtMove?.Move();
         }
     }
 

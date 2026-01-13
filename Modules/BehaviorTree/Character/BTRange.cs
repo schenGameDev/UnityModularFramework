@@ -3,8 +3,8 @@ using ModularFramework;
 using Sisus.ComponentNames;
 using UnityEngine;
 
-[AddComponentMenu("Enemy/Range", 0), RequireComponent(typeof(Enemy))]
-public class EnemyRange : MonoBehaviour, IMultiComponent<EnemyRange>
+[AddComponentMenu("Behavior Tree/Range", 0), RequireComponent(typeof(BTRunner))]
+public class BTRange : MonoBehaviour, IMultiComponent<BTRange>
 {
     [SerializeField,OnValueChanged(nameof(RenameComponent))] private string rangeName;
 
