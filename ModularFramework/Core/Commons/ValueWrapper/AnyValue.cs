@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using ValueType = ModularFramework.Utility.BooleanExpressionEvaluator.ValueType;
 
 namespace ModularFramework.Commons {
     [Serializable]
@@ -88,6 +89,4 @@ namespace ModularFramework.Commons {
             };
         }
     }
-
-    public enum ValueType { Int, Float, Bool, String, Vector3 }
 }

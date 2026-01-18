@@ -1,8 +1,8 @@
-
 using System;
 using EditorAttributes;
 using ModularFramework.Utility;
 using UnityEngine;
+using ValueType = ModularFramework.Utility.BooleanExpressionEvaluator.ValueType;
 
 namespace ModularFramework.Commons {
     [Serializable]
@@ -14,7 +14,7 @@ namespace ModularFramework.Commons {
         [SerializeField,ShowField(nameof(type),ValueType.Int)] private int intValue;
         [SerializeField,ShowField(nameof(type),ValueType.Float)] private float floatValue;
         [SerializeField,ShowField(nameof(type),ValueType.String)] private string stringValue;
-
+        [SerializeField,ShowField(nameof(type),ValueType.Vector3)] private Vector3 vector3Value;
 
         public static Keeper Of<T>(T value) {
             ValueType tp = ValueTypeOf(value.GetType());
@@ -23,6 +23,7 @@ namespace ModularFramework.Commons {
                 ValueType.Int => new Keeper() {type=tp, intValue=(int)(object)value},
                 ValueType.Float => new Keeper() {type=tp, floatValue=(float)(object)value},
                 ValueType.String => new Keeper() {type=tp, stringValue=(string)(object)value},
+                ValueType.Vector3 => new Keeper() {type=tp, vector3Value=(Vector3)(object)value},
                 _ => throw new InvalidCastException()
             };
         }
@@ -32,9 +33,16 @@ namespace ModularFramework.Commons {
         public static implicit operator int(Keeper value) => value.ConvertValue<int>();
         public static implicit operator float(Keeper value) => value.ConvertValue<float>();
         public static implicit operator string(Keeper value) => value.ConvertValue<string>();
+        public static implicit operator Vector3(Keeper value) => value.ConvertValue<Vector3>();
 
         public AnyValue ConvertToAnyValue() {
-            return new AnyValue() {type=this.type, boolValue = boolValue, stringValue = stringValue, floatValue = floatValue, intValue=intValue};
+            return new AnyValue() {type=this.type, 
+                boolValue = boolValue, 
+                stringValue = stringValue, 
+                floatValue = floatValue, 
+                intValue=intValue,
+                vector3Value=vector3Value,
+            };
         }
 
         public T ConvertValue<T>() {
@@ -44,6 +52,7 @@ namespace ModularFramework.Commons {
                 ValueType.Float => AsFloat<T>(floatValue),
                 ValueType.Bool => AsBool<T>(boolValue),
                 ValueType.String => (T) (object) stringValue,
+                ValueType.Vector3 => AsVector3<T>(vector3Value),
                 _ => throw new InvalidCastException($"Cannot convert Keeper of type {type} to {typeof(T).Name}")
             };
         }
@@ -51,6 +60,7 @@ namespace ModularFramework.Commons {
         T AsBool<T>(bool value) => typeof(T) == typeof(bool) && value is T correctType ? correctType : default;
         T AsInt<T>(int value) => typeof(T) == typeof(int) && value is T correctType ? correctType : default;
         T AsFloat<T>(float value) => typeof(T) == typeof(float) && value is T correctType ? correctType : default;
+        T AsVector3<T>(Vector3 value) => typeof(T) == typeof(Vector3) && value is T correctType ? correctType : default;
 
         public static Type TypeOf(ValueType valueType) {
             return valueType switch {
@@ -80,6 +90,7 @@ namespace ModularFramework.Commons {
                 ValueType.Float => (T) (object) floatValue,
                 ValueType.Bool => (T) (object) boolValue,
                 ValueType.String => (T) (object) stringValue,
+                ValueType.Vector3 => (T) (object) vector3Value,
                 _ => throw new InvalidCastException($"Cannot convert Keeper of type {type} to {typeof(T).Name}")
             };
         }
@@ -101,6 +112,9 @@ namespace ModularFramework.Commons {
                     break;
                 case ValueType.String:
                     stringValue=(string)(object)newValue;
+                    break;
+                case ValueType.Vector3:
+                    vector3Value=(Vector3)(object)newValue;
                     break;
             }
 
@@ -169,76 +183,27 @@ namespace ModularFramework.Commons {
             throw NotSupportError(operatorStr);
         }
 
-        public bool Is<T>(string logicOperator, T value) {
+        public bool Is<T>(string logicOperator, T value)
+        {
             // >/</==/>=/<=
             if(ValueTypeOf(value.GetType()) != type) {
                 throw UnmatchTypeError(value.GetType());
             }
 
-            switch(type)  {
-                case ValueType.Bool:
-                    bool b=(bool)(object)value;
-                    switch(logicOperator) {
-                        case "==":
-                            return boolValue == b;
-                        case "!=":
-                            return boolValue != b;
-                        default:
-                            throw NotSupportError(logicOperator);
-                    }
-
-                case ValueType.Int:
-                    int i=(int)(object)value;
-                    switch(logicOperator) {
-                        case ">":
-                            return intValue>i;
-                        case "<":
-                            return intValue<i;
-                        case "==":
-                            return intValue==i;
-                        case "!=":
-                            return intValue!=i;
-                        case ">=":
-                            return intValue>=i;
-                        case "<=":
-                            return intValue<=i;
-                        default:
-                            throw NotSupportError(logicOperator);
-                    }
-
-                case ValueType.Float:
-                    float f=(float)(object)value;
-                    switch(logicOperator) {
-                        case ">":
-                            return floatValue>f;
-                        case "<":
-                            return floatValue<f;
-                        case "==":
-                            return floatValue==f;
-                        case "!=":
-                            return floatValue!=f;
-                        case ">=":
-                            return floatValue>=f;
-                        case "<=":
-                            return floatValue<=f;
-                        default:
-                            throw NotSupportError(logicOperator);
-                    }
-
-                case ValueType.String:
-                    string s=(string)(object)value;
-                    switch(logicOperator) {
-                        case "==":
-                            return stringValue==s;
-                        case "!=":
-                            return stringValue!=s;
-                        default:
-                            throw NotSupportError(logicOperator);
-                    }
-            }
-
-            return false;
-
+            return type switch
+            {
+                ValueType.Bool => BooleanExpressionEvaluator.EvaluateBoolCondition(boolValue, logicOperator,
+                    (bool)(object)value),
+                ValueType.Int => BooleanExpressionEvaluator.EvaluateIntCondition(intValue, logicOperator,
+                    (int)(object)value),
+                ValueType.Float => BooleanExpressionEvaluator.EvaluateFloatCondition(floatValue, logicOperator,
+                    (float)(object)value),
+                ValueType.String => BooleanExpressionEvaluator.EvaluateStringCondition(stringValue, logicOperator,
+                    (string)(object)value),
+                ValueType.Vector3 => BooleanExpressionEvaluator.EvaluateVector3Condition(vector3Value, logicOperator,
+                    (Vector3)(object)value),
+                _ => false
+            };
         }
 
         public override string ToString()
@@ -248,6 +213,7 @@ namespace ModularFramework.Commons {
                 ValueType.Float => floatValue.ToString(),
                 ValueType.Bool => boolValue.ToString(),
                 ValueType.String => stringValue,
+                ValueType.Vector3 => vector3Value.ToString(),
                 _ => throw new InvalidCastException($"Cannot convert Keeper of type {type} to string")
             };
         }
