@@ -10,7 +10,7 @@ namespace ModularFramework.Utility {
 			Ray ray = new (targetSky, Vector3.down);
 			var landPos = target;
 
-			if(Physics.Raycast(ray,out RaycastHit hitInfo, 100, 1<<LayerMask.NameToLayer(EnvironmentConstants.LAYER_GROUND))) {
+			if(Physics.Raycast(ray,out RaycastHit hitInfo, 100, LayerMask.GetMask(EnvironmentConstants.LAYER_GROUND))) {
 				landPos = hitInfo.point;
 			}
 			return landPos;
