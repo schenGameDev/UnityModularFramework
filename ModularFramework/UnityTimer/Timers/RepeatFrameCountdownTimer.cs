@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace UnityTimer {
     /// <summary>
-    /// Timer that counts down from a specific frame value to zero then repeat.
+    /// Timer that counts down from a specific frame value to zero then call OnTick() for the next N frames, then repeat.
     /// </summary>
     public class RepeatFrameCountdownTimer : Timer<RepeatFrameCountdownTimer> {
         private int _tickNTimes;
@@ -26,7 +26,9 @@ namespace UnityTimer {
                     _currentTriggeredTimes += 1;
                     OnTick.Invoke();
                     DeltaTime = 0;
-                } else {
+                } 
+                if (_currentTriggeredTimes == _tickNTimes)
+                {
                     Reset();
                 }
             }
