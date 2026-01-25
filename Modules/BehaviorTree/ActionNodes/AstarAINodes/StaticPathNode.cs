@@ -13,7 +13,7 @@ public class StaticPathNode : AstarAINode
     {
         base.OnEnter();
         _currentIndex = 0;
-        _currentPath = tree.Me.GetComponent<WaypointCollection>().GetPath(pathName);
+        _currentPath = GetComponentInMe<WaypointCollection>().GetPath(pathName);
         SetTarget();
         BtMove.Move();
     }

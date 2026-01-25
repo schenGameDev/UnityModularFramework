@@ -35,6 +35,8 @@ public class BTRunner : MonoBehaviour,ILive
             tree.Run();
             _btTimer = 0f;
         }
+        
+        UpdateFaceDirection();
     }
 
     #region Animation
@@ -64,14 +66,18 @@ public class BTRunner : MonoBehaviour,ILive
     
     
     #region Face Direction
-    public Vector3 faceDirection;
+    public Vector3 faceDirection; // slowly face the direction over time
     private Transform _faceTarget;
 
     public void FaceTarget(Transform target, bool oneTime) {
         if(!oneTime) {
             _faceTarget = target;
         }
-        FaceDirection(target.position - transform.position);
+        else
+        {
+            FaceDirection(target.position - transform.position);
+        }
+        
     }
 
     public void FaceTarget(Vector3 targetPosition) => FaceDirection(targetPosition - transform.position);
@@ -83,6 +89,25 @@ public class BTRunner : MonoBehaviour,ILive
     
     public void ResetFace() {
         _faceTarget = null;
+    }
+    
+    private void UpdateFaceDirection()
+    {
+        if (_faceTarget != null)
+        {
+            faceDirection = _faceTarget.position - transform.position;
+        }
+        
+        if (faceDirection != Vector3.zero)
+        {
+            Vector3 targetDirection = new Vector3(faceDirection.x, 0f, faceDirection.z);
+            if (targetDirection != Vector3.zero)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+                transform.rotation =
+                    Quaternion.RotateTowards(transform.rotation, targetRotation, 180f * Time.deltaTime);
+            }
+        }
     }
     #endregion
     

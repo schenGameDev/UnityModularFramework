@@ -47,7 +47,7 @@ public class FollowTargetNode : AstarAINode
     {
         Vector3 direction = targetPosition - tree.Me.position;
         direction.y = 0;
-        var cc = tree.Me.GetComponent<CharacterController>();
+        var cc = GetComponentInMe<CharacterController>();
         return targetPosition - direction * (cc? cc.radius : 0.5f);
     }
 

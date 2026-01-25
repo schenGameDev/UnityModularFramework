@@ -28,6 +28,7 @@ namespace ModularFramework.Utility
         public static bool Evaluate(int currentValue, string expression)
         {
             var conditionStr = TrimOperator(expression, out string op);
+            if(conditionStr.IsEmpty()) return false;
             if (int.TryParse(conditionStr, out int conditionValue))
             {
                 return EvaluateIntCondition(currentValue, op, conditionValue);
@@ -39,6 +40,7 @@ namespace ModularFramework.Utility
         public static bool Evaluate(bool currentValue, string expression)
         {
             var conditionStr = TrimOperator(expression, out string op);
+            if(conditionStr.IsEmpty()) return false;
             if (bool.TryParse(conditionStr, out bool conditionValue))
             {
                 return EvaluateBoolCondition(currentValue, op, conditionValue);
@@ -50,6 +52,7 @@ namespace ModularFramework.Utility
         public static bool Evaluate(float currentValue, string expression)
         {
             var conditionStr = TrimOperator(expression, out string op);
+            if(conditionStr.IsEmpty()) return false;
             if (float.TryParse(conditionStr, out float conditionValue))
             {
                 return EvaluateFloatCondition(currentValue, op, conditionValue);
@@ -61,12 +64,14 @@ namespace ModularFramework.Utility
         public static bool Evaluate(string currentValue, string expression)
         {
             var condition = TrimOperator(expression, out string op);
+            if(condition.IsEmpty()) return false;
             return EvaluateStringCondition(currentValue, op, condition);
         }
         
         public static bool Evaluate(Vector3 currentValue, string expression)
         {
             var conditionStr = TrimOperator(expression, out string op);
+            if(conditionStr.IsEmpty()) return false;
             var conditionValue = ParseVector3(conditionStr);
             return EvaluateVector3Condition(currentValue, op, conditionValue);
         }
@@ -130,6 +135,7 @@ namespace ModularFramework.Utility
         {
             condition = condition.Trim();
             opr = "";
+            if(condition.IsEmpty()) return string.Empty;
             int i = 0;
             do
             {

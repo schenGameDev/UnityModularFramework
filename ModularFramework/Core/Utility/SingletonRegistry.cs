@@ -18,7 +18,7 @@ namespace ModularFramework.Utility
             if (instance is MonoBehaviour mono2)
             {
                 Object.Destroy(mono2.gameObject);
-                Debug.LogWarning("Destroy duplicated Singleton class " + nameof(T) + " in scene");
+                Debug.LogWarning("Destroy duplicated Singleton class " + _instance.GetType() + " in scene");
             }
             return false;
         }
@@ -27,8 +27,8 @@ namespace ModularFramework.Utility
         {
             if (_instance is MonoBehaviour mono)
             {
+                Debug.LogWarning("Destroy Singleton class " + _instance.GetType() + " in scene");
                 Object.Destroy(mono.gameObject);
-                Debug.LogWarning("Destroy Singleton class " + nameof(T) + " in scene");
             }
             _instance = null;
         }

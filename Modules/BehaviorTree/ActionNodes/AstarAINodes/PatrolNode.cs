@@ -18,7 +18,7 @@ public class PatrolNode : AstarAINode
         base.OnEnter();
         _currentIndex = 0;
         _positiveDirection =true;
-        _currentPath = tree.Me.GetComponent<WaypointCollection>().GetPath(pathName);
+        _currentPath = GetComponentInMe<WaypointCollection>().GetPath(pathName);
         SetTarget();
         BtMove.Move();
     }
