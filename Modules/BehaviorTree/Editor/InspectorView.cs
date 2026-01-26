@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -20,17 +21,14 @@ public partial class InspectorView : VisualElement
         Clear();
         Object.DestroyImmediate(_editor);
         _editor = Editor.CreateEditor(nodeView.Node);
-        IMGUIContainer container = new (() => {
-            if(_editor.target)
-                _editor.OnInspectorGUI();
-        });
-        
+        InspectorElement inspector = new InspectorElement(_editor);
+    
         _currentNodeView = nodeView;
-        
+
         var resetButton = new Button(ResetNode) { text = "Reset" };
         Add(resetButton);
-        
-        Add(container);
+
+        Add(inspector);
     }
     
     private void ResetNode()

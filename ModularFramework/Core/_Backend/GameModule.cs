@@ -93,14 +93,14 @@ namespace ModularFramework {
             if(updateMode == UpdateMode.NONE || OperateEveryFrame) return;
             if(updateMode == UpdateMode.EVERY_N_FRAME)
             {
-                var timer = new RepeatFrameCountdownTimer(everyNFrame, 2);
+                var timer = new RepeatFrameCountdownTimer(everyNFrame, 1);
                 timer.OnTick += () =>  {
                     if(CentrallyManaged) SingletonRegistry<GameRunner>.Get().Do(builder=>builder.AddToExecQueue(this, timer.DeltaTime));
                     else Tick(timer.DeltaTime);
                 };
                 Timer = timer;
             } else {
-                var timer = new RepeatCountdownTimer(everyNSecond, 2);
+                var timer = new RepeatCountdownTimer(everyNSecond, 1);
                 timer.OnTick += () =>  {
                     if(CentrallyManaged) SingletonRegistry<GameRunner>.Get().Do(builder=>builder.AddToExecQueue(this, timer.DeltaTime));
                     else Tick(timer.DeltaTime);

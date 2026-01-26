@@ -56,5 +56,6 @@ public class TestKeywordOnExitNode : DecoratorNode
     TestKeywordOnExitNode()
     {
         description = "Read a keyword in the blackboard to alter the result of the child node on exit";
+        titleCustomizable = false;
     }
 }

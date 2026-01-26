@@ -54,5 +54,6 @@ public class RedoNode : DecoratorNode
     private RedoNode()
     {
         description = "Rerun child node";
+        titleCustomizable = false;
     }
 }

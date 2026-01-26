@@ -8,14 +8,14 @@ public abstract class SwitchNode : ControlNode
     
     [Tooltip("Verify the condition each frame. If it changes, fail the node")]public bool verifyEachFrame;
     
-    private bool _enterConditionState;
+    protected bool enterConditionState;
     
     protected override void OnEnter()
     {
         if (Children.Count == 0) return;
 
-        _enterConditionState = Condition();
-        if (_enterConditionState)
+        enterConditionState = Condition();
+        if (enterConditionState)
         {
             currentRunningChild = GetChildByPortName(PORT_YES)[0];
         } 
@@ -32,7 +32,7 @@ public abstract class SwitchNode : ControlNode
     {
         if (currentRunningChild is null) return State.Failure;
         
-        if (verifyEachFrame && Condition() != _enterConditionState)
+        if (verifyEachFrame && Condition() != enterConditionState)
         {
             CascadeExit();
             return State.Failure;

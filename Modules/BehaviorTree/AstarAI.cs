@@ -10,9 +10,10 @@ public class AstarAI : MonoBehaviour
     private const float NEXT_WAYPOINT_DISTANCE = 1;
     private const float REPATH_RATE = 0.5f;
     // [SerializeField] private float stoppingDistance = 1f;
-    [SerializeField] private LayerMask ground;
     [SerializeField] private float heightOffset = 1f;
     [SerializeField] private EventChannel<float> npcSpeedChangeEvent;
+    [Tooltip("the customized tags in seeker")] public uint[] astarTags;
+
 
     [Header("Runtime")]
     [ReadOnly,ShowInInspector] private bool _targetFixed;
@@ -179,14 +180,25 @@ public class AstarAI : MonoBehaviour
 
     }
     private Vector3 _velocity;
+    private float _stuckTimer = 0f;
     private void FixedUpdate() {
         if (_path == null) {
             return;
         }
 
-        if (!_controller.SimpleMove(_velocity))
+        if (!_controller.SimpleMove(_velocity) || (_velocity.sqrMagnitude>0.01f && _controller.velocity is { x: 0, z: 0 }))
         {
-            Debug.Log("CharacterController SimpleMove failed.");
+            _stuckTimer += Time.fixedDeltaTime;
+            if (!PathNotFound && _stuckTimer > 1f)
+            {
+                Debug.Log($"{name} stuck.");
+                PathNotFound = true;
+                _seeker.CancelCurrentPathRequest();
+            }
+            else
+            {
+                _stuckTimer = 0;
+            }
         }
         
     }

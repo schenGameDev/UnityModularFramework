@@ -8,16 +8,18 @@ public struct DamageOverTimeEffect : IEffect<IDamageable>
 {
     public int damagePerTick;
     public DamageType damageType;
+    public DamageTarget damageTarget;
     public event Action<IEffect<IDamageable>> OnCompleted;
 
     private RepeatCountdownTimer _timer;
     private IDamageable _target;
 
-    public DamageOverTimeEffect(DamageType damageType, int ticks, float tickInterval, int damagePerTick)
+    public DamageOverTimeEffect(DamageType damageType, DamageTarget damageTarget,int ticks, float tickInterval, int damagePerTick)
     {
         this.damagePerTick = damagePerTick;
         this.damageType = damageType;
         _timer = new RepeatCountdownTimer(tickInterval, ticks);
+        this.damageTarget = damageTarget;
         _target = null;
         OnCompleted = null;
     }
@@ -40,6 +42,11 @@ public struct DamageOverTimeEffect : IEffect<IDamageable>
         _timer.Stop();
         CleanUp();
     }
+    
+    public bool IsTargetValid(IDamageable target)
+    {
+        return damageTarget.HasFlag(target.DamageTarget);
+    }
 
     private void CleanUp()
     {
@@ -55,22 +62,24 @@ public class DamageOverTimeEffectFactory : IEffectFactory<IDamageable>
     [Min(0), Suffix("s")] public float tickInterval;
     [Min(0)] public int damagePerTick;
     public DamageType damageType;
+    public DamageTarget damageTarget;
 
     public IEffect<IDamageable> Create()
     {
-        return new DamageOverTimeEffect(damageType, ticks, tickInterval, damagePerTick);
+        return new DamageOverTimeEffect(damageType, damageTarget, ticks, tickInterval, damagePerTick);
     }
 }
 
 [Serializable]
 public class HealOverTimeEffectFactory : IEffectFactory<IDamageable>
 {
+    public DamageTarget healTarget = DamageTarget.All;
     public int ticks;
     public float tickInterval;
     [Min(0)] public int healPerTick;
 
     public IEffect<IDamageable> Create()
     {
-        return new DamageOverTimeEffect(DamageType.Physical, ticks, tickInterval, - healPerTick);
+        return new DamageOverTimeEffect(DamageType.Physical, healTarget, ticks, tickInterval, - healPerTick);
     }
 }

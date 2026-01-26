@@ -40,6 +40,11 @@ public struct SpecialConditionEffect : IEffect<IDamageable>
         _target.RemoveSpecialCondition(specialCondition);
         CleanUp();
     }
+    
+    public bool IsTargetValid(IDamageable target)
+    {
+        return true;
+    }
 
     public void CleanUp()
     {

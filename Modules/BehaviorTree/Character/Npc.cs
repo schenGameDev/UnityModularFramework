@@ -18,6 +18,7 @@ public class Npc : Character,IDamageable
     }
 
     public Transform Transform => transform;
+    public DamageTarget DamageTarget => DamageTarget.NPC;
     
 
     private void Start()
@@ -60,11 +61,15 @@ public class Npc : Character,IDamageable
 
     public void TakeDamage(int damageAmount, DamageType damageType)
     {
-        health -= damageAmount;
-        if (health <= 0)
+        if (damageType == DamageType.Physical)
         {
-            Die();
+            health -= damageAmount;
+            if (health <= 0)
+            {
+                Die();
+            }
         }
+        
     }
 
     private void Die()

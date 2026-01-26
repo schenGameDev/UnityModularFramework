@@ -5,6 +5,7 @@ public class FollowTargetNode : AstarAINode
     public bool isStaticTarget = false;
     public bool exitWhenReached = false;
     private Transform _target;
+    private CharacterController _cc;
 
     protected override void OnEnter()
     {
@@ -15,7 +16,7 @@ public class FollowTargetNode : AstarAINode
             _target = targets[0];
             if (isStaticTarget)
             {
-                tree.AI.SetNewTarget(GetCloseToMePosition(_target.position), BtMove.speed,true);
+                tree.AI.SetNewTarget(GetCloseToMePosition(_target), BtMove.speed,true);
             }
             else
             {
@@ -43,12 +44,16 @@ public class FollowTargetNode : AstarAINode
         return node;
     }
     
-    private Vector3 GetCloseToMePosition(Vector3 targetPosition)
+    private Vector3 GetCloseToMePosition(Transform target)
     {
+        Vector3 targetPosition = target.TryGetComponent<Collider>(out var collider) 
+            ? collider.ClosestPoint(tree.Me.position) 
+            : target.position;
+
         Vector3 direction = targetPosition - tree.Me.position;
         direction.y = 0;
-        var cc = GetComponentInMe<CharacterController>();
-        return targetPosition - direction * (cc? cc.radius : 0.5f);
+        if(!_cc) _cc = GetComponentInMe<CharacterController>();
+        return targetPosition - direction * (_cc? _cc.radius : 0.5f);
     }
 
     FollowTargetNode()

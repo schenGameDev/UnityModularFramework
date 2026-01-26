@@ -10,7 +10,7 @@ namespace ModularFramework {
     /// The bucket keeps a list of ScriptableObjects, which can be fetched by the name
     /// </summary>
     public abstract class SOBucket<T> : ScriptableObject where T : ScriptableObject {
-        [SerializeField] private T[] _items;
+        [SerializeField] private T[] items;
         private Dictionary<string,T> _dictionary = new();
 
         public Optional<T> Get(string name) {
@@ -29,20 +29,20 @@ namespace ModularFramework {
         void Clear() =>  _dictionary.Clear();
 
         void ResetState() {
-            if(_items == null) {
+            if(items == null) {
                 _dictionary = new();
             } else {
-                _dictionary = _items.ToDictionary(x=>x.name, x=>x);
+                _dictionary = items.ToDictionary(x=>x.name, x=>x);
             }
         }
 
-        public bool ContainsKey(string name) {
+        public bool ContainsKey(string key) {
             if(_dictionary.IsEmpty()) ResetState();
-            return _dictionary.ContainsKey(name);
+            return _dictionary.ContainsKey(key);
         }
 
         public void ForEach(Action<T> action) {
-            _items.ForEach(i => action(i));
+            items.ForEach(action);
         }
     }
 }

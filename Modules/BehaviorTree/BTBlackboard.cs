@@ -9,45 +9,63 @@ public class BTBlackboard : ScriptableObject
     public const string KEYWORD_TARGET = "Target";
     public const string KEYWORD_ABILITY_NAME = "AbilityName";
     
+    public bool changed = false;
     
-    [ReadOnly,ShowInInspector]
-    [SerializedDictionary(keyName: "key", valueName: "value")]
-    private readonly SerializedDictionary<string, string> _parameters = new ();
+    [ReadOnly]
+    [SerializeField,SerializedDictionary(keyName: "key", valueName: "value")]
+    private SerializedDictionary<string, string> parameters = new ();
     
-    [ReadOnly,ShowInInspector]
-    [SerializedDictionary(keyName: "key", valueName: "transform")]
-    private readonly SerializedDictionary<string, List<Transform>> _inSceneObjects = new ();
+    [ReadOnly]
+    [SerializeField,SerializedDictionary(keyName: "key", valueName: "transform")]
+    private SerializedDictionary<string, List<Transform>> inSceneObjects = new ();
     
-    public void Add(string key, string value) => _parameters[key] = value;
-    
-    public void RemoveParameter(string key) => _parameters.Remove(key);
+    public void Add(string key, string value)
+    {
+        changed = true;
+        parameters[key] = value;
+    }
+
+    public void RemoveParameter(string key)
+    {
+        changed = true;
+        parameters.Remove(key);
+    }
 
     public void Add(string key, Transform tf)
     {
-        if (tf == null) _inSceneObjects.Remove(key);
-        else _inSceneObjects[key] = new List<Transform> {tf};
+        if (tf == null) inSceneObjects.Remove(key);
+        else inSceneObjects[key] = new List<Transform> {tf};
+        changed = true;
     } 
 
     public void Add(string key, List<Transform> tfs)
     {
-        if (tfs == null || tfs.Count == 0) _inSceneObjects.Remove(key);
-        else _inSceneObjects[key] = tfs;
+        if (tfs == null || tfs.Count == 0) inSceneObjects.Remove(key);
+        else inSceneObjects[key] = tfs;
+        changed = true;
     }
     
     public void Add<T>(string key, List<T> components) where T : Component
     {
-        if (components == null || components.Count == 0) _inSceneObjects.Remove(key);
-        else _inSceneObjects[key] = components.Select(c => c.transform).ToList();
+        if (components == null || components.Count == 0) inSceneObjects.Remove(key);
+        else inSceneObjects[key] = components.Select(c => c.transform).ToList();
+        changed = true;
+    }
+    
+    public void RemoveInSceneObject(string key)
+    {
+        changed = true;
+        inSceneObjects.Remove(key);
     }
 
     public string Get(string key)
     {
-        return _parameters.GetValueOrDefault(key);
+        return parameters.GetValueOrDefault(key);
     }
     
     public List<T> Get<T>(string key) where T : Component
     {
-        if (!_inSceneObjects.TryGetValue(key, out var tfs))
+        if (!inSceneObjects.TryGetValue(key, out var tfs))
         {
             return new List<T>();
         }
@@ -61,7 +79,8 @@ public class BTBlackboard : ScriptableObject
 
     public void Clear()
     {
-        _parameters.Clear();
-        _inSceneObjects.Clear();
+        parameters.Clear();
+        inSceneObjects.Clear();
+        changed = false;
     }
 }

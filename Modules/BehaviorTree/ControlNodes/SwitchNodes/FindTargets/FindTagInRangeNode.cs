@@ -7,14 +7,14 @@ public class FindTagInRangeNode : FindTargetInRangeNode<Transform>
 {
     [TagDropdown] public string tag;
         
-    private List<Transform> targets = new ();
+    private List<Transform> _targets = new ();
     protected override void OnEnter()
     {
-        targets.Clear();
+        _targets.Clear();
         base.OnEnter();
-        if (targets is { Count: > 0 })
+        if (_targets is { Count: > 0 })
         {
-            tree.blackboard.Add(BTBlackboard.KEYWORD_TARGET, targets);
+            tree.blackboard.Add(BTBlackboard.KEYWORD_TARGET, _targets);
         }
     }
     protected override bool Condition()
@@ -22,8 +22,8 @@ public class FindTagInRangeNode : FindTargetInRangeNode<Transform>
         if (BtRange == null) return  false;
         var tfWithTag = GameObject.FindGameObjectsWithTag(tag).Select(go => go.transform);
         var filteredTargets = ITransformTargetFilter.Filter(tfWithTag, tree.Me, BtRange.targetFilters);
-        targets = BtRange.targetSelector.GetStrategy(tree.Me)(filteredTargets).ToList();
-        return targets is { Count: > 0 };
+        _targets = BtRange.targetSelector.GetStrategy(tree.Me)(filteredTargets).ToList();
+        return _targets is { Count: > 0 };
     }
     
 

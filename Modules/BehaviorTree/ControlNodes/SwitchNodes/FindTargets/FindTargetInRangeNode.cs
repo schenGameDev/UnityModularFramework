@@ -25,7 +25,7 @@ public abstract class FindTargetInRangeNode<TTarget> : SwitchNode where TTarget 
         BtRange??= GetComponentInMe<BTRange>(rangeName);
         if (BtRange == null)
         {
-            Debug.LogError($"EnemyRange of {rangeName} component not found on {tree.Me.name}");
+            Debug.LogError($"Range of {rangeName} component not found on {tree.Me.name}");
             return false;
         }
         return AnyTargetInRightRange();
@@ -34,12 +34,14 @@ public abstract class FindTargetInRangeNode<TTarget> : SwitchNode where TTarget 
     private bool AnyTargetInRightRange() {
         if (BtRange == null)
         {
-            Debug.LogError($"EnemyRange of {rangeName} component not found on {tree.Me.name}");
+            Debug.LogError($"Range of {rangeName} component not found on {tree.Me.name}");
             return false;
         }
         targets = Registry<TTarget>.Get(BtRange.targetSelector.GetStrategy<TTarget>(tree.Me, number), 
             BtRange.targetFilters?.Select(f => f.GetStrategy<TTarget>(tree.Me)).ToArray()).ToList(); 
         if (targets == null || targets.Count == 0) return false;
+        
+        Debug.Log("Target: " + string.Join(",",targets.Select(t => t.name)));
 
         return true;
     }

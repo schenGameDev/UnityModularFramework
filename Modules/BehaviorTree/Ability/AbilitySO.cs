@@ -6,8 +6,8 @@ using Void = EditorAttributes.Void;
 
 public abstract class AbilitySO : ScriptableObject
 {
-    [Title(nameof(description))]
-    private Void _titleHolder;
+    [Title(nameof(description),12,stringInputMode:StringInputMode.Dynamic),SerializeField]
+    private Void titleHolder;
     protected string description;
     
     public AudioClip releaseSfx;
@@ -50,7 +50,7 @@ public abstract class AbilitySO : ScriptableObject
             if(onComplete != null) effect.OnCompleted += (e) => onComplete();
             foreach (var target in targets)
             {
-                target.TakeEffect(effect);
+                if(effect.IsTargetValid(target)) target.TakeEffect(effect);
             }
             
         }

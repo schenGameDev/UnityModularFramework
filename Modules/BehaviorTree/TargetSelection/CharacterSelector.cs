@@ -9,6 +9,8 @@ public struct CharacterSelector : ITransformTargetSelector
     [Rename("health x")] public int healthWeight;
     [Rename("dps x")] public int dpsWeight;
     public SortOrder sortOrder;
+    
+    public bool SkipNegativeScore => false;
 
     public float GetScore(Transform target, Transform me)
     {

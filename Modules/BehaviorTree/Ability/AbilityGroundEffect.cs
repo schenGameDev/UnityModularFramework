@@ -21,7 +21,7 @@ public class AbilityGroundEffect : MonoBehaviour
     
     [SerializeField] RangeFilter rangeFilter;
     
-    private RepeatCountdownTimer _timer;
+    private LimitedRepeatTimer _timer;
     private Action _onComplete;
     [SerializeField] private bool live;
     
@@ -30,7 +30,7 @@ public class AbilityGroundEffect : MonoBehaviour
         if(!live) return;
         if (impactOverTime)
         {
-            _timer = new RepeatCountdownTimer(tickInterval, ticks);
+            _timer = new LimitedRepeatTimer(tickInterval, ticks);
             _timer.OnTick = ApplyEffects;
             _timer.OnTimerStop = () => Destroy(gameObject);
             _timer.Start();

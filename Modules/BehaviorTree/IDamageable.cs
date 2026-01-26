@@ -13,4 +13,6 @@ public interface IDamageable
     public void AimedAtBy( bool isAiming, Transform attacker, string details = null);
     
     public Transform Transform { get; }
+    
+    public DamageTarget DamageTarget { get; }
 }

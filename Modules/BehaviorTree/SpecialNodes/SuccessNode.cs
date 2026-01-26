@@ -11,5 +11,6 @@ public class SuccessNode : SingletonNode
     SuccessNode()
     {
         description = "Always Success";
+        titleCustomizable = false;
     }
 }

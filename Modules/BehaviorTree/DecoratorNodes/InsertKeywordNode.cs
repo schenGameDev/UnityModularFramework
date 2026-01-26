@@ -35,5 +35,6 @@ public class InsertKeywordNode : DecoratorNode
     InsertKeywordNode()
     {
         description = "Insert a keyword into the blackboard";
+        titleCustomizable = false;
     }
 }

@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -19,10 +20,7 @@ public partial class BlackboardView : VisualElement
         Clear();
         Object.DestroyImmediate(_editor);
         _editor = Editor.CreateEditor(blackboard);
-        IMGUIContainer container = new (() => {
-            if(_editor.target)
-                _editor.OnInspectorGUI();
-        });
-        Add(container);
+        InspectorElement inspector = new InspectorElement(_editor);
+        Add(inspector);
     }
 }

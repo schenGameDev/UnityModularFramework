@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 
 public class FindTargetByKeyword : SwitchNode
@@ -11,6 +12,7 @@ public class FindTargetByKeyword : SwitchNode
         if (targets is { Count: > 0 })
         {
             tree.blackboard.Add(BTBlackboard.KEYWORD_TARGET, targets);
+            Debug.Log("Target: " + string.Join(",",targets.Select(t => t.name)));
             return true;
         }
         return false;

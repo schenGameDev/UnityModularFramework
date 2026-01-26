@@ -22,7 +22,7 @@ public class BTAbility : MonoBehaviour, IMultiComponent<BTAbility>, IReady
     public bool verifyRangeAtDamageTime = true;
     
     [Header("Casting")]
-    [SerializeReference,OnValueChanged(nameof(RenameComponent))] 
+    [Required,SerializeReference,OnValueChanged(nameof(RenameComponent))] 
     private AbilitySO ability;
     [SerializeField,Tooltip("Casting animation")] 
     private string animFlag;

@@ -211,5 +211,6 @@ public class BehaviorTreeSO : ScriptableObject
 
     public void Run() {
         root.Run();
+        blackboard.changed = false;
     }
 }

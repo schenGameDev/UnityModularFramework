@@ -12,5 +12,6 @@ public class FailNode : SingletonNode
     FailNode()
     {
         description = "Always fail";
+        titleCustomizable = false;
     }
 }

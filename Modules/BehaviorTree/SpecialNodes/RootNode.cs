@@ -7,6 +7,7 @@ public class RootNode : BTNode
     private RootNode()
     {
         description = "Root node";
+        titleCustomizable = false;
     }
     
     [HideInInspector] public BTNode child;

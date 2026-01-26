@@ -27,7 +27,7 @@ public abstract class FindTargetInAbilityRangeNode<TTarget> : SwitchNode,IReady 
         _btAbility ??= GetComponentInMe<BTAbility>(abilityName);
         if (_btAbility == null)
         {
-            Debug.LogError($"EnemyAbility of {abilityName} component not found on {tree.Me.name}");
+            Debug.LogError($"Ability of {abilityName} component not found on {tree.Me.name}");
             return false;
         }
         
@@ -55,6 +55,9 @@ public abstract class FindTargetInAbilityRangeNode<TTarget> : SwitchNode,IReady 
         targets = Registry<TTarget>.Get(_btAbility.targetSelector.GetStrategy<TTarget>(tree.Me, _btAbility.targetNumber), 
             ((ITransformTargetFilter)_btAbility.rangeFilter).GetStrategy<TTarget>(tree.Me)).ToList(); 
         if (targets == null || targets.Count == 0) return false;
+        
+        Debug.Log("Target: " + string.Join(",",targets.Select(t => t.name)));
+        
         return true;
     }
     

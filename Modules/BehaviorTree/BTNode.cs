@@ -13,10 +13,11 @@ public abstract class BTNode : ScriptableObject
         Running,Success,Failure
     }
     
-    public string title;
+    [ShowField(nameof(titleCustomizable))] public string title;
+    protected bool titleCustomizable = true;
     
-    [Title(nameof(description))]
-    private Void _descriptionHolder;
+    [SerializeField,Title(nameof(description), 12,stringInputMode: StringInputMode.Dynamic)]
+    private Void descriptionHolder;
     protected string description;
     
     [ReadOnly] public State nodeState;

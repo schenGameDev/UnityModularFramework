@@ -6,7 +6,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class BTRunner : MonoBehaviour,ILive
 {
-    public BehaviorTreeSO tree;
+    [Required] public BehaviorTreeSO tree;
     [Suffix("s"),SerializeField] private float interval = 0.2f;
     public bool Live { get; set; }
     private Action _onAnimKeyEvent;
@@ -69,21 +69,25 @@ public class BTRunner : MonoBehaviour,ILive
     public Vector3 faceDirection; // slowly face the direction over time
     private Transform _faceTarget;
 
-    public void FaceTarget(Transform target, bool oneTime) {
+    public void FaceTarget(Transform target, bool oneTime = false) {
         if(!oneTime) {
             _faceTarget = target;
         }
         else
         {
-            FaceDirection(target.position - transform.position);
+            ResetFace();
         }
-        
+        FaceDirection(target.position - transform.position);
     }
 
-    public void FaceTarget(Vector3 targetPosition) => FaceDirection(targetPosition - transform.position);
-    
+    public void FaceTarget(Vector3 targetPosition)
+    {
+        ResetFace();
+        faceDirection = targetPosition - transform.position;
+    }
+
     public void FaceDirection(Vector3 direction) {
-        if(_faceTarget) return;
+        ResetFace();
         faceDirection = direction;
     }
     
@@ -110,9 +114,15 @@ public class BTRunner : MonoBehaviour,ILive
         }
     }
     #endregion
+
+    #region Blackboard
+    public void AddParameterToBlackboard(string key, string value) => tree.blackboard.Add(key, value);
+
+    public void AddTransformToBlackboard(string key, Transform tf) => tree.blackboard.Add(key, tf);
+
+    public void RemoveTransformFromBlackboard(string key) => tree.blackboard.RemoveInSceneObject(key);
     
-    
-    public void AddParameter(string key, string value) {
-        tree.blackboard.Add(key, value);
-    }
+    public void RemoveParameterFromBlackboard(string key) => tree.blackboard.RemoveParameter(key);
+
+    #endregion
 }

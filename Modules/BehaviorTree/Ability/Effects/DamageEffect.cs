@@ -6,6 +6,7 @@ public struct DamageEffect : IEffect<IDamageable>
 {
     public int damageAmount;
     public DamageType damageType;
+    public DamageTarget damageTarget;
     public event Action<IEffect<IDamageable>> OnCompleted;
 
     public void Apply(IDamageable target)
@@ -18,6 +19,11 @@ public struct DamageEffect : IEffect<IDamageable>
     {
         OnCompleted?.Invoke(this);
     }
+
+    public bool IsTargetValid(IDamageable target)
+    {
+        return damageTarget.HasFlag(target.DamageTarget);
+    }
 }
 
 [Serializable]
@@ -25,13 +31,15 @@ public class DamageEffectFactory : IEffectFactory<IDamageable>
 {
     [Min(0)] public int damageAmount;
     public DamageType damageType;
+    public DamageTarget damageTarget;
 
     public IEffect<IDamageable> Create()
     {
         return new DamageEffect
         {
             damageAmount = damageAmount,
-            damageType = damageType
+            damageType = damageType,
+            damageTarget = damageTarget
         };
     }
 }
@@ -39,6 +47,7 @@ public class DamageEffectFactory : IEffectFactory<IDamageable>
 [Serializable]
 public class HealEffectFactory : IEffectFactory<IDamageable>
 {
+    public DamageTarget healTarget = DamageTarget.All;
     [Min(0)] public int healAmount;
 
     public IEffect<IDamageable> Create()
@@ -46,7 +55,8 @@ public class HealEffectFactory : IEffectFactory<IDamageable>
         return new DamageEffect
         {
             damageAmount =  - healAmount,
-            damageType = DamageType.Physical
+            damageType = DamageType.Physical,
+            damageTarget = healTarget
         };
     }
 }

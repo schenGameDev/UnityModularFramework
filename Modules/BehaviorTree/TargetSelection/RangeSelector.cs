@@ -5,6 +5,7 @@ using UnityEngine;
 public struct RangeSelector : ITransformTargetSelector
 {
     public SortOrder sortOrder;
+    public bool SkipNegativeScore => false;
 
     public float GetScore(Transform target, Transform me)
     {
