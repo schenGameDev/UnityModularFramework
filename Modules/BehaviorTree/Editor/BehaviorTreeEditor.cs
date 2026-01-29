@@ -179,6 +179,7 @@ public class BehaviorTreeEditor : EditorWindow
     {
         _currentInspectorNodeView = node;
         _inspectorView.UpdateSelection(node);
+        _treeView.HighlightSubTreeNode(node.Node.title);
     }
     
     private void OnEnable() {

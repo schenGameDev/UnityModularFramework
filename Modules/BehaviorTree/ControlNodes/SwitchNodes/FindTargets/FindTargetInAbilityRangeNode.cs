@@ -56,7 +56,7 @@ public abstract class FindTargetInAbilityRangeNode<TTarget> : SwitchNode,IReady 
             ((ITransformTargetFilter)_btAbility.rangeFilter).GetStrategy<TTarget>(tree.Me)).ToList(); 
         if (targets == null || targets.Count == 0) return false;
         
-        Debug.Log("Target: " + string.Join(",",targets.Select(t => t.name)));
+        if(!started) Debug.Log("Target: " + string.Join(",",targets.Select(t => t.name)));
         
         return true;
     }

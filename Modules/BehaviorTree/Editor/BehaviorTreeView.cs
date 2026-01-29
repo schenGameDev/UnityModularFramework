@@ -240,6 +240,12 @@ public partial class BehaviorTreeView : GraphView
             evt.menu.AppendAction($"Special/{type.Name}", (a) => CreateNode(type));
         }
         
+        evt.menu.AppendAction($"Special/SubTree", (a) =>
+        {
+            CreateNode(typeof(SubTreeOutletNode));
+            CreateNode(typeof(SubTreeRootNode), new Vector2(10,10));
+        });
+        
         types = TypeCache.GetTypesDerivedFrom<ActionNode>();
         foreach(var type in types) {
             if(type.IsAbstract) continue;
@@ -275,7 +281,7 @@ public partial class BehaviorTreeView : GraphView
         }
     }
 
-    private void CreateNode(Type type) {
+    private void CreateNode(Type type, Vector2 offset = default) {
         if (type.IsSubclassOf(typeof(SingletonNode)))
         {
             CreateSingletonNode(type);
@@ -284,6 +290,7 @@ public partial class BehaviorTreeView : GraphView
         
         BTNode node = _tree.CreateNode(type);
         node.position = _rightClickPosition;
+        if(offset != default) node.position += offset;
         CreateNodeView(node);
     }
 
@@ -377,6 +384,17 @@ public partial class BehaviorTreeView : GraphView
             NodeView view = n as NodeView;
             if(view!=null) {
                 view.UpdateState();
+            }
+        });
+    }
+    
+    public void HighlightSubTreeNode(string selectedNodeTitle)
+    {
+        if(Application.isPlaying) return;
+        nodes.ForEach(n => {
+            NodeView view = n as NodeView;
+            if(view!=null) {
+                view.HighlightSubTree(selectedNodeTitle);
             }
         });
     }

@@ -41,7 +41,7 @@ public abstract class FindTargetInRangeNode<TTarget> : SwitchNode where TTarget 
             BtRange.targetFilters?.Select(f => f.GetStrategy<TTarget>(tree.Me)).ToArray()).ToList(); 
         if (targets == null || targets.Count == 0) return false;
         
-        Debug.Log("Target: " + string.Join(",",targets.Select(t => t.name)));
+        if (!started) Debug.Log("Target: " + string.Join(",",targets.Select(t => t.name)));Debug.Log("Target: " + string.Join(",",targets.Select(t => t.name)));
 
         return true;
     }

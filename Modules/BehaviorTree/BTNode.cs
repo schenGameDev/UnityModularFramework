@@ -68,6 +68,7 @@ public abstract class BTNode : ScriptableObject
     public abstract Color HeaderColor { get; }
     
     public abstract OutputPortDefinition[] OutputPortDefinitions { get; }
+    public virtual bool HideInputPort() => false;
     [HideInInspector] public string parentPortName;
     public int GetOutputPortIndex(string portName)
     { 

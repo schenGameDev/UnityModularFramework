@@ -185,27 +185,43 @@ public class BehaviorTreeSO : ScriptableObject
     public void Initialize() {
         AI = Me.GetComponent<AstarAI>();
         runner = Me.GetComponent<BTRunner>();
-        nodes.ForEach(n =>
-        {
-            n.tree = this;
-        });
     }
 
     public BehaviorTreeSO Clone() {
         var clone = Instantiate(this);
         clone.root = root.Clone();
+        LinkSubTree(clone.nodes);
         clone.nodes = new List<BTNode>();
         Traverse(clone.root, (n) => {
+            n.tree = clone;
             clone.nodes.Add(n);
         } );
         if(blackboard) clone.blackboard = Instantiate(blackboard);
         return clone;
     }
 
-    void Traverse(BTNode node, Action<BTNode> visitor) {
+    private void Traverse(BTNode node, Action<BTNode> visitor) {
         if(node) {
             visitor.Invoke(node);
             node.GetChildren().ForEach(n => Traverse(n, visitor));
+        }
+    }
+    
+    private void LinkSubTree(List<BTNode> nodes)
+    {
+        try
+        {
+            var subroots = nodes.OfType<SubTreeRootNode>().ToDictionary(sr => sr.title, sr => sr);
+            nodes.OfType<SubTreeOutletNode>().ForEach(outlet =>
+            {
+                if (subroots.TryGetValue(outlet.title, out var subroot))
+                    outlet.subTreeRootNode = subroot;
+            });
+        }
+        catch (ArgumentException e)
+        {
+            Debug.LogError("Duplicate SubTreeRootNode titles found. Make sure all SubTreeRootNode have unique titles.");
+            Debug.LogException(e);
         }
     }
 

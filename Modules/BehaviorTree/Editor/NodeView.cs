@@ -36,14 +36,24 @@ public class NodeView : Node {
         CreateOutputPorts();
     }
 
-
+    public void HighlightSubTree(string title)
+    {
+        if (Node is SubTreeRootNode or SubTreeOutletNode && Node.title == title)
+        {
+            AddToClassList("current");
+        }
+        else
+        {
+            RemoveFromClassList("current");
+        }
+        
+    }
+    
     public void UpdateState()
     {
         RemoveFromClassList("running");
         RemoveFromClassList("success");
         RemoveFromClassList("failure");
-
-        if(!Application.isPlaying) return;
 
         switch(Node.nodeState) {
             case BTNode.State.Running:
@@ -66,7 +76,7 @@ public class NodeView : Node {
 
     private void CreateInputPorts()
     {
-        if (Node is not RootNode) {
+        if (!Node.HideInputPort()) {
             InputPort = InstantiatePort(Orientation.Vertical, Direction.Input, Port.Capacity.Single, typeof(bool));
         }
 

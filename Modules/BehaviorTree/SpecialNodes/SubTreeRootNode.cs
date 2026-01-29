@@ -1,27 +1,20 @@
 using System.Collections.Generic;
+using EditorAttributes;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
-public class RootNode : BTNode
+public class SubTreeRootNode : BTNode
 {
-    private RootNode()
-    {
-        description = "Root node";
-        titleCustomizable = false;
-    }
-    public override bool HideInputPort() => true;
-    [HideInInspector] public BTNode child;
-
+    [ReadOnly] public BTNode child;
     protected override State OnUpdate() => child.Run();
     // public override void OnFixedUpdate()=>Child.OnFixedUpdate();
 
     public override BTNode Clone() {
-        RootNode node = Instantiate(this);
+        SubTreeRootNode node = Instantiate(this);
         node.child = child.Clone();
         return node;
     }
-
-
+    
     public override OutputPortDefinition[] OutputPortDefinitions => new[] { new OutputPortDefinition(Port.Capacity.Single) };
     public override Color HeaderColor => new Color32(251, 68, 68, 255);
     public override List<BTNode> GetChildren() => child==null? new List<BTNode>() : new List<BTNode> {child};
@@ -44,5 +37,11 @@ public class RootNode : BTNode
     {
         Exit();
         child?.CascadeExit();
+    }
+
+    SubTreeRootNode()
+    {
+        description = "Sub Tree Root node\r\n" +
+                      "<b>Requires</b>: Title not empty";
     }
 }

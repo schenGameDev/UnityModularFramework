@@ -8,6 +8,15 @@ public abstract class SwitchNode : ControlNode
     
     [Tooltip("Verify the condition each frame. If it changes, fail the node")]public bool verifyEachFrame;
     
+    public AfterAction afterAction;
+
+    public enum AfterAction
+    {
+        NONE,
+        RUN_YES_AFTER_NO_SUCCESS,
+        RUN_NO_AFTER_YES_SUCCESS,
+    }
+    
     protected bool enterConditionState;
     
     protected override void OnEnter()
@@ -37,12 +46,29 @@ public abstract class SwitchNode : ControlNode
             CascadeExit();
             return State.Failure;
         }
-        return currentRunningChild.Run();
+        var res = currentRunningChild.Run();
+        if (res==State.Success)
+        {
+            if((afterAction == AfterAction.RUN_YES_AFTER_NO_SUCCESS && currentRunningChild.parentPortName == PORT_NO) ||
+               (afterAction == AfterAction.RUN_NO_AFTER_YES_SUCCESS && currentRunningChild.parentPortName == PORT_YES))
+            {
+                var nextPort = currentRunningChild.parentPortName == PORT_YES ? PORT_NO : PORT_YES;
+                var foundChildren = GetChildByPortName(nextPort);
+                if (foundChildren.Count > 0)
+                {
+                    currentRunningChild = foundChildren[0];
+                    return State.Running;
+                }
+            }
+        }
+
+        return res;
     }
     
     public override BTNode Clone() {
         var node = base.Clone() as SwitchNode;
         node.verifyEachFrame = verifyEachFrame;
+        node.afterAction = afterAction;
         return node;
     }
     
