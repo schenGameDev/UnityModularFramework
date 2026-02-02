@@ -103,7 +103,7 @@ public class SlideShowProfile
     public string name;
     public Sprite sprite;
     public Color color = Color.clear;
-    [SerializeReference] private SlideTransitionBase transition;
+    [SerializeField] private SlideTransitionBase transition;
 
     public void Initialize(Color defaultColor)
     {

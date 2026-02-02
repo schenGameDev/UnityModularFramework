@@ -22,8 +22,9 @@ public class BTAbility : MonoBehaviour, IMultiComponent<BTAbility>, IReady
     public bool verifyRangeAtDamageTime = true;
     
     [Header("Casting")]
-    [Required,SerializeReference,OnValueChanged(nameof(RenameComponent))] 
+    [Required,SerializeField,PropertyDropdown,OnValueChanged(nameof(RenameComponent))] 
     private AbilitySO ability;
+    [SerializeField, ShowField(nameof(HasOffset))] private Vector3 spawnEffectOffset;
     [SerializeField,Tooltip("Casting animation")] 
     private string animFlag;
     
@@ -41,7 +42,8 @@ public class BTAbility : MonoBehaviour, IMultiComponent<BTAbility>, IReady
     [ReadOnly,ShowInInspector] protected bool isReady = true;
     
     public bool Ready => isReady;
-
+    private bool HasOffset => ability is ProjectileAbilitySO or GroundEffectAbilitySO;
+    
     private List<IDamageable> _targets;
     private Action<bool> _abilityReleaseCallback;
     private BTRunner _runner;
@@ -54,6 +56,12 @@ public class BTAbility : MonoBehaviour, IMultiComponent<BTAbility>, IReady
         if (targetSelector == null)
         {
             Debug.LogWarning($"No Target Selector assigned to Ability {AbilityName}!");
+        }
+        
+        if (ability != null)
+        {
+            if(ability is ProjectileAbilitySO p) p.projectileSpawnOffset = spawnEffectOffset;
+            else if(ability is GroundEffectAbilitySO g) g.groundEffectSpawnOffset = spawnEffectOffset;
         }
     }
 
@@ -114,12 +122,12 @@ public class BTAbility : MonoBehaviour, IMultiComponent<BTAbility>, IReady
         if (_targets.Count == 0)
         {
             Debug.LogWarning($"{AbilityName} Missed, targets not within range");
-            if (ability is ProjectileAbilitySO p) p.DryFire(this, _initialAimPosition, CastComplete);
-            else if (ability is GroundEffectAbilitySO g) g.DryFire(this, _initialAimPosition, CastComplete);
+            if (ability is ProjectileAbilitySO p) p.DryFire(transform, _initialAimPosition, null, CastComplete);
+            else if (ability is GroundEffectAbilitySO g) g.DryFire(transform, _initialAimPosition, CastComplete);
             else CastComplete();
             return;
         }
-        ability.Release(this, _targets, CastComplete);
+        ability.Release(transform, _targets, CastComplete);
     }
     /// <summary>
     /// for continuous casting end: one effect ends, complete the cast

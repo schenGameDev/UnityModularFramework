@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EditorAttributes;
-using UnityEngine;
 using ModularFramework;
+using UnityEngine;
+using Void = EditorAttributes.Void;
 
 [CreateAssetMenu(fileName ="LockManager_SO",menuName ="Game Module/Target Lock")]
 public class LockManagerSO : GameModule<LockManagerSO>, IRegistrySO
@@ -13,7 +14,7 @@ public class LockManagerSO : GameModule<LockManagerSO>, IRegistrySO
     [SerializeField] private bool _autoLock = true;
 
     [FoldoutGroup("Event Channels", nameof(_cameraManager), nameof(_lockEvent), nameof(_switchLockTargetEvent))]
-    [SerializeField] private EditorAttributes.Void _eventChannelGroup;
+    [SerializeField] private Void _eventChannelGroup;
 
     [HideInInspector,SerializeField] private CameraManagerSO _cameraManager;
     [HideInInspector,SerializeField] private EventChannel _lockEvent;
@@ -37,6 +38,7 @@ public class LockManagerSO : GameModule<LockManagerSO>, IRegistrySO
     protected override void OnAwake() { }
     protected override void OnStart() { }
     protected override void OnUpdate() { }
+    protected override void OnLateUpdate() { }
     protected override void OnSceneDestroy() { }
     protected override void OnDraw() { }
     

@@ -22,7 +22,9 @@ public class BehaviorManagerSO : GameModule<BehaviorManagerSO>,IRegistrySO
     {
         _btDict.Values.Where(bt => bt.Live).ForEach(bt => bt.tree.Run());
     }
-    
+
+    protected override void OnLateUpdate() { }
+
     protected override void OnSceneDestroy() { }
 
     protected override void OnDraw() { }

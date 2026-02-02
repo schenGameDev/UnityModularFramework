@@ -9,6 +9,7 @@ public struct DamageOverTimeEffect : IEffect<IDamageable>
     public int damagePerTick;
     public DamageType damageType;
     public DamageTarget damageTarget;
+    public DamageTarget ApplyTarget => damageTarget;
     public event Action<IEffect<IDamageable>> OnCompleted;
 
     private RepeatCountdownTimer _timer;

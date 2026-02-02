@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using EditorAttributes;
-using Unity.Mathematics;
-using UnityEngine;
 using ModularFramework;
 using ModularFramework.Utility;
+using Unity.Mathematics;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 [CreateAssetMenu(fileName ="InputSystem_SO",menuName ="Game Module/Input/Input System")]
@@ -128,16 +128,31 @@ public partial class InputSystemSO : GameSystem<InputSystemSO>,ILive {
             PointerCameraPosition = cameraVector;
             viewDirection = CameraDirectionToWorldSpace(PointerCameraPosition - PlayerCameraPosition);
         }
-        return viewDirection;
+        return WithinViewDeadZone(viewDirection)? Vector3.zero : viewDirection.normalized;
     }
-
+    
+    private const float MOUSE_DEAD_ZONE = 1f; // 0 ~ infinity
+    private const float GAMEPAD_DEAD_ZONE = 0.2f; // 0 ~ 1
+    private static bool WithinViewDeadZone(Vector3 dir) {
+        if (InputDevice == InputDeviceType.KEYBOARD_MOUSE)
+            return Mathf.Abs(dir.x) < MOUSE_DEAD_ZONE &&
+                   Mathf.Abs(dir.z) < MOUSE_DEAD_ZONE;
+        // gamepad
+        return Mathf.Abs(dir.x) < GAMEPAD_DEAD_ZONE &&
+               Mathf.Abs(dir.z) < GAMEPAD_DEAD_ZONE;
+    }
+    /// <summary>
+    /// won't normalize the vector
+    /// </summary>
+    /// <param name="cameraVector"></param>
+    /// <returns></returns>
     public Vector3 CameraDirectionToWorldSpace(Vector2 cameraVector) {
         var dir = CameraMode switch
         {
             CameraAngle.SIDE => new Vector3(cameraVector.x, 0, 0),
             _ => new Vector3(cameraVector.x, 0, cameraVector.y),
         };
-        return dir.normalized;
+        return dir;
     }
     
     private static bool IsActiveTiming(ActionTiming mask, ActionTiming currentTiming) 

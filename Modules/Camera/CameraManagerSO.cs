@@ -1,15 +1,13 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Cinemachine;
-using EditorAttributes;
-using UnityEngine;
 using AYellowpaper.SerializedCollections;
+using EditorAttributes;
 using ModularFramework;
 using ModularFramework.Commons;
 using ModularFramework.Utility;
-using UnityEngine.Serialization;
+using Unity.Cinemachine;
+using UnityEngine;
 
 [CreateAssetMenu(fileName ="CameraManager_SO",menuName ="Game Module/Camera")]
 public class CameraManagerSO : GameModule<CameraManagerSO>,IRegistrySO {
@@ -18,7 +16,7 @@ public class CameraManagerSO : GameModule<CameraManagerSO>,IRegistrySO {
     [SerializeField] Vector2 positionShakeStrength = new (0.03f,0.03f);
     [SerializeField] float  rotationShakeStrength = 0.05f;
     [SerializeField] float shakeTime = 0.3f;
-
+    [SerializeField] EventChannel<Vector2> pointerPositionChannel;
 
 
     [Header("Runtime")]
@@ -34,6 +32,13 @@ public class CameraManagerSO : GameModule<CameraManagerSO>,IRegistrySO {
     [RuntimeObject] private Dictionary<string, Tuple<CameraType,Transform>> _activeCamerasInScene=new();
 
     [RuntimeObject] private string _defaultCamera;
+    /// <summary>
+    /// Used for mouse world position raycast when no collider is hit
+    /// </summary>
+    [RuntimeObject] private Plane _groundPlane;
+    [RuntimeObject] private Vector2 _pointerScreenPos;
+    [RuntimeObject] private Vector2 _pointerDisplacement;
+    [RuntimeObject] public Vector2 playerScreenPosition;
 
     public CameraManagerSO() {
         updateMode = UpdateMode.NONE;
@@ -43,14 +48,20 @@ public class CameraManagerSO : GameModule<CameraManagerSO>,IRegistrySO {
     protected override void OnAwake()
     {
         currentMode = CameraType.FIXED;
+        _groundPlane = new Plane(Vector3.up, Vector3.zero);
+        pointerPositionChannel?.AddListener(ReadPointerPositionInput);
     }
         
     protected override void OnStart() { }
-    protected override void OnUpdate() { }
+
+    protected override void OnUpdate()
+    {
+        UpdatePlayerCameraPosition();
+    }
+    protected override void OnLateUpdate() { }
     protected override void OnSceneDestroy() { }
     protected override void OnDraw() { }
     
-
     [RuntimeObject] OnetimeFlip _isDefaultSet = new();
     public void Register(Transform transform) {
         string name = transform.name;
@@ -159,5 +170,48 @@ public class CameraManagerSO : GameModule<CameraManagerSO>,IRegistrySO {
             cam.Shake(positionOffsetStrength, rotationOffsetStrength, seconds);
         }
     }
+
+    #region Pointer World Position
+    private bool UpdatePlayerCameraPosition()
+    {
+        if (!SingletonRegistry<Player>.TryGet(out var player))
+        {
+            playerScreenPosition = Vector2.zero;
+            return false;
+        }
+        playerScreenPosition = SingletonRegistry<GameBuilder>.Instance.MainCamera.WorldToScreenPoint(player.transform.position);
+        return true;
+    }
+    
+    private bool _useGamepadAsPointer = false;
+    public Vector3 GetPointerWorldPosition(LayerMask layerMask)
+    {
+        var ray = SingletonRegistry<GameBuilder>.Instance.MainCamera.ScreenPointToRay(_pointerScreenPos);
+        if(Physics.Raycast(ray, out RaycastHit hit, 100f, layerMask)) return hit.point;
+        if (_groundPlane.Raycast(ray, out var enterDist)) return ray.GetPoint(enterDist);
+        return Vector3.zero;
+    }
+    
+    private void ReadPointerPositionInput(Vector2 pointerScreenPosition)
+    {
+        if (InputSystemSO.InputDevice == InputSystemSO.InputDeviceType.GAMEPAD)
+        {
+            if(!_useGamepadAsPointer) return;
+            _pointerDisplacement += pointerScreenPosition;
+            _pointerScreenPos = playerScreenPosition + _pointerDisplacement;
+        }
+        else
+        {
+            _pointerScreenPos = pointerScreenPosition;
+        }
+        
+    }
+    
+    public void UseGamepadAsPointer(bool use)
+    {
+        _pointerDisplacement = Vector2.zero;
+        _useGamepadAsPointer = use;
+    }
+    #endregion
 }
 

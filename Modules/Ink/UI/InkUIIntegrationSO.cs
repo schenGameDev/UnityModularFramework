@@ -77,6 +77,7 @@ public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
     }
     
     protected override void OnUpdate() { }
+    protected override void OnLateUpdate() { }
     protected override void OnSceneDestroy() { }
     protected override void OnDraw() { }
 

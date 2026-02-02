@@ -29,7 +29,7 @@ public class SubTreeOutletNode : BTNode
     {
         if (subTreeRootNode == null)
         {
-            Debug.LogError("Sub Tree Outlet node could not be found");
+            Debug.LogError($"Sub Tree Root node {title} could not be found");
             return State.Failure;
         }
 

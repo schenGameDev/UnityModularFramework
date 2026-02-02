@@ -1,7 +1,5 @@
-using System;
-using UnityEngine;
-using UnityEngine.Events;
 using ModularFramework;
+using UnityEngine;
 
 [CreateAssetMenu(fileName ="SlowdownManager_SO",menuName ="Game Module/Slowdown")]
 public class SlowdownManagerSO : GameModule<SlowdownManagerSO>, ILive
@@ -38,6 +36,7 @@ public class SlowdownManagerSO : GameModule<SlowdownManagerSO>, ILive
         }
     }
     
+    protected override void OnLateUpdate() { }
     protected override void OnSceneDestroy() { }
     protected override void OnDraw() { }
 

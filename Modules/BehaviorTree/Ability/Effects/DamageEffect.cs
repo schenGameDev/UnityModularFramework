@@ -7,6 +7,7 @@ public struct DamageEffect : IEffect<IDamageable>
     public int damageAmount;
     public DamageType damageType;
     public DamageTarget damageTarget;
+    public DamageTarget ApplyTarget => damageTarget;
     public event Action<IEffect<IDamageable>> OnCompleted;
 
     public void Apply(IDamageable target)

@@ -35,6 +35,7 @@ namespace ModularFramework {
                 if(!module.CentrallyManaged && module.OperateEveryFrame) {
                     _framelyUpdatedModules.Add(module);
                 }
+                InjectModule(module);
             }
 
             foreach (var sys in Registry<GameSystem>.All)
@@ -85,6 +86,14 @@ namespace ModularFramework {
             }
         }
 
+        private void LateUpdate()
+        {
+            LateUpdateModuleFrame();
+            foreach(var module in _framelyUpdatedModules) {
+                module.LateTick();
+            }
+        }
+
         private void OnDestroy()
         {
             DestroySystemsForDev();
@@ -93,6 +102,7 @@ namespace ModularFramework {
                 foreach (var module in modules)
                 {
                     module.Destroy();
+                    ClearSystem(module);
                 }
             }
 
@@ -131,14 +141,24 @@ namespace ModularFramework {
     #region System
         public static void InjectSystem<T>(T sys, bool cleanExisting = false) where T : GameSystem
         {
-            if(cleanExisting) SingletonRegistry<T>.Clear();
-            if (!SingletonRegistry<T>.TryRegister(sys))
+            if(cleanExisting) SingletonRegistry<T>.Replace(sys);
+            else if (!SingletonRegistry<T>.TryRegister(sys))
             {
                 Debug.LogWarning("System of type " + sys.GetType().Name + " already exists");
             } 
             
             sys.Start();
             Registry<GameSystem>.TryAdd(sys);
+        }
+
+        public static void InjectModule<T>(T module) where T : GameSystem // System can be used as a module too
+        {
+            SingletonRegistry<T>.Replace(module);
+        }
+
+        public static void ClearSystem<T>(T module) where T : GameSystem
+        {
+            SingletonRegistry<T>.Clear();
         }
     #endregion
     
@@ -169,6 +189,7 @@ namespace ModularFramework {
     #region Exec Management
         private readonly List<ExecQueueMember> _pendingToAddQueue = new();
         private readonly Queue<ExecQueueMember> _execSignalQueue = new();
+        private readonly List<ExecQueueMember> _execQueue = new();
 
         class ExecQueueMember {
             public GameModule Module;
@@ -181,7 +202,7 @@ namespace ModularFramework {
         }
 
         public void AddToExecQueue(GameModule module, float deltaTime) {
-            if(!_execSignalQueue.Any(m=>m.Module == module)) {
+            if(_execSignalQueue.All(m => m.Module != module)) {
                 var member = new ExecQueueMember(module, deltaTime);
                 if(_execSignalQueue.Count > 0 || _pendingToAddQueue.Count > 0) {
                     module.Timer.Pause();
@@ -190,7 +211,7 @@ namespace ModularFramework {
             }
         }
 
-        void UpdateModuleFrame() {
+        private void UpdateModuleFrame() {
             _execSignalQueue.ForEach(m => m.DeltaTime += Time.deltaTime);
 
             ExecQueueMember toExec = null;
@@ -203,9 +224,19 @@ namespace ModularFramework {
             }
 
             toExec.Module.Tick(toExec.DeltaTime);
+            _execQueue.Add(toExec);
 
             _pendingToAddQueue.ForEach(m=>_execSignalQueue.Enqueue(m));
             _pendingToAddQueue.Clear();
+        }
+
+        private void LateUpdateModuleFrame()
+        {
+            foreach (var toExec in _execQueue)
+            {
+                toExec.Module.LateTick();
+            }
+            _execQueue.Clear();
         }
     #endregion
 

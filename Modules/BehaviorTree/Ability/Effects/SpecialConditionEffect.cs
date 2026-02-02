@@ -8,7 +8,7 @@ public struct SpecialConditionEffect : IEffect<IDamageable>
 {
     public SpecialCondition specialCondition;
     public event Action<IEffect<IDamageable>> OnCompleted;
-
+    public DamageTarget ApplyTarget => DamageTarget.All;
     private CountdownTimer _timer;
     private IDamageable _target;
 

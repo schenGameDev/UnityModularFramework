@@ -25,6 +25,11 @@ namespace ModularFramework {
             DeltaTime = deltaTime;
             ((T)this).OnUpdate();
         }
+        
+        public override void LateTick()
+        {
+            ((T)this).OnLateUpdate();
+        }
 
         public override void Destroy()
         {
@@ -52,6 +57,10 @@ namespace ModularFramework {
         /// Trigger in <c>GameRunner</c> Update method
         /// </summary>
         protected abstract void OnUpdate();
+        /// <summary>
+        /// Trigger in <c>GameRunner</c> LateUpdate method
+        /// </summary>
+        protected abstract void OnLateUpdate();
         /// <summary>
         /// Trigger in <c>GameRunner</c> Destroy method
         /// </summary>
@@ -103,7 +112,11 @@ namespace ModularFramework {
                 var timer = new RepeatCountdownTimer(everyNSecond, 1);
                 timer.OnTick += () =>  {
                     if(CentrallyManaged) SingletonRegistry<GameRunner>.Get().Do(builder=>builder.AddToExecQueue(this, timer.DeltaTime));
-                    else Tick(timer.DeltaTime);
+                    else
+                    {
+                        Tick(timer.DeltaTime);
+                        LateTick();
+                    }
                 };
                 Timer = timer;
             }
@@ -112,6 +125,7 @@ namespace ModularFramework {
         }
 
         public abstract void Tick(float deltaTime);
+        public abstract void LateTick();
         public abstract void Draw();
     }
 }

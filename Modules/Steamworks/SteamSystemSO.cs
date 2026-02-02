@@ -2,8 +2,11 @@
 #define DISABLESTEAMWORKS
 #endif
 
-using UnityEngine;
+using System;
+using System.Text;
+using AOT;
 using ModularFramework;
+using UnityEngine;
 #if !DISABLESTEAMWORKS
 using Steamworks;
 #endif
@@ -32,8 +35,8 @@ public class SteamSystemSO : GameModule<SteamSystemSO>,ILive
 
 	protected SteamAPIWarningMessageHook_t m_SteamAPIWarningMessageHook;
 
-	[AOT.MonoPInvokeCallback(typeof(SteamAPIWarningMessageHook_t))]
-	protected static void SteamAPIDebugTextHook(int nSeverity, System.Text.StringBuilder pchDebugText) {
+	[MonoPInvokeCallback(typeof(SteamAPIWarningMessageHook_t))]
+	protected static void SteamAPIDebugTextHook(int nSeverity, StringBuilder pchDebugText) {
 		Debug.LogWarning(pchDebugText);
 	}
 
@@ -64,7 +67,7 @@ public class SteamSystemSO : GameModule<SteamSystemSO>,ILive
 				return;
 			}
 		}
-		catch (System.DllNotFoundException e) { // We catch this exception here, as it will be the first occurrence of it.
+		catch (DllNotFoundException e) { // We catch this exception here, as it will be the first occurrence of it.
 			Debug.LogError("[Steamworks.NET] Could not load [lib]steam_api.dll/so/dylib. It's likely not in the correct location. Refer to the README for more details.\n" + e, this);
 
 			Application.Quit();
@@ -104,6 +107,7 @@ public class SteamSystemSO : GameModule<SteamSystemSO>,ILive
 		SteamAPI.RunCallbacks();
 	}
 
+	protected override void OnLateUpdate() { }
 
 	// OnApplicationQuit gets called too early to shutdown the SteamAPI.
 	// Because the SteamManager should be persistent and never disabled or destroyed we can shutdown the SteamAPI here.

@@ -1,12 +1,12 @@
-
 using System.Collections.Generic;
-using ModularFramework;
-using static ModularFramework.Utility.MathUtil;
-using UnityEngine;
 using System.Linq;
 using EditorAttributes;
+using ModularFramework;
 using ModularFramework.Commons;
 using Polygon2D;
+using UnityEngine;
+using static ModularFramework.Utility.MathUtil;
+
 /// <summary>
 /// Life cycle: OnAwake(Reset -> Prepare) -> OnUpdate(CalculateVision -> ImplementVision)
 /// </summary>
@@ -74,6 +74,7 @@ public abstract class VisionMap : GameModule<VisionMap>, IRegistrySO
             skippedTime = DeltaTime;
         }
     }
+    protected override void OnLateUpdate() { }
     protected override void OnSceneDestroy() { }
     protected override void OnDraw() { }
 

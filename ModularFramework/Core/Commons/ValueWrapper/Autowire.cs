@@ -12,9 +12,10 @@ namespace ModularFramework
         private T _instance;
         public T Get()
         {
-            if (_instance != null)
+            if (_instance != null) return _instance;
+            if (SingletonRegistry<T>.TryGet(out var instance))
             {
-                _instance = SingletonRegistry<T>.Instance;
+                _instance = instance;
             }
 
             return _instance;
