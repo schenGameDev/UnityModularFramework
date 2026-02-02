@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class RaycastBatchProcessor : IDisposable {
     private int maxRaycastsPerJob;
-    private const float MAX_DISTANCE = 1f;
+    private const float MAX_DISTANCE = 0.05f;
 
     NativeArray<RaycastCommand> rayCommands;
     NativeArray<RaycastHit> hitResults;

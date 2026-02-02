@@ -2,7 +2,7 @@ using System;
 using EditorAttributes;
 using ModularFramework.Utility;
 using UnityEngine;
-using ValueType = ModularFramework.Utility.BooleanExpressionEvaluator.ValueType;
+using ValueType = ModularFramework.Utility.BoolExpressionEvaluator.ValueType;
 
 namespace ModularFramework.Commons {
     [Serializable]
@@ -192,15 +192,15 @@ namespace ModularFramework.Commons {
 
             return type switch
             {
-                ValueType.Bool => BooleanExpressionEvaluator.EvaluateBoolCondition(boolValue, logicOperator,
+                ValueType.Bool => BoolExpressionEvaluator.EvaluateBoolCondition(boolValue, logicOperator,
                     (bool)(object)value),
-                ValueType.Int => BooleanExpressionEvaluator.EvaluateIntCondition(intValue, logicOperator,
+                ValueType.Int => BoolExpressionEvaluator.EvaluateIntCondition(intValue, logicOperator,
                     (int)(object)value),
-                ValueType.Float => BooleanExpressionEvaluator.EvaluateFloatCondition(floatValue, logicOperator,
+                ValueType.Float => BoolExpressionEvaluator.EvaluateFloatCondition(floatValue, logicOperator,
                     (float)(object)value),
-                ValueType.String => BooleanExpressionEvaluator.EvaluateStringCondition(stringValue, logicOperator,
+                ValueType.String => BoolExpressionEvaluator.EvaluateStringCondition(stringValue, logicOperator,
                     (string)(object)value),
-                ValueType.Vector3 => BooleanExpressionEvaluator.EvaluateVector3Condition(vector3Value, logicOperator,
+                ValueType.Vector3 => BoolExpressionEvaluator.EvaluateVector3Condition(vector3Value, logicOperator,
                     (Vector3)(object)value),
                 _ => false
             };

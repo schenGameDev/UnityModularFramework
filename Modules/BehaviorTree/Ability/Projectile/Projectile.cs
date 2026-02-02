@@ -75,10 +75,15 @@ public class Projectile : MonoBehaviour
                                               ? targetPos.Value - startPos 
                                               : Vector3.zero));
                 break;
-            case AimType.Transform:
+            case AimType.Transform when target != null:
                 InitializeByTransform(target);
                 break;
+            case AimType.Transform:
             case AimType.Position:
+                if (AimType.Transform == aimType)
+                {
+                    Debug.LogError($"{nameof(target)} is null but AimType is Transform, fall back to Position");
+                }
                 InitializeByPosition(target!=null? target.position : targetPos ?? Vector3.zero);
                 break;
         }
@@ -87,11 +92,6 @@ public class Projectile : MonoBehaviour
 
     private void InitializeByTransform(Transform target)
     {
-        if (target == null)
-        {
-            Debug.LogError($"{nameof(target)} is null but AimType is Transform");
-            return;
-        }
         _target = followTarget? target : null;
         _trackTargetMaxRadiansPerSecond = _target == null? 0 : trackTargetMaxAngle * Mathf.Deg2Rad;
         _groundDirection = new Vector3(target.position.x - transform.position.x, 0, target.position.z - transform.position.z).normalized;

@@ -17,7 +17,7 @@
             </ui:VisualElement>
         </VerticalSplitView>
         <ui:VisualElement name="Right" style="flex-grow: 1;">
-            <ui:Label tabindex="-1" text="TreeView" parse-escape-sequences="true" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); background-color: rgb(32, 32, 32); flex-shrink: 1; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;" />
+            <ui:Label name="TreeViewLabel" tabindex="-1" text="TreeView" parse-escape-sequences="true" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); background-color: rgb(32, 32, 32); flex-shrink: 1; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;" />
             <BehaviorTreeView style="height: auto; flex-grow: 1;" />
         </ui:VisualElement>
     </SplitView>

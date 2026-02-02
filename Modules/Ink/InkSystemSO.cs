@@ -12,7 +12,7 @@ using ModularFramework.Commons;
 using ModularFramework.Utility;
 using UnityEngine;
 using UnityTimer;
-using ValueType = ModularFramework.Utility.BooleanExpressionEvaluator.ValueType;
+using ValueType = ModularFramework.Utility.BoolExpressionEvaluator.ValueType;
 using Void = EditorAttributes.Void;
 
 /// <summary>

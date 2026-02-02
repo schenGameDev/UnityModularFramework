@@ -25,7 +25,21 @@ public partial class BehaviorTreeView : GraphView
 
         var styleSheet = Resources.Load<StyleSheet>("BehaviorTreeEditorStyleSheet");
         styleSheets.Add(styleSheet);
-
+        // shortcuts
+        RegisterCallback<KeyDownEvent>(kd =>
+        {
+            if(kd.keyCode == KeyCode.D && kd.commandKey)
+            {
+                if(CanDuplicate()) DuplicateNodes();
+            } else if(kd.keyCode == KeyCode.R && kd.commandKey)
+            {
+                if(CanReset()) ResetNode();
+            } else if(kd.keyCode == KeyCode.Backspace)
+            {
+                if(CanDelete()) DeleteSelectionCallback(AskUser.DontAskUser);
+            }
+        }, TrickleDown.TrickleDown);
+        
         Undo.undoRedoPerformed += OnUndoRedo;
     }
 
@@ -70,7 +84,17 @@ public partial class BehaviorTreeView : GraphView
         }
 
         // create node view
-        _tree.nodes.ForEach(CreateNodeView);
+        _tree.nodes.ForEach(node =>
+        {
+            if (node is SingletonNode s)
+            {
+                s.nodePositions.ForEach(np =>CreateSingletonNodeView(s, np));
+            }
+            else
+            {
+                CreateNodeView(node);
+            }
+        });
         // create edges
         _tree.nodes.ForEach(n=> {
             var children = n.GetChildren();
@@ -153,14 +177,8 @@ public partial class BehaviorTreeView : GraphView
         return graphViewChange;
     }
 
-    private void CreateNodeView(BTNode node)
+    private NodeView CreateNodeView(BTNode node)
     {
-        if (node is SingletonNode s)
-        {
-            s.nodePositions.ForEach(np =>CreateSingletonNodeView(s, np));
-            return;
-        }
-        
         NodeView nodeView = new NodeView(node)
         {
             OnNodeSelected = OnNodeSelected
@@ -169,17 +187,16 @@ public partial class BehaviorTreeView : GraphView
         if(visualText!=null) visualText.text = node.GetType().Name;
 
         AddElement(nodeView);
-
-        
+        return nodeView;
     }
     
-    private void CreateSingletonNodeView(SingletonNode node, SingletonNode.NodePosition position)
+    private NodeView CreateSingletonNodeView(SingletonNode node, SingletonNode.NodePosition position)
     {
         NodeView nodeView = GetNodeByGuid(position.guid) as NodeView;
         if (nodeView != null)
         {
             nodeView.UpdateTitle();
-            return;
+            return nodeView;
         }
         
         nodeView = new NodeView(node, position)
@@ -190,6 +207,7 @@ public partial class BehaviorTreeView : GraphView
         if(visualText!=null) visualText.text = node.GetType().Name;
 
         AddElement(nodeView);
+        return nodeView;
     }
 
     public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
@@ -203,32 +221,25 @@ public partial class BehaviorTreeView : GraphView
         _rightClickPosition = contentViewContainer.WorldToLocal(evt.mousePosition);
 
         //base.BuildContextualMenu(evt);
-        var groupSelectedNodes = selection.OfType<NodeView>().ToList();
-        var groupSelectedEdges = selection.OfType<Edge>().ToList();
-        bool multiNodeViewSelected = groupSelectedNodes.Count > 1;
-        bool containRoot = (!multiNodeViewSelected &&
-                            (evt.target is NodeView { Node: RootNode } ||
-                             (evt.target is Group group && group.Children()
-                                 .Where(c => c is NodeView)
-                                 .Any(c => (c as NodeView)?.Node is RootNode)))) ||
-                           groupSelectedNodes.Any(c => c.Node is RootNode);
-        bool canDelete = (groupSelectedNodes.Count > 0 && !containRoot) || 
-                         (groupSelectedNodes.Count ==0 && groupSelectedEdges.Count > 0);
         evt.menu.AppendSeparator();
         
         
-        if (canDelete)
+        if (CanDelete(evt) && canDeleteSelection)
         {
-            evt.menu.AppendAction("Delete", delegate
+            evt.menu.AppendAction("Delete _BACKSPACE", delegate
             {
                 DeleteSelectionCallback(AskUser.DontAskUser);
-            }, (a) => canDeleteSelection ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+            }, (_) => DropdownMenuAction.Status.Normal);
         }
 
-        if (!multiNodeViewSelected && evt.target is NodeView { Node: not RootNode and not SingletonNode })
+        if (CanReset(evt))
         {
-            evt.menu.AppendAction("Reset", (a)  => ResetNode());
-            evt.menu.AppendAction("Duplicate", (a)  => DuplicateNode());
+            evt.menu.AppendAction("Reset %r", (a)  => ResetNode());
+        }
+
+        if (CanDuplicate(evt))
+        {
+            evt.menu.AppendAction("Duplicate %d", (a)  => DuplicateNodes());
         }
         
         evt.menu.AppendSeparator();
@@ -280,11 +291,54 @@ public partial class BehaviorTreeView : GraphView
             evt.menu.AppendAction(menuName, (a) => CreateNode(type));
         }
     }
+    
+    private bool CanDelete(ContextualMenuPopulateEvent rightClickEvent = null)
+    {
+        var groupSelectedNodes = selection.OfType<NodeView>().ToList();
+        var groupSelectedEdges = selection.OfType<Edge>().ToList();
+
+        if (groupSelectedNodes.Count > 0 || groupSelectedEdges.Count > 0)
+        {
+            return groupSelectedNodes.Count == 0 || groupSelectedNodes.All(c => c.Node is not RootNode);
+        }
+        // No selection, check right click target
+        if(rightClickEvent == null) return false;
+        return rightClickEvent.target is NodeView { Node: not RootNode } ||
+               (rightClickEvent.target is Group group && group.Children()
+                   .Where(c => c is NodeView)
+                   .Any(c => (c as NodeView)?.Node is RootNode));
+    }
+    
+    private bool CanReset(ContextualMenuPopulateEvent rightClickEvent = null)
+    {
+        var groupSelectedNodes = selection.OfType<NodeView>().ToList();
+        if (groupSelectedNodes.Count > 1) return false;
+        if (groupSelectedNodes.Count > 0)
+        {
+            return groupSelectedNodes[0].Node is not RootNode and not SingletonNode;
+        }
+
+        // No selection, check right click target
+        return rightClickEvent?.target is NodeView { Node: not RootNode and not SingletonNode };
+    }
+    
+    private bool CanDuplicate(ContextualMenuPopulateEvent rightClickEvent = null)
+    {
+        var groupSelectedNodes = selection.OfType<NodeView>().ToList();
+        if (groupSelectedNodes.Count > 0)
+        {
+            return groupSelectedNodes.All(c => c.Node is not RootNode);
+        }
+
+        // No selection, check right click target
+        return rightClickEvent?.target is NodeView { Node: not RootNode };
+    }
 
     private void CreateNode(Type type, Vector2 offset = default) {
         if (type.IsSubclassOf(typeof(SingletonNode)))
         {
-            CreateSingletonNode(type);
+            var singletonNode = _tree.CreateSingletonNode(type, _rightClickPosition);
+            CreateSingletonNodeView(singletonNode, singletonNode.nodePositions[^1]);
             return;
         }
         
@@ -292,21 +346,6 @@ public partial class BehaviorTreeView : GraphView
         node.position = _rightClickPosition;
         if(offset != default) node.position += offset;
         CreateNodeView(node);
-    }
-
-    public void CreateSingletonNode(Type type)
-    {
-        var existingNode = _tree.nodes.FirstOrDefault(n => type == n.GetType());
-        if (existingNode != null && existingNode is SingletonNode s)
-        {
-            s.Add(_rightClickPosition);
-            CreateSingletonNodeView(s, s.nodePositions[^1]);
-            return;
-        }
-        
-        var node = _tree.CreateNode(type) as SingletonNode;
-        node.position = _rightClickPosition;
-        node.Add(_rightClickPosition);
     }
     
     private void ResetNode()
@@ -341,22 +380,34 @@ public partial class BehaviorTreeView : GraphView
         nodeView.OnSelected();
     }
     
-    private void DuplicateNode()
+    private void DuplicateNodes()
     {
-        if (_rightClickTarget is not NodeView nodeView || 
-            nodeView.Node == null || 
-            nodeView.Node is RootNode) return;
-
-        if (nodeView.Node is SingletonNode s)
+        // group
+        var groupSelectedNodes = selection.OfType<NodeView>().ToList();
+        if (groupSelectedNodes.Count > 0)
         {
-            s.Add(s.position + new Vector2(10,10));
-            CreateSingletonNodeView(s, s.nodePositions[^1]);
-            return;
+            selection.Clear();
+            foreach (var nodeView in groupSelectedNodes)
+            {
+                if (nodeView.Node == null || nodeView.Node is RootNode) continue;
+                
+                BTNode node = _tree.DuplicateNode(nodeView.Node, nodeView.GetPosition().position + new Vector2(10,10));
+                if(node is SingletonNode sn) selection.Add(CreateSingletonNodeView(sn, sn.nodePositions[^1]));
+                else selection.Add(CreateNodeView(node));
+                
+            }
         }
+        else
+        {
+            // right click
+            if (_rightClickTarget is not NodeView nodeView || 
+                nodeView.Node == null || 
+                nodeView.Node is RootNode) return;
         
-        BTNode node = _tree.DuplicateNode(nodeView.Node);
-        node.position += new Vector2(10,10);
-        CreateNodeView(node);
+            BTNode node = _tree.DuplicateNode(nodeView.Node, nodeView.GetPosition().position + new Vector2(10,10));
+            if(node is SingletonNode sn) CreateSingletonNodeView(sn, sn.nodePositions[^1]);
+            else CreateNodeView(node);
+        }
     }
 
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)

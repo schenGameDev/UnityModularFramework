@@ -35,13 +35,35 @@ public class BehaviorTreeSO : ScriptableObject
         return node;
     }
     
-    public BTNode DuplicateNode(BTNode originalNode) {
+    public SingletonNode CreateSingletonNode(Type type, Vector2 position)
+    {
+        var existingNode = nodes.FirstOrDefault(n => type == n.GetType());
+        if (existingNode != null && existingNode is SingletonNode s)
+        {
+            s.Add(position);
+            return s;
+        }
+        
+        var node = CreateNode(type) as SingletonNode;
+        node.position = position;
+        node.Add(position);
+        return node;
+    }
+    
+    public BTNode DuplicateNode(BTNode originalNode, Vector2 position) {
         if(originalNode is RootNode) return null;
+        if (originalNode is SingletonNode s)
+        {
+            s.Add(position);
+            Undo.RecordObject(this,"Behavior Tree (Duplicate Node)");
+            return s;
+        }
         BTNode node = CreateInstance(originalNode.GetType()) as BTNode;
         EditorUtility.CopySerialized(originalNode, node);
         node.guid = GUID.Generate().ToString();
         node.parentPortName = null;
         node.ClearChildren();
+        node.position = position;
         Undo.RecordObject(this,"Behavior Tree (Duplicate Node)");
 
         nodes.Add(node);

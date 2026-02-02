@@ -1,6 +1,6 @@
 using System;
 using UnityEngine;
-using ValueType = ModularFramework.Utility.BooleanExpressionEvaluator.ValueType;
+using ValueType = ModularFramework.Utility.BoolExpressionEvaluator.ValueType;
 
 namespace ModularFramework.Commons {
     [Serializable]

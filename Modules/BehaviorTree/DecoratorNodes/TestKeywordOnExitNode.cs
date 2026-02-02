@@ -4,11 +4,18 @@ using UnityEngine;
 public class TestKeywordOnExitNode : DecoratorNode
 {
     public string keyword;
-    public BooleanExpressionEvaluator.ValueType dataType;
+    public BoolExpressionEvaluator.ValueType dataType;
     public string successCondition;
     public string failCondition;
     public bool removeParameterOnRead = true;
-    
+    private IBoolExprCondition _successEvaluator;
+    private IBoolExprCondition _failEvaluator;
+
+    protected override void OnEnter()
+    {
+        _successEvaluator??= BoolExpressionEvaluator.Get(dataType, successCondition);
+        _failEvaluator??= BoolExpressionEvaluator.Get(dataType, failCondition);
+    }
 
     protected override State OnUpdate()
     {
@@ -19,11 +26,11 @@ public class TestKeywordOnExitNode : DecoratorNode
         if (!string.IsNullOrEmpty(value))
         {
             if(removeParameterOnRead) tree.blackboard.RemoveParameter(keyword);
-            if (BooleanExpressionEvaluator.Evaluate(value, dataType, successCondition))
+            if (_successEvaluator.Evaluate(value, dataType))
             {
                 return State.Success;
             }
-            if (BooleanExpressionEvaluator.Evaluate(value, dataType, failCondition))
+            if (_failEvaluator.Evaluate(value, dataType))
             {
                 return State.Failure;
             }

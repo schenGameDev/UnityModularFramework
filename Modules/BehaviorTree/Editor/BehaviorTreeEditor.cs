@@ -12,7 +12,7 @@ public class BehaviorTreeEditor : EditorWindow
     InspectorView _inspectorView;
     BlackboardView _blackboardView;
     NodeView _currentInspectorNodeView;
-    
+    Label _treeLabel;
 
     [SerializeField] private VisualTreeAsset m_VisualTreeAsset = default;
 
@@ -78,6 +78,7 @@ public class BehaviorTreeEditor : EditorWindow
         _treeView = root.Q<BehaviorTreeView>();
         _inspectorView = root.Q<InspectorView>();
         _blackboardView = root.Q<BlackboardView>();
+        _treeLabel = root.Q<Label>("TreeViewLabel");
         _treeView.OnNodeSelected = OnNodeSelectionChanged;
         OnSelectionChange();
     }
@@ -172,6 +173,7 @@ public class BehaviorTreeEditor : EditorWindow
         if(tree && (Application.isPlaying || AssetDatabase.CanOpenAssetInEditor(tree.GetEntityId()))) {
             _treeView?.PopulateView(tree);
             _blackboardView?.UpdateBlackboard(tree.blackboard);
+            if(_treeLabel!=null) _treeLabel.text = "TreeView: " + Selection.activeObject.name;
         }
     }
 

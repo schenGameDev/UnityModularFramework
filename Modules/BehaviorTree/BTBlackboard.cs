@@ -9,8 +9,6 @@ public class BTBlackboard : ScriptableObject
     public const string KEYWORD_TARGET = "Target";
     public const string KEYWORD_ABILITY_NAME = "AbilityName";
     
-    public bool changed = false;
-    
     [ReadOnly]
     [SerializeField,SerializedDictionary(keyName: "key", valueName: "value")]
     private SerializedDictionary<string, string> parameters = new ();
@@ -18,6 +16,8 @@ public class BTBlackboard : ScriptableObject
     [ReadOnly]
     [SerializeField,SerializedDictionary(keyName: "key", valueName: "transform")]
     private SerializedDictionary<string, List<Transform>> inSceneObjects = new ();
+    
+    [ReadOnly] public bool changed = false;
     
     public void Add(string key, string value)
     {

@@ -1,7 +1,7 @@
 using EditorAttributes;
 using ModularFramework.Utility;
 using UnityEngine;
-using ValueType = ModularFramework.Utility.BooleanExpressionEvaluator.ValueType;
+using ValueType = ModularFramework.Utility.BoolExpressionEvaluator.ValueType;
 
 public class KeywordSwitchNode : SwitchNode
 {
@@ -12,7 +12,14 @@ public class KeywordSwitchNode : SwitchNode
     [Tooltip("string/bool must start with \"=/!=\", int/float can also start with \">/</>=/<=\"")] 
     public string yesCondition;
     [Rename("Not Found = No")] public bool notFoundIsN = true;
+    private IBoolExprCondition _yesEvaluator;
 
+    protected override void OnEnter()
+    {
+        _yesEvaluator??= BoolExpressionEvaluator.Get(dataType, yesCondition);
+        base.OnEnter();
+    }
+    
     protected override bool Condition()
     {
         if (started && !tree.blackboard.changed) return enterConditionState;
@@ -25,7 +32,8 @@ public class KeywordSwitchNode : SwitchNode
         
         var v = tree.blackboard.Get(keyword);
         if(v == null) return !notFoundIsN;
-        return BooleanExpressionEvaluator.Evaluate(v, dataType, yesCondition);
+
+        return _yesEvaluator.Evaluate(v, dataType);
     }
     
     
