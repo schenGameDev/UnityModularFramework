@@ -5,7 +5,6 @@ using UnityEngine;
 public class RandomSelectNode : ControlNode
 {
     public bool pickAgainIfFailed = false;
-    public bool onlyIncludeReadyChildren = false;
     public bool equalChance = true;
     [HideField(nameof(equalChance))] public int[] weights;
     
@@ -66,7 +65,7 @@ public class RandomSelectNode : ControlNode
         List<BTNode> readyChildren = new List<BTNode>();
         foreach (var child in Children)
         {
-            if (!picked.Contains(child) && (!onlyIncludeReadyChildren || IsReady(child)))
+            if (!picked.Contains(child) && (child is not ReadyNode rn || rn.Ready))
             {
                 readyChildren.Add(child);
             }
@@ -93,7 +92,6 @@ public class RandomSelectNode : ControlNode
         var clone = base.Clone() as RandomSelectNode;
         clone.weights = weights;
         clone.pickAgainIfFailed = pickAgainIfFailed;
-        clone.onlyIncludeReadyChildren = onlyIncludeReadyChildren;
         return clone;
     }
 

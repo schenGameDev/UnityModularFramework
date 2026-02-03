@@ -2,35 +2,36 @@ using System.Collections.Generic;
 using System.Linq;
 using ModularFramework;
 using UnityEngine;
-using UnityModularFramework;
 
-public abstract class FindTargetInAbilityRangeNode<TTarget> : SwitchNode,IReady where TTarget : Component
+public abstract class FindTargetInAbilityRangeNode<TTarget> : SwitchNode where TTarget : Component
 {
     public string abilityName;
     public bool faceTargetBeforeCheck = true;
     
     private BTAbility _btAbility;
-    public bool Ready => _btAbility is null || _btAbility.Ready;
     private List<TTarget> targets = new ();
+    
+    public override void Prepare()
+    {
+        _btAbility = GetComponentInMe<BTAbility>(abilityName);
+        if (_btAbility == null)
+        {
+            Debug.LogError($"BTAbility of {abilityName} component not found on {tree.Me.name}");
+        }
+    }
+    
     protected override void OnEnter()
     {
         targets.Clear();
         base.OnEnter();
+        tree.blackboard.Add(BTBlackboard.KEYWORD_ABILITY_NAME, abilityName);  
         if (targets is { Count: > 0 })
         {
             tree.blackboard.Add(BTBlackboard.KEYWORD_TARGET, targets);
-            tree.blackboard.Add(BTBlackboard.KEYWORD_ABILITY_NAME, abilityName);   
         }
     }
 
     protected override bool Condition() {
-        _btAbility ??= GetComponentInMe<BTAbility>(abilityName);
-        if (_btAbility == null)
-        {
-            Debug.LogError($"Ability of {abilityName} component not found on {tree.Me.name}");
-            return false;
-        }
-        
         return AnyTargetInRightRange();
     }
 
@@ -77,7 +78,7 @@ public abstract class FindTargetInAbilityRangeNode<TTarget> : SwitchNode,IReady 
     FindTargetInAbilityRangeNode()
     {
         description = "Find target in host ability range \n\n" +
-                      "<b>Requires</b>: AbilityNode as child node\n\n" +
+                      "<b>Requires</b>: AnonymousAbilityNode as child node\n\n" +
                       "<b>Sends</b>: 'AbilityName' and 'Target' to blackboard";
     }
 }

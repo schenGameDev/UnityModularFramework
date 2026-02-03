@@ -21,8 +21,7 @@ public class BTRunner : MonoBehaviour,ILive
     private void Start()
     {
         tree = tree.Clone();
-        tree.Me = transform;
-        tree.Initialize();
+        tree.Initialize(transform);
     }
 
     private void Update()

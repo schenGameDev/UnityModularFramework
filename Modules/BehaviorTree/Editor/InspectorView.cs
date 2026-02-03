@@ -24,16 +24,27 @@ public partial class InspectorView : VisualElement
         InspectorElement inspector = new InspectorElement(_editor);
     
         _currentNodeView = nodeView;
-
+        
         var resetButton = new Button(ResetNode) { text = "Reset" };
+        resetButton.SetEnabled(nodeView.Node != null && nodeView.Node is not RootNode and not SingletonNode);
         Add(resetButton);
 
         Add(inspector);
     }
+
+    public void ValidateCurrentView()
+    {
+        if (_currentNodeView != null && _currentNodeView.Node == null)
+        {
+            Clear();
+            Object.DestroyImmediate(_editor);
+            _currentNodeView = null;
+        }
+    }
     
     private void ResetNode()
     {
-        if (_currentNodeView?.Node == null) return;
+        if (_currentNodeView==null || _currentNodeView.Node == null) return;
         
         Undo.RecordObject(_currentNodeView.Node, "Reset Node");
         

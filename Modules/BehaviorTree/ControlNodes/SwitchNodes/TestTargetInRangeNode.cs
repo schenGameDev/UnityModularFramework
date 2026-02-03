@@ -3,27 +3,28 @@ using UnityEngine;
 
 public class TestTargetInRangeNode : SwitchNode
 {
-    public string rangeName;
+    [SerializeField] private string rangeName;
     private BTRange _btRange;
     
-    protected override bool Condition()
+    public override void Prepare()
     {
-        _btRange??= GetComponentInMe<BTRange>(rangeName);
+        if (!rangeName.IsEmpty())
+        {
+            _btRange = GetComponentInMe<BTRange>(rangeName);
+        }
+        
         if (_btRange == null)
         {
-            Debug.LogError($"EnemyRange of {_btRange} component not found on {tree.Me.name}");
-            return false;
+            Debug.LogError($"BTRange of {rangeName} component not found on {tree.Me.name}");
         }
+    }
+    protected override bool Condition()
+    {
         return IsTargetInRange();
     }
     
     private bool IsTargetInRange()
     {
-        if (_btRange == null)
-        {
-            Debug.LogError($"EnemyRange of {rangeName} component not found on {tree.Me.name}");
-            return false;
-        }
         var targets = tree.blackboard.Get<Transform>(BTBlackboard.KEYWORD_TARGET);
         if (targets == null) return false;
         targets = ITransformTargetFilter.Filter(targets, tree.Me, _btRange.targetFilters)?.ToList();

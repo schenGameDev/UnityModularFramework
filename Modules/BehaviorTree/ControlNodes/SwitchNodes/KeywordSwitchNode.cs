@@ -14,10 +14,9 @@ public class KeywordSwitchNode : SwitchNode
     [Rename("Not Found = No")] public bool notFoundIsN = true;
     private IBoolExprCondition _yesEvaluator;
 
-    protected override void OnEnter()
+    public override void Prepare()
     {
-        _yesEvaluator??= BoolExpressionEvaluator.Get(dataType, yesCondition);
-        base.OnEnter();
+        _yesEvaluator= BoolExpressionEvaluator.Get(dataType, yesCondition);
     }
     
     protected override bool Condition()

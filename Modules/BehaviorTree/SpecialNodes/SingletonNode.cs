@@ -33,7 +33,12 @@ public abstract class SingletonNode : BTNode
     public override bool RemoveChild(BTNode childToRemove) => false;
     public override void ClearChildren() { }
     public override void CascadeExit() => Exit();
-    
+
+    public override BTNode Clone() {
+        SingletonNode node = Instantiate(this);
+        return node;
+    }
+
     public override OutputPortDefinition[] OutputPortDefinitions => Array.Empty<OutputPortDefinition>();
     
     [Serializable]

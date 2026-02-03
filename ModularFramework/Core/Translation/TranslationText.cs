@@ -5,9 +5,10 @@ using UnityEngine;
 
 namespace ModularFramework.Utility
 {
-    public class TranslationText : MonoBehaviour
+    public class TranslationText : MonoBehaviour,IUniqueIdentifiable
     {
         [SerializeField,ReadOnly] protected string id;
+        public string UniqueId => id;
         private string _text;
         private TextMeshProUGUI _tmp;
 #if UNITY_EDITOR

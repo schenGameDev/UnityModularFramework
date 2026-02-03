@@ -7,10 +7,18 @@ public class InteractNode : ActionNode
     private BTInteract _btInteract;
     private State _interactEndState = State.Running;
 
+    public override void Prepare()
+    {
+        _btInteract = GetComponentInMe<BTInteract>(interactName);
+        if (_btInteract == null)
+        {
+            Debug.LogError($"EnemyInteract of {interactName} component not found on {tree.Me.name}");
+        }
+    }
+    
     protected override void OnEnter()
     {
         base.OnEnter();
-        _btInteract ??= GetComponentInMe<BTInteract>(interactName);
         _interactEndState = State.Running;
         Interact();
     }

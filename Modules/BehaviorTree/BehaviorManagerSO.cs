@@ -34,8 +34,7 @@ public class BehaviorManagerSO : GameModule<BehaviorManagerSO>,IRegistrySO
     {
         if(!tf.TryGetComponent<BTRunner>(out var marker)) return;
         var tree = marker.tree.Clone();
-        tree.Me = tf;
-        tree.Initialize();
+        tree.Initialize(tf);
         marker.tree = tree;
         _btDict.Add(tf, marker);
     }

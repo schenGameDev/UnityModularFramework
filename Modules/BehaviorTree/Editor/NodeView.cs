@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -114,8 +115,17 @@ public class NodeView : Node {
     {
         base.SetPosition(newPos);
         Undo.RecordObject(Node, "Behavior Tree Node (Set Position)");
-        Node.position.x = newPos.xMin;
-        Node.position.y = newPos.yMin;
+        if (Node is SingletonNode sn)
+        {
+            sn.nodePositions.Where(np => np.guid==viewDataKey)
+                .ForEach(np =>np.position= new Vector2(newPos.xMin,newPos.yMin));
+        }
+        else
+        {
+            Node.position.x = newPos.xMin;
+            Node.position.y = newPos.yMin;
+        }
+        
         EditorUtility.SetDirty(Node);
     }
 

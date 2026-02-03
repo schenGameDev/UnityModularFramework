@@ -204,9 +204,14 @@ public class BehaviorTreeSO : ScriptableObject
     #endregion
 #endif
 
-    public void Initialize() {
+    public void Initialize(Transform me) {
+        Me = me;
         AI = Me.GetComponent<AstarAI>();
         runner = Me.GetComponent<BTRunner>();
+        foreach (var n in nodes)
+        {
+            n.Prepare();
+        }
     }
 
     public BehaviorTreeSO Clone() {

@@ -1,4 +1,4 @@
-namespace UnityModularFramework
+namespace ModularFramework
 {
     public interface IReady
     {

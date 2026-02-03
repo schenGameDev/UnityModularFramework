@@ -11,10 +11,10 @@ public class TestKeywordOnExitNode : DecoratorNode
     private IBoolExprCondition _successEvaluator;
     private IBoolExprCondition _failEvaluator;
 
-    protected override void OnEnter()
+    public override void Prepare()
     {
-        _successEvaluator??= BoolExpressionEvaluator.Get(dataType, successCondition);
-        _failEvaluator??= BoolExpressionEvaluator.Get(dataType, failCondition);
+        _successEvaluator = BoolExpressionEvaluator.Get(dataType, successCondition);
+        _failEvaluator = BoolExpressionEvaluator.Get(dataType, failCondition);
     }
 
     protected override State OnUpdate()

@@ -61,6 +61,19 @@ public partial class BehaviorTreeView : GraphView
             .Select(np => GetNodeByGuid(np.guid) as NodeView)
             .FirstOrDefault();
     }
+    
+    
+    
+    public bool ValidateCurrentView()
+    {
+        if (_tree == null)
+        {
+            graphViewChanged -= OnGraphViewChanged;
+            DeleteElements(graphElements);
+            return false;
+        }
+        return true;
+    }
 
     internal void PopulateView(BehaviorTreeSO tree)
     {
@@ -114,7 +127,8 @@ public partial class BehaviorTreeView : GraphView
 
     private GraphViewChange OnGraphViewChanged(GraphViewChange graphViewChange)
     {
-        if(graphViewChange.elementsToRemove != null) {
+        if(graphViewChange.elementsToRemove != null)
+        {
             graphViewChange.elementsToRemove.ForEach(ele => {
                 if(ele is NodeView nodeView) {
                     if(nodeView.Node is SingletonNode s) _tree.DeleteSingletonNode(s, nodeView.viewDataKey);

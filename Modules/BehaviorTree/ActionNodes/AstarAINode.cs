@@ -1,11 +1,8 @@
-using UnityModularFramework;
-
-public abstract class AstarAINode : ActionNode,IReady
+public abstract class AstarAINode : ActionNode
 {
     public string moveName;
     protected bool isActive;
     protected BTMove BtMove;
-    public bool Ready => BtMove is null || BtMove.Ready;
 
     protected override void OnEnter()
     {

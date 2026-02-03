@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityModularFramework;
 
 public abstract class ControlNode : BTNode
 {
@@ -56,20 +55,6 @@ public abstract class ControlNode : BTNode
         Exit();
         currentRunningChild?.CascadeExit();
     }
-
-    protected bool IsReady(BTNode node)
-    {
-        return node is IReady {Ready:true} || !RecursiveGetChildren((n)=> n is IReady)
-            .Any(n =>
-            {
-                if (n is IReady { Ready: false })
-                {
-                    // Debug.Log("Not Ready: " + n.title + " in " + title);
-                    return true;
-                }
-                return false;
-            });
-    } 
     
     public override OutputPortDefinition[] OutputPortDefinitions => new[] { new OutputPortDefinition(Port.Capacity.Multi) };
     public override Color HeaderColor => new Color32(63, 128, 247, 255);

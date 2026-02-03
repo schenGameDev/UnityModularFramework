@@ -1,7 +1,7 @@
 using ModularFramework;
 using UnityEngine;
 
-public class Waypoint : MonoBehaviour, IMultiComponent<Waypoint>
+public class Waypoint : MonoBehaviour, IUniqueIdentifiable
 {
     [Header("Config")]
     public Color GizmosColor = Color.red;

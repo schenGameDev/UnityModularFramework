@@ -13,10 +13,12 @@ public abstract class BTNode : ScriptableObject
         Running,Success,Failure
     }
     
-    [ShowField(nameof(titleCustomizable))] public string title;
+    [ShowField(nameof(titleCustomizable)),Rename(nameof(titleName), stringInputMode: StringInputMode.Dynamic)] 
+    public string title;
     protected bool titleCustomizable = true;
+    protected string titleName = "Title";
     
-    [SerializeField,Title(nameof(description), 12,stringInputMode: StringInputMode.Dynamic)]
+    [SerializeField,Title(nameof(description), 12, 20,stringInputMode: StringInputMode.Dynamic)]
     private Void descriptionHolder;
     protected string description;
     
@@ -120,19 +122,36 @@ public abstract class BTNode : ScriptableObject
     }
 
     public abstract void CascadeExit();
-
+    /// <summary>
+    /// Recursively collects all descendant nodes. Optional stop condition halts recursion at matching nodes.
+    /// </summary>
     public List<BTNode> RecursiveGetChildren(Func<BTNode, bool> stopCondition = null)
     {
         List<BTNode> children = new List<BTNode>();
         foreach (var child in GetChildren())
         {
-            children.Add(child);
-            if(stopCondition!=null && stopCondition(child)) continue;
-            children.AddRange(child.RecursiveGetChildren(stopCondition));
+            if (stopCondition == null)
+            {
+                children.Add(child);
+                children.AddRange(child.RecursiveGetChildren());
+            } else if (stopCondition(child))
+            {
+                children.Add(child);// stop recursion
+            }
+            else
+            {
+                children.AddRange(child.RecursiveGetChildren(stopCondition));
+            }
+            
         }
         return children;
     }
-
+    
+    /// <summary>
+    /// Run once when the node is cloned at runtime
+    /// </summary>
+    public virtual void Prepare() {}
+    
     protected virtual void OnEnter() {}
     protected abstract State OnUpdate();
     // public virtual void OnFixedUpdate() {}
@@ -152,13 +171,13 @@ public abstract class BTNode : ScriptableObject
         return component;
     }
     
-    protected T GetComponentInMe<T>(string uniqueId) where T : Component
+    protected T GetComponentInMe<T>(string uniqueId) where T : class
     {
         if (string.IsNullOrEmpty(uniqueId))
         {
             return GetComponentInMe<T>();
         }
-        foreach (var component in tree.Me.GetComponents<IMultiComponent<T>>())
+        foreach (var component in tree.Me.GetComponents<T>().OfType<IUniqueIdentifiable>())
         {
             if (component.UniqueId == uniqueId)
             {

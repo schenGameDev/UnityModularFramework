@@ -4,7 +4,7 @@ using Sisus.ComponentNames;
 using UnityEngine;
 
 [AddComponentMenu("Behavior Tree/Range", 0), RequireComponent(typeof(BTRunner))]
-public class BTRange : MonoBehaviour, IMultiComponent<BTRange>
+public class BTRange : MonoBehaviour,IUniqueIdentifiable
 {
     [SerializeField,OnValueChanged(nameof(RenameComponent))] private string rangeName;
 

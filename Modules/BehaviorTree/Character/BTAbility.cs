@@ -5,12 +5,11 @@ using EditorAttributes;
 using ModularFramework;
 using Sisus.ComponentNames;
 using UnityEngine;
-using UnityModularFramework;
 using UnityTimer;
 using Void = EditorAttributes.Void;
 
 [AddComponentMenu("Behavior Tree/Ability"), RequireComponent(typeof(BTRunner))]
-public class BTAbility : MonoBehaviour, IMultiComponent<BTAbility>, IReady
+public class BTAbility : MonoBehaviour, IUniqueIdentifiable, IReady
 {
     [Header("Targeting")]
     [SerializeReference] public ITransformTargetSelector targetSelector;

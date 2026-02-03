@@ -5,7 +5,7 @@ using Sisus.ComponentNames;
 using UnityEngine;
 
 [AddComponentMenu("Behavior Tree/Interact"), RequireComponent(typeof(BTRunner))]
-public abstract class BTInteract: MonoBehaviour, IMultiComponent<BTInteract>
+public abstract class BTInteract: MonoBehaviour, IUniqueIdentifiable
 {
     [SerializeField,OnValueChanged(nameof(RenameComponent))] protected string interactName;
     [SerializeField] private string animFlag;

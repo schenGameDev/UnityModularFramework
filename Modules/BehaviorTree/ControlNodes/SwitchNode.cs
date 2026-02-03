@@ -39,7 +39,7 @@ public abstract class SwitchNode : ControlNode
     
     protected override State OnUpdate()
     {
-        if (currentRunningChild is null) return State.Failure;
+        if (currentRunningChild == null) return State.Failure;
         
         if (verifyEachFrame && Condition() != enterConditionState)
         {

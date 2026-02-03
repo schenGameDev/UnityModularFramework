@@ -6,7 +6,6 @@ public class SequenceNode : ControlNode
     [Tooltip("If true, the sequence will ignore failures and continue to the next child")]
     public bool ignoreFailure;
     [ShowField(nameof(ignoreFailure))] public bool returnOnSuccess;
-    public bool onlyIncludeReadyChildren;
     private int _current;
 
     protected override void OnEnter()
@@ -19,9 +18,9 @@ public class SequenceNode : ControlNode
     protected override State OnUpdate()
     {
         // precheck if child is ready
-        while (onlyIncludeReadyChildren)
+        while (true)
         {
-            if (IsReady(currentRunningChild))
+            if (currentRunningChild is not ReadyNode rn || rn.Ready)
                 break;
 
             // if ignoring failure, move to next child
@@ -55,7 +54,6 @@ public class SequenceNode : ControlNode
     {
         var clone = base.Clone() as SequenceNode;
         clone.ignoreFailure = ignoreFailure;
-        clone.onlyIncludeReadyChildren = onlyIncludeReadyChildren;
         clone.returnOnSuccess = returnOnSuccess;
         return clone;
     }

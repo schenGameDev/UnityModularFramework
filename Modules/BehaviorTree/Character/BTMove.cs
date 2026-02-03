@@ -2,11 +2,10 @@ using EditorAttributes;
 using ModularFramework;
 using Sisus.ComponentNames;
 using UnityEngine;
-using UnityModularFramework;
 using UnityTimer;
 
 [AddComponentMenu("Behavior Tree/Move", 0), RequireComponent(typeof(BTRunner))]
-public class BTMove : MonoBehaviour,IMultiComponent<BTMove>,IReady
+public class BTMove : MonoBehaviour,IUniqueIdentifiable, IReady
 {
     public string UniqueId => moveName;
 

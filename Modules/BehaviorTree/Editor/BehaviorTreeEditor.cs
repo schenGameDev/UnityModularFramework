@@ -175,6 +175,12 @@ public class BehaviorTreeEditor : EditorWindow
             _blackboardView?.UpdateBlackboard(tree.blackboard);
             if(_treeLabel!=null) _treeLabel.text = "TreeView: " + Selection.activeObject.name;
         }
+        else if (_treeView != null && !_treeView.ValidateCurrentView())
+        {
+            _inspectorView?.ValidateCurrentView();
+            _blackboardView?.Clear();
+            if(_treeLabel!=null) _treeLabel.text = "TreeView";
+        }
     }
 
     private void OnNodeSelectionChanged(NodeView node)
@@ -215,6 +221,7 @@ public class BehaviorTreeEditor : EditorWindow
 
     private void OnInspectorUpdate() {
         _treeView?.UpdateNodeState();
+        _inspectorView?.ValidateCurrentView();
         if (_currentInspectorNodeView != null)
         {
             _currentInspectorNodeView.UpdateTitle();

@@ -8,9 +8,19 @@ public abstract class FindTargetInRangeNode<TTarget> : SwitchNode where TTarget 
     public string rangeName;
     [Tooltip("Number of targets to select"),Min(0)] public int number = 1;
 
-    protected BTRange BtRange;
+    protected BTRange btRange;
     
     private List<TTarget> targets = new ();
+    
+    public override void Prepare()
+    {
+        btRange = GetComponentInMe<BTRange>(rangeName);
+        if (btRange == null)
+        {
+            Debug.LogError($"BTRange of {rangeName} component not found on {tree.Me.name}");
+        }
+    }
+    
     protected override void OnEnter()
     {
         targets.Clear();
@@ -22,23 +32,17 @@ public abstract class FindTargetInRangeNode<TTarget> : SwitchNode where TTarget 
     }
 
     protected override bool Condition() {
-        BtRange??= GetComponentInMe<BTRange>(rangeName);
-        if (BtRange == null)
-        {
-            Debug.LogError($"Range of {rangeName} component not found on {tree.Me.name}");
-            return false;
-        }
         return AnyTargetInRightRange();
     }
 
     private bool AnyTargetInRightRange() {
-        if (BtRange == null)
+        if (btRange == null)
         {
             Debug.LogError($"Range of {rangeName} component not found on {tree.Me.name}");
             return false;
         }
-        targets = Registry<TTarget>.Get(BtRange.targetSelector.GetStrategy<TTarget>(tree.Me, number), 
-            BtRange.targetFilters?.Select(f => f.GetStrategy<TTarget>(tree.Me)).ToArray()).ToList(); 
+        targets = Registry<TTarget>.Get(btRange.targetSelector.GetStrategy<TTarget>(tree.Me, number), 
+            btRange.targetFilters?.Select(f => f.GetStrategy<TTarget>(tree.Me)).ToArray()).ToList(); 
         if (targets == null || targets.Count == 0) return false;
         
         if (!started) Debug.Log("Target: " + string.Join(",",targets.Select(t => t.name)));Debug.Log("Target: " + string.Join(",",targets.Select(t => t.name)));

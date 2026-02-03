@@ -1,33 +1,33 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityModularFramework;
 
-public class TestTargetInAbilityRangeNode : SwitchNode,IReady
+public class TestTargetInAbilityRangeNode : SwitchNode
 {
     public string abilityName;
     private BTAbility _btAbility;
-    public bool Ready => _btAbility is null || _btAbility.Ready;
     private List<Transform> targets = new ();
+    public override void Prepare()
+    {
+        _btAbility = GetComponentInMe<BTAbility>(abilityName);
+        if (_btAbility == null)
+        {
+            Debug.LogError($"Ability of {abilityName} component not found on {tree.Me.name}");
+        }
+    }
     protected override void OnEnter()
     {
         targets.Clear();
         base.OnEnter();
+        tree.blackboard.Add(BTBlackboard.KEYWORD_ABILITY_NAME, abilityName);
         if (targets is { Count: > 0 })
         {
             tree.blackboard.Add(BTBlackboard.KEYWORD_TARGET, targets);
-            tree.blackboard.Add(BTBlackboard.KEYWORD_ABILITY_NAME, abilityName);
         }
     }
     
     protected override bool Condition()
     {
-        _btAbility ??= GetComponentInMe<BTAbility>(abilityName);
-        if (_btAbility == null)
-        {
-            Debug.LogError($"EnemyAbility of {abilityName} component not found on {tree.Me.name}");
-            return false;
-        }
         return IsTargetInRange();
     }
     
