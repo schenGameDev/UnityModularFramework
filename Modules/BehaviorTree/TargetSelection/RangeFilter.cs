@@ -50,7 +50,7 @@ public struct RangeFilter : ITransformTargetFilter
         if(halfConeAngle >= 180) return true; // 360
         Vector3 dir = target.position - me.position;
         dir.y = 0;
-        Vector3 fwd = me.forward;
+        Vector3 fwd = me.TryGetComponent<BTRunner>(out var runner) ? runner.faceDirection : me.forward;
         fwd.y = 0;
         return Vector3.Angle(fwd, dir) < halfConeAngle;
     }
@@ -58,7 +58,8 @@ public struct RangeFilter : ITransformTargetFilter
 
     public List<List<Vector3>> GetRangeSector(Transform me)
     {
-        var groundSectors = GetRangeSector(me.position, me.forward, Vector3.up, 
+        Vector3 fwd = Application.isPlaying && me.TryGetComponent<BTRunner>(out var runner) ? runner.faceDirection : me.forward;
+        var groundSectors = GetRangeSector(me.position, fwd, Vector3.up, 
             minMaxRange.x, minMaxRange.y, viewAngle, 20);
         
         if (rangeType == RangeType.CIRCLE || minMaxHeight.x>=minMaxHeight.y) return groundSectors;

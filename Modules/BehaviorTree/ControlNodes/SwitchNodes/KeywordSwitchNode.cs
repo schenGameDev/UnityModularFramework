@@ -16,6 +16,7 @@ public class KeywordSwitchNode : SwitchNode
 
     public override void Prepare()
     {
+        base.Prepare();
         _yesEvaluator= BoolExpressionEvaluator.Get(dataType, yesCondition);
     }
     

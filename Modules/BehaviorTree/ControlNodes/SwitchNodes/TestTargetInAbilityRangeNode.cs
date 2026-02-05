@@ -9,6 +9,7 @@ public class TestTargetInAbilityRangeNode : SwitchNode
     private List<Transform> targets = new ();
     public override void Prepare()
     {
+        base.Prepare();
         _btAbility = GetComponentInMe<BTAbility>(abilityName);
         if (_btAbility == null)
         {

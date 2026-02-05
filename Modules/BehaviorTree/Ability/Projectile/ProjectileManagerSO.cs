@@ -219,7 +219,7 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
             {
                 int index = indexMapping[i];
                 hitResults[index] = true;
-                _activeProjectiles[index].GetComponent<ProjectileEffect>().Arrive(hits[i].transform);
+                _activeProjectiles[index].GetComponent<ProjectileEffect>().Arrive(hits[i].transform, hits[i].point);
                
             }
         }

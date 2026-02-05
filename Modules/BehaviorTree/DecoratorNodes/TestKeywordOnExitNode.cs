@@ -13,6 +13,7 @@ public class TestKeywordOnExitNode : DecoratorNode
 
     public override void Prepare()
     {
+        base.Prepare();
         _successEvaluator = BoolExpressionEvaluator.Get(dataType, successCondition);
         _failEvaluator = BoolExpressionEvaluator.Get(dataType, failCondition);
     }

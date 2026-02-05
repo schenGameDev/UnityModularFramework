@@ -11,6 +11,7 @@ public class NamedAbilityNode : ActionNode
 
     public override void Prepare()
     {
+        base.Prepare();
         if (!title.IsEmpty())
         {
             _btAbility = GetComponentInMe<BTAbility>(title);

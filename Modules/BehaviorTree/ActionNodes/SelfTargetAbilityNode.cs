@@ -9,6 +9,7 @@ public class SelfTargetAbilityNode : ActionNode
 
     public override void Prepare()
     {
+        base.Prepare();
         _btAbility = GetComponentInMe<BTAbility>(abilityName);
         if (!_btAbility.TargetAtSelf)
         {

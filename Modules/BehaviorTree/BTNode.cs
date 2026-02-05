@@ -146,11 +146,14 @@ public abstract class BTNode : ScriptableObject
         }
         return children;
     }
-    
+
     /// <summary>
     /// Run once when the node is cloned at runtime
     /// </summary>
-    public virtual void Prepare() {}
+    public virtual void Prepare()
+    {
+        started = false;
+    }
     
     protected virtual void OnEnter() {}
     protected abstract State OnUpdate();
@@ -184,7 +187,7 @@ public abstract class BTNode : ScriptableObject
                 return component as T;
             }
         }
-        Debug.LogError($"{typeof(T)} component with UniqueId '{uniqueId}' not found on " + tree.Me.name);
+        Debug.LogError($"{typeof(T).Name} component with UniqueId '{uniqueId}' not found on " + tree.Me.name);
         return null;
     }
     #endregion

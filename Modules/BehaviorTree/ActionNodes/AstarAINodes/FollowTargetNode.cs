@@ -3,6 +3,7 @@ using UnityEngine;
 public class FollowTargetNode : AstarAINode
 {
     public bool isStaticTarget = false;
+    public bool highlightTarget = true;
     public bool exitWhenReached = false;
     private Transform _target;
     private CharacterController _cc;
@@ -22,7 +23,7 @@ public class FollowTargetNode : AstarAINode
             {
                 tree.AI.SetNewTarget(_target, BtMove.speed,true);
             }
-            
+            HighlightTarget(true);
             BtMove.Move();
         }
         else
@@ -37,6 +38,20 @@ public class FollowTargetNode : AstarAINode
         if(_target == null || tree.AI.PathNotFound) return State.Failure;
         if(exitWhenReached && tree.AI.TargetReached) return State.Success;
         return State.Running;
+    }
+    
+    protected override void OnExit()
+    {
+        HighlightTarget(false);
+        base.OnExit();
+        
+    }
+
+    private void HighlightTarget(bool on)
+    {
+        if(!highlightTarget || _target == null) return;
+        if (_target.TryGetComponent<IDamageable>(out var damageable)) 
+            damageable.AimedAtBy(on, tree.Me);
     }
 
     public override BTNode Clone() {

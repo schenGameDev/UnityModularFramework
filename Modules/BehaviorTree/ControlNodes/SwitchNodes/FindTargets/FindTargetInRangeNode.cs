@@ -14,6 +14,7 @@ public abstract class FindTargetInRangeNode<TTarget> : SwitchNode where TTarget 
     
     public override void Prepare()
     {
+        base.Prepare();
         btRange = GetComponentInMe<BTRange>(rangeName);
         if (btRange == null)
         {

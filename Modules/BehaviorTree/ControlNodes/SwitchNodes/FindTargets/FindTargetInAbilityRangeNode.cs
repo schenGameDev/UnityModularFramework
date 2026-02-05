@@ -13,6 +13,7 @@ public abstract class FindTargetInAbilityRangeNode<TTarget> : SwitchNode where T
     
     public override void Prepare()
     {
+        base.Prepare();
         _btAbility = GetComponentInMe<BTAbility>(abilityName);
         if (_btAbility == null)
         {

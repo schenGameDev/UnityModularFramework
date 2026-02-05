@@ -12,13 +12,15 @@ public class ProjectileEffect : MonoBehaviour
     
     public Action onComplete;
     
-    public void Arrive(Transform target)
+    public void Arrive(Transform target, Vector3 hitPoint) 
     {
+        // target like ground can be too big,
+        // so we use hitPoint to spawn effect, and use target to get IDamageable
         if (target == null) return;
        
         if (impactEffectPrefab != null)
         {
-            Instantiate(impactEffectPrefab, target.position, Quaternion.identity, 
+            Instantiate(impactEffectPrefab, hitPoint, Quaternion.identity, 
                 SingletonRegistry<ProjectileManagerSO>.Instance.effectParent);
         }
         else

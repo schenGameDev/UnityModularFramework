@@ -184,7 +184,28 @@ public class BehaviorTreeSO : ScriptableObject
         {
             controlNode.Children = controlNode.Children.Where(x=> x!=null).Distinct().ToList();
         }
-        
+        // fix switch node children port names
+        foreach (var switchNode in nodes.OfType<SwitchNode>())
+        {
+            bool yesFound = false, noFound = false;
+            foreach (var child in switchNode.Children)
+            {
+                if (child.parentPortName == SwitchNode.PORT_YES)
+                {
+                    if (yesFound) Debug.LogWarning($"two children with YES port found in {switchNode.title} Node."); 
+                    else yesFound = true;
+                } else if(child.parentPortName == SwitchNode.PORT_NO)
+                {
+                    if (noFound) Debug.LogWarning($"two children with NO port found in {switchNode.title} Node."); 
+                    else noFound = true;
+                } else if (yesFound && noFound) {
+                    Debug.LogWarning($"a third child found in {switchNode.title} Node.");
+                } else
+                {
+                    child.parentPortName = yesFound ? SwitchNode.PORT_NO : SwitchNode.PORT_YES;
+                }
+            }
+        }
         AssetDatabase.SaveAssets();
     }
 
@@ -217,12 +238,18 @@ public class BehaviorTreeSO : ScriptableObject
     public BehaviorTreeSO Clone() {
         var clone = Instantiate(this);
         clone.root = root.Clone();
-        LinkSubTree(clone.nodes);
         clone.nodes = new List<BTNode>();
         Traverse(clone.root, (n) => {
             n.tree = clone;
             clone.nodes.Add(n);
         } );
+        foreach (var subroot in CloneSubTree(nodes, clone.nodes))
+        {
+            Traverse(subroot, (n) => {
+                n.tree = clone;
+                clone.nodes.Add(n);
+            } );
+        }
         if(blackboard) clone.blackboard = Instantiate(blackboard);
         return clone;
     }
@@ -234,15 +261,25 @@ public class BehaviorTreeSO : ScriptableObject
         }
     }
     
-    private void LinkSubTree(List<BTNode> nodes)
+    private IEnumerable<BTNode> CloneSubTree(List<BTNode> nodes, List<BTNode> clonedNodes)
     {
+        Dictionary<string,BTNode> visited = new ();
         try
         {
-            var subroots = nodes.OfType<SubTreeRootNode>().ToDictionary(sr => sr.title, sr => sr);
-            nodes.OfType<SubTreeOutletNode>().ForEach(outlet =>
+            var subroots = nodes.OfType<SubTreeRootNode>()
+                .ToDictionary(sr => sr.title, sr => sr);
+            clonedNodes.OfType<SubTreeOutletNode>().ForEach(outlet =>
             {
                 if (subroots.TryGetValue(outlet.title, out var subroot))
-                    outlet.subTreeRootNode = subroot;
+                {
+                    if (!visited.TryGetValue(subroot.guid, out BTNode node))
+                    {
+                        node = (SubTreeRootNode) subroot.Clone();
+                        visited.Add(subroot.guid, node);
+                    }
+                    
+                    outlet.subTreeRootNode = (SubTreeRootNode)node;
+                }
             });
         }
         catch (ArgumentException e)
@@ -250,6 +287,7 @@ public class BehaviorTreeSO : ScriptableObject
             Debug.LogError("Duplicate SubTreeRootNode titles found. Make sure all SubTreeRootNode have unique titles.");
             Debug.LogException(e);
         }
+        return visited.Values;
     }
 
     public void Run() {

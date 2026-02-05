@@ -8,6 +8,7 @@ public class TestTargetInRangeNode : SwitchNode
     
     public override void Prepare()
     {
+        base.Prepare();
         if (!rangeName.IsEmpty())
         {
             _btRange = GetComponentInMe<BTRange>(rangeName);

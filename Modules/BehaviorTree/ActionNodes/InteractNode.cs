@@ -9,6 +9,7 @@ public class InteractNode : ActionNode
 
     public override void Prepare()
     {
+        base.Prepare();
         _btInteract = GetComponentInMe<BTInteract>(interactName);
         if (_btInteract == null)
         {
