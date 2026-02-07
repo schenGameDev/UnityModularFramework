@@ -5,6 +5,9 @@ using EditorAttributes;
 using ModularFramework.Utility;
 using UnityEngine;
 
+/// <summary>
+/// RegisterProjectile() to the Projectile Manager before Apply() or DryFire()
+/// </summary>
 [CreateAssetMenu(fileName = "Projectile Ability", menuName = "Game Module/Ability/Projectile Ability")]
 public class ProjectileAbilitySO : AbilitySO
 {
@@ -22,6 +25,8 @@ public class ProjectileAbilitySO : AbilitySO
     
     [SerializeField] bool matchCasterRotation = true;
 
+    private uint _projectileId;
+
     protected override void Apply(Transform me, List<IDamageable> targets, Action onComplete)
     {
         if (!SingletonRegistry<ProjectileManagerSO>.TryGet(out var projectileManager))
@@ -34,7 +39,7 @@ public class ProjectileAbilitySO : AbilitySO
         Quaternion rotatedRotation = matchCasterRotation? me.rotation : Quaternion.identity;
         if (targetSelf)
         {
-            var projectile = projectileManager.SpawnProjectile(projectilePrefab, 
+            var projectile = projectileManager.SpawnProjectile(_projectileId, 
                 me.position + rotatedOffset, 
                 rotatedRotation,
                 me.transform, null, null);
@@ -43,7 +48,7 @@ public class ProjectileAbilitySO : AbilitySO
         else if (positionCalculator != null)
         {
             Vector3 spawnPosition = positionCalculator.GetPosition(me.position, targets == null? null : targets.Select(t=>t.Transform.position));
-            var projectile = projectileManager.SpawnProjectile(projectilePrefab, 
+            var projectile = projectileManager.SpawnProjectile(_projectileId, 
                 me.position + rotatedOffset, 
                 rotatedRotation, 
                 null, spawnPosition, null);
@@ -53,7 +58,7 @@ public class ProjectileAbilitySO : AbilitySO
         {
             foreach (var target in targets)
             {
-                var projectile = projectileManager.SpawnProjectile(projectilePrefab, 
+                var projectile = projectileManager.SpawnProjectile(_projectileId, 
                     me.position + rotatedOffset, 
                     rotatedRotation, 
                     target.Transform, null, null);
@@ -83,7 +88,7 @@ public class ProjectileAbilitySO : AbilitySO
        
         if (targetSelf)
         {
-            var projectile = projectileManager.SpawnProjectile(projectilePrefab, 
+            var projectile = projectileManager.SpawnProjectile(_projectileId, 
                 me.position + rotatedOffset, 
                 rotatedRotation,
                 me.transform, null, null);
@@ -92,7 +97,7 @@ public class ProjectileAbilitySO : AbilitySO
         else if (positionCalculator != null && targetPos.HasValue)
         {
             Vector3 spawnPosition = positionCalculator.GetPosition(me.position, new List<Vector3>() {targetPos.Value});
-            var projectile = projectileManager.SpawnProjectile(projectilePrefab, 
+            var projectile = projectileManager.SpawnProjectile(_projectileId, 
                 me.position + rotatedOffset, 
                 rotatedRotation, 
                 null, spawnPosition, null);
@@ -100,11 +105,17 @@ public class ProjectileAbilitySO : AbilitySO
         }
         else
         {
-            var projectile = projectileManager.SpawnProjectile(projectilePrefab, 
+            var projectile = projectileManager.SpawnProjectile(_projectileId, 
                 me.position + rotatedOffset, 
                 rotatedRotation, 
                 null, targetPos, direction);
             projectile.GetComponent<ProjectileEffect>().onComplete = onComplete;
         }
+    }
+
+    public void RegisterProjectile()
+    {
+        if (!SingletonRegistry<ProjectileManagerSO>.TryGet(out var projectileManager)) return;
+        _projectileId = projectileManager.RegisterProjectile(projectilePrefab);
     }
 }

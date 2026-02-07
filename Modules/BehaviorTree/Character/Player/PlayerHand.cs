@@ -52,6 +52,7 @@ public class PlayerHand : MonoBehaviour
     {
         ChangeWeapon0();
         _collisionMask = SingletonRegistry<ProjectileManagerSO>.Instance.collisionMask;
+        weaponSlots.ForEach(w => w.RegisterProjectile());
     }
 
     private void Update()

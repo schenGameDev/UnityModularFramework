@@ -1,9 +1,12 @@
-public static class StringExtension {
-    public static bool IsEmpty(this string str) => string.IsNullOrEmpty(str);
-    
-    public static bool IsBlank(this string str) => string.IsNullOrWhiteSpace(str);
+using System.Runtime.CompilerServices;
 
-    public static bool NonEmpty(this string str) => !IsEmpty(str);
+public static class StringExtension {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsEmpty(this string str) => string.IsNullOrEmpty(str);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsBlank(this string str) => string.IsNullOrWhiteSpace(str);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool NonEmpty(this string str) => !str.IsEmpty();
 
     public static string SubstringBetween(this string str, int start, int endExclusive) {
         int len = endExclusive - start;

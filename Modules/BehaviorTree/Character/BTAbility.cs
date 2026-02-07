@@ -59,7 +59,11 @@ public class BTAbility : MonoBehaviour, IUniqueIdentifiable, IReady
         
         if (ability != null)
         {
-            if(ability is ProjectileAbilitySO p) p.projectileSpawnOffset = spawnEffectOffset;
+            if (ability is ProjectileAbilitySO p)
+            {
+                p.projectileSpawnOffset = spawnEffectOffset;
+                p.RegisterProjectile();
+            }
             else if(ability is GroundEffectAbilitySO g) g.groundEffectSpawnOffset = spawnEffectOffset;
         }
     }

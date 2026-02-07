@@ -1,17 +1,17 @@
 using EditorAttributes;
+using ModularFramework;
 using Sisus.ComponentNames;
 using UnityEngine;
 
 /// <summary>
 /// Handles the movement of a projectile in the game ONLY.
 /// </summary>
-[DisallowMultipleComponent]
+[DisallowMultipleComponent,RequireComponent(typeof(AssetIdentity))]
 public class Projectile : MonoBehaviour
 {
     [Header("Config"),OnValueChanged(nameof(RenameComponent))] 
     public bool isPooling;
-    [ShowField(nameof(isPooling)),OnValueChanged(nameof(RenameComponent))] public string uniqueId;
-    
+
     [SerializeField,Min(0.01f),Suffix("s")] private float lifetime = 1;
     [SerializeField] private bool faceMoveDirection = true;
     
@@ -50,6 +50,8 @@ public class Projectile : MonoBehaviour
     private Vector3 _groundDirection;
     private float _acceleration;
     private float _trackTargetMaxRadiansPerSecond;
+
+    [HideInInspector] public uint assetId;
     
     public Vector3 Direction => faceMoveDirection
         ? transform.forward 
@@ -257,7 +259,7 @@ public class Projectile : MonoBehaviour
 
     private void RenameComponent()
     {
-        if(isPooling) this.SetName($"Projectile ({uniqueId})" );
+        if(isPooling) this.SetName("Projectile (pooling)" );
         else this.SetName("Projectile");
     }
 

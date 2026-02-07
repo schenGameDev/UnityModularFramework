@@ -16,7 +16,8 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
     public Transform effectParent;
     public LayerMask collisionMask;
     
-    private readonly Dictionary<string,ObjectPool<Projectile>> _projectilePool = new ();
+    private readonly Dictionary<uint,ObjectPool<Projectile>> _projectilePool = new ();
+    private readonly Dictionary<uint,Projectile> _nonPoolingProjectiles = new ();
     
     private readonly List<Projectile> _activeProjectiles = new ();
     private readonly List<Projectile> _projectilesToReturn = new ();
@@ -90,7 +91,7 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
     protected override void OnLateUpdate() {
         if(_projectilesToReturn.Count == 0) return;
         foreach (var projectile in _projectilesToReturn) {
-            if(_projectilePool.TryGetValue(projectile.uniqueId, out var pool)) {
+            if(_projectilePool.TryGetValue(projectile.assetId, out var pool)) {
                 pool.Release(projectile);
             } else {
                 DestroyProjectile(projectile);
@@ -136,11 +137,12 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
     {
     }
 
-    private ObjectPool<Projectile> CreateProjectilePool(Projectile prefab)
+    private ObjectPool<Projectile> CreateProjectilePool(Projectile prefab, uint assetId)
     {
         return new ObjectPool<Projectile>(
             createFunc: () => {
                 var projectile = Instantiate(prefab, _projectileParent);
+                projectile.assetId = assetId;
                 projectile.gameObject.SetActive(false);
                 return projectile;
             },
@@ -224,42 +226,55 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
             }
         }
     }
-    public Projectile SpawnProjectile(Projectile prefab, Vector3 startPos, Quaternion startRot,
+    public Projectile SpawnProjectile(uint assetId, Vector3 startPos, Quaternion startRot,
         Transform target, Vector3? targetPos, Vector3? direction)
     {
-        Projectile projectile = CreateProjectile(prefab);
+        Projectile projectile = CreateProjectile(assetId);
         projectile.Initialize(startPos, startRot, Time.time,target, targetPos, direction);
         _activeProjectiles.Add(projectile);
         if (projectile.radius > 0f) _spherecastCount++;
         return projectile;
     }
     
-    private readonly HashSet<int> _verifiedInstanceIds = new ();
-    private Projectile CreateProjectile(Projectile prefab)
+    
+    private Projectile CreateProjectile(uint assetId)
     {
         Projectile projectile;
-        if (prefab.isPooling)
+        if (_projectilePool.TryGetValue(assetId, out var pool))
         {
-            string uniqueId = prefab.uniqueId;
-            if (!_projectilePool.TryGetValue(uniqueId, out var pool))
-            {
-                pool = CreateProjectilePool(prefab);
-                _projectilePool.Add(uniqueId, pool);
-            }
-            
             projectile = pool.Get();
         }
-        else
+        else if (_nonPoolingProjectiles.TryGetValue(assetId, out var prefab))
         {
-            if (!_verifiedInstanceIds.Contains(prefab.GetInstanceID()))
-            {
-                _verifiedInstanceIds.Add(prefab.GetInstanceID());
-            }
             projectile = Instantiate(prefab, _projectileParent);
             projectile.gameObject.SetActive(true);
         }
+        else
+        {
+            Debug.LogError($"Projectile {assetId} not registered");
+            projectile = null;
+        }
         
         return projectile;
+    }
+
+    public uint RegisterProjectile(Projectile prefab)
+    {
+        uint assetId = prefab.GetComponent<AssetIdentity>().assetId;
+        if (prefab.isPooling)
+        {
+            if (!_projectilePool.ContainsKey(assetId))
+            {
+                var pool = CreateProjectilePool(prefab, assetId);
+                _projectilePool.Add(assetId, pool);
+            }
+        }
+        else
+        {
+            _nonPoolingProjectiles.TryAdd(assetId, prefab);
+        }
+        
+        return assetId;
     }
     
     private void ReturnProjectile(Projectile projectile) {

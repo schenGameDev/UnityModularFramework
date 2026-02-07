@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace ModularFramework.Utility {
     public static class MathUtil {
         public static readonly float TOLERANCE = 0.001f;
         public static readonly float SQUARE_TOLERANCE = 0.000001f;
 
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsOdd(int num) => num % 2 != 0;
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IntPow(int x, uint pow)
         {
             int ret = 1;
@@ -39,7 +41,7 @@ namespace ModularFramework.Utility {
             int res = except;
             if(maxExclusive !=1) {
                 while(res==except) {
-                    res = UnityEngine.Random.Range(0,maxExclusive);
+                    res = Random.Range(0,maxExclusive);
                 }
             }
             return res;
