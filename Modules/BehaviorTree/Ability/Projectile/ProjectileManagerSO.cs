@@ -179,7 +179,7 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
             if (projectile.radius > 0f)
             {
                 sphereOrigins[s] = projectile.transform.position;
-                sphereDirections[s] = projectile.transform.forward;
+                sphereDirections[s] = projectile.Direction;
                 sphereRadii[s] = projectile.radius;
                 sphereIndices[s] = i;
                 s++;
@@ -187,7 +187,7 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
             else
             {
                 rayOrigins[r] = projectile.transform.position;
-                rayDirections[r] = projectile.transform.forward;
+                rayDirections[r] = projectile.Direction;
                 rayIndices[r] = i;
                 r++;
             }

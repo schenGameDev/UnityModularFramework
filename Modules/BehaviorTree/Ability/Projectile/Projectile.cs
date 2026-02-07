@@ -42,9 +42,7 @@ public class Projectile : MonoBehaviour
     
     [SerializeField] private bool spherecast;
     [ShowField(nameof(spherecast))] public float radius;
-    
-    
-    // public Vector3 direction;
+
     private float _groundSpeed;
     private float _ySpeed;
     private float _startTime;
@@ -52,6 +50,10 @@ public class Projectile : MonoBehaviour
     private Vector3 _groundDirection;
     private float _acceleration;
     private float _trackTargetMaxRadiansPerSecond;
+    
+    public Vector3 Direction => faceMoveDirection
+        ? transform.forward 
+        : new Vector3(_groundDirection.x, _ySpeed / _groundSpeed, _groundDirection.z).normalized;
 
     private void Awake()
     {

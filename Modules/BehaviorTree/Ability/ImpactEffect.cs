@@ -28,6 +28,7 @@ public class ImpactEffect : MonoBehaviour
     //public override void OnStartServer()
     private void Start()
     {
+        _affectedTargets = GetAllTargetTypes();
         if (impactOverTime)
         {
             _timer = new LimitedRepeatTimer(tickInterval, ticks);
@@ -50,8 +51,6 @@ public class ImpactEffect : MonoBehaviour
                 Destroy(gameObject);
             }
         }
-
-        _affectedTargets = GetAllTargetTypes();
     }
     
     private DamageTarget GetAllTargetTypes()
@@ -132,5 +131,10 @@ public class ImpactEffect : MonoBehaviour
         targetsInRange.AddRange(Registry<T>
             .Filter(((ITransformTargetFilter)rangeFilter).GetStrategy<T>(transform))
             .Select(x => x as IDamageable));
+    }
+
+    private void OnDestroy()
+    {
+        _timer?.Stop();
     }
 }

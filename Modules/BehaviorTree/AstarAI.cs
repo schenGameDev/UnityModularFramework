@@ -148,9 +148,11 @@ public class AstarAI : MonoBehaviour
 
         bool reachedEndOfPath = false;
         // The distance to the next waypoint in the path
-        float sqrDistanceToWaypoint;
+        float sqrDistanceToWaypoint = 0;
         var tfGroundPos = GetTransformGroundPos();
-        while (true) {
+        int i = 0;
+        const int maxIterations = 100; // safety to prevent infinite loop
+        while (i++ <= maxIterations) {
             sqrDistanceToWaypoint = Vector3.SqrMagnitude(tfGroundPos - _path.vectorPath[_currentWaypoint]);
             if (sqrDistanceToWaypoint < NEXT_WAYPOINT_DISTANCE) {
                 if (_currentWaypoint + 1 < _path.vectorPath.Count) {

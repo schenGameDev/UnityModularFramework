@@ -18,7 +18,7 @@ public class SequenceNode : ControlNode
     protected override State OnUpdate()
     {
         // precheck if child is ready
-        while (true)
+        while (_current <= Children.Count)
         {
             if (currentRunningChild is not ReadyNode rn || rn.Ready)
                 break;
