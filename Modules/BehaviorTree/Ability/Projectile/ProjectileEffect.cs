@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using EditorAttributes;
-using ModularFramework.Utility;
+using ModularFramework;
 using UnityEngine;
 
 [DisallowMultipleComponent,RequireComponent(typeof(Projectile))]

@@ -1,4 +1,4 @@
-using ModularFramework.Utility;
+using ModularFramework;
 using UnityEngine;
 using UnityTimer;
 

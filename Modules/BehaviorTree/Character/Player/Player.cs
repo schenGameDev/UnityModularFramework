@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ModularFramework.Utility;
+using ModularFramework;
 using UnityEngine;
 using UnityEngine.UI;
 

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EditorAttributes;
-using ModularFramework.Utility;
+using ModularFramework;
 using UnityEngine;
 
 /// <summary>

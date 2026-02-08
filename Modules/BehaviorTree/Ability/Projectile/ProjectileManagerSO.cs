@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using ModularFramework;
-using ModularFramework.Utility;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
@@ -16,7 +15,6 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
     public Transform effectParent;
     public LayerMask collisionMask;
     
-    private readonly Dictionary<uint,ObjectPool<Projectile>> _projectilePool = new ();
     private readonly Dictionary<uint,Projectile> _nonPoolingProjectiles = new ();
     
     private readonly List<Projectile> _activeProjectiles = new ();
@@ -35,7 +33,7 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
     }
     protected override void OnStart()
     {
-        CleanObjectPool();
+        PrefabPool<Projectile>.Clear();
     }
 
     protected override void OnUpdate()
@@ -91,9 +89,7 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
     protected override void OnLateUpdate() {
         if(_projectilesToReturn.Count == 0) return;
         foreach (var projectile in _projectilesToReturn) {
-            if(_projectilePool.TryGetValue(projectile.assetId, out var pool)) {
-                pool.Release(projectile);
-            } else {
+            if(!PrefabPool<Projectile>.Release(projectile, projectile.assetId)) {
                 DestroyProjectile(projectile);
             }
         }
@@ -102,7 +98,7 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
 
     protected override void OnSceneDestroy()
     {
-        CleanObjectPool();
+        PrefabPool<Projectile>.Clear();
         if(_projTransforms.isCreated) 
             try
             {
@@ -137,7 +133,7 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
     {
     }
 
-    private ObjectPool<Projectile> CreateProjectilePool(Projectile prefab, uint assetId)
+    private ObjectPool<Projectile> CreateProjectilePool(uint assetId, Projectile prefab)
     {
         return new ObjectPool<Projectile>(
             createFunc: () => {
@@ -239,20 +235,17 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
     
     private Projectile CreateProjectile(uint assetId)
     {
-        Projectile projectile;
-        if (_projectilePool.TryGetValue(assetId, out var pool))
+        if (!PrefabPool<Projectile>.TryGet(assetId, out var projectile))
         {
-            projectile = pool.Get();
-        }
-        else if (_nonPoolingProjectiles.TryGetValue(assetId, out var prefab))
-        {
-            projectile = Instantiate(prefab, _projectileParent);
-            projectile.gameObject.SetActive(true);
-        }
-        else
-        {
-            Debug.LogError($"Projectile {assetId} not registered");
-            projectile = null;
+            if (_nonPoolingProjectiles.TryGetValue(assetId, out var prefab))
+            {
+                projectile = Instantiate(prefab, _projectileParent);
+                projectile.gameObject.SetActive(true);
+            }
+            else
+            {
+                Debug.LogError($"Projectile {assetId} not registered");
+            }
         }
         
         return projectile;
@@ -260,20 +253,13 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
 
     public uint RegisterProjectile(Projectile prefab)
     {
-        uint assetId = prefab.GetComponent<AssetIdentity>().assetId;
         if (prefab.isPooling)
         {
-            if (!_projectilePool.ContainsKey(assetId))
-            {
-                var pool = CreateProjectilePool(prefab, assetId);
-                _projectilePool.Add(assetId, pool);
-            }
+            return PrefabPool<Projectile>.Register(prefab, CreateProjectilePool);
         }
-        else
-        {
-            _nonPoolingProjectiles.TryAdd(assetId, prefab);
-        }
-        
+
+        uint assetId = prefab.GetComponent<AssetIdentity>().assetId;
+        _nonPoolingProjectiles.TryAdd(assetId, prefab);
         return assetId;
     }
     
@@ -281,21 +267,5 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
         _projectilesToReturn.Add( projectile);
         _activeProjectiles.Remove( projectile);
         if (projectile.radius > 0f) _spherecastCount--;
-    }
-
-    private void CleanObjectPool()
-    {
-        foreach (var pool in _projectilePool.Values)
-        {
-            try
-            {
-                pool.Dispose();
-            }
-            catch (ObjectDisposedException)
-            {
-                // already disposed before
-            }
-        }
-        _projectilePool.Clear();
     }
 }

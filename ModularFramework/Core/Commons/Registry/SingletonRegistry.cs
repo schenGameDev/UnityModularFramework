@@ -1,7 +1,7 @@
 using ModularFramework.Commons;
 using UnityEngine;
 
-namespace ModularFramework.Utility
+namespace ModularFramework
 {
     public static class SingletonRegistry<T> where T : class
     {
