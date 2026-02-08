@@ -119,7 +119,7 @@ public class FollowPlayerCamera : MovingCameraBase
     }
 
     public Vector3 FwdVectorRelativeToCamera(Vector3 faceDirection) {
-        var cameraFwd = new Vector3(FreeMoveViewDirection.x,0,FreeMoveViewDirection.z);
+        var cameraFwd = FreeMoveViewDirection.IgnoreY();
         var degWithRef = Vector3.SignedAngle(cameraFwd, Vector3.forward, Vector3.up);
         var relativeVec = Quaternion.AngleAxis(degWithRef,Vector3.up) * faceDirection;
         return relativeVec.normalized;

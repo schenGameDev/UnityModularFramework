@@ -189,7 +189,7 @@ public class LockTargetCamera : MovingCameraBase
         Quaternion targetRot = Quaternion.LookRotation(dir);
 
         var roll =Quaternion.RotateTowards(focusPoint.rotation,targetRot,rollSpeed * Time.deltaTime);
-        focusPoint.eulerAngles = new Vector3(roll.eulerAngles.x, roll.eulerAngles.y, 0);
+        focusPoint.eulerAngles = roll.eulerAngles.IgnoreZ();
 
         if(Quaternion.Angle(focusPoint.rotation, targetRot) > closeUpNoRollAngle) {
             RollAccelerate(_rollAccModifier);

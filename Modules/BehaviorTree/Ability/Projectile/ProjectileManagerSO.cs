@@ -15,17 +15,17 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
     public Transform effectParent;
     public LayerMask collisionMask;
     
-    private readonly Dictionary<uint,Projectile> _nonPoolingProjectiles = new ();
+    [RuntimeObject] private readonly Dictionary<uint,Projectile> _nonPoolingProjectiles = new ();
     
-    private readonly List<Projectile> _activeProjectiles = new ();
-    private readonly List<Projectile> _projectilesToReturn = new ();
-    private int _spherecastCount = 0;
+    [RuntimeObject] private readonly List<Projectile> _activeProjectiles = new ();
+    [RuntimeObject] private readonly List<Projectile> _projectilesToReturn = new ();
+    [RuntimeObject] private int _spherecastCount = 0, _boxcastCount = 0, _capsulecastCount = 0;
     
     private TransformAccessArray _projTransforms;
     private NativeArray<ProjectileMoveResult> _moveResults;
     private NativeArray<ProjectileStatus> _projectileStatuses;
     
-    private RaycastBatchProcessor _raycastBatchProcessor = new (10000);
+    [RuntimeObject(noInitialize:true)]private RaycastBatchProcessor _raycastBatchProcessor;
 
     protected override void OnAwake()
     {
@@ -34,6 +34,7 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
     protected override void OnStart()
     {
         PrefabPool<Projectile>.Clear();
+        _raycastBatchProcessor = new(10000);
     }
 
     protected override void OnUpdate()
@@ -126,7 +127,6 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
             {
                 // already disposed before
             }
-        _raycastBatchProcessor.Dispose();
     }
 
     protected override void OnDraw()
@@ -171,16 +171,49 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
         float[] sphereRadii = new float[_spherecastCount];
         int[] sphereIndices = new int[_spherecastCount];
         int s = 0;
-
+        
+        Vector3[] boxOrigins = new Vector3[_boxcastCount];
+        Vector3[] boxDirections = new Vector3[_boxcastCount];
+        Vector3[] boxHalfExtents = new Vector3[_boxcastCount];
+        Quaternion[] boxRotations = new Quaternion[_boxcastCount];
+        int[] boxIndices = new int[_boxcastCount];
+        int b = 0;
+        
+        Vector3[] capsulePointA = new Vector3[_capsulecastCount];
+        Vector3[] capsulePointB = new Vector3[_capsulecastCount];
+        Vector3[] capsuleDirections = new Vector3[_capsulecastCount];
+        float[] capsuleRadii = new float[_capsulecastCount];
+        int[] capsuleIndices = new int[_capsulecastCount];
+        int c = 0;
+        
         for (int i = 0; i < _activeProjectiles.Count; i++) {
             Projectile projectile = _activeProjectiles[i];
-            if (projectile.radius > 0f)
+            
+            if (projectile.collisionDetection == CastType.SPHERECAST)
             {
                 sphereOrigins[s] = projectile.transform.position;
                 sphereDirections[s] = projectile.Direction;
                 sphereRadii[s] = projectile.radius;
                 sphereIndices[s] = i;
                 s++;
+            }
+            else if (projectile.collisionDetection == CastType.BOXCAST)
+            {
+                boxOrigins[b] = projectile.transform.position;
+                boxDirections[b] = projectile.Direction;
+                boxHalfExtents[b] = projectile.halfExtents;
+                boxRotations[b] = projectile.transform.rotation;
+                boxIndices[b] = i;
+                b++;
+            }
+            else if (projectile.collisionDetection == CastType.CAPSULECAST)
+            {
+                capsulePointA[c] = projectile.pointA;
+                capsulePointB[c] = projectile.pointB;
+                capsuleDirections[c] = projectile.Direction;
+                capsuleRadii[c] = projectile.radius;
+                capsuleIndices[c] = i;
+                c++;
             }
             else
             {
@@ -202,6 +235,18 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
         {
             _raycastBatchProcessor.PerformSpherecasts(sphereOrigins, sphereDirections, sphereRadii, collisionMask.value, false, 
                     false, false,hits => OnRaycastResults(hits, sphereIndices, ref hitResults));
+        }
+        
+        if (boxOrigins.Length > 0)
+        {
+            _raycastBatchProcessor.PerformBoxcasts(boxOrigins, boxDirections, boxHalfExtents, boxRotations, collisionMask.value, 
+                false,false, false,hits => OnRaycastResults(hits, boxIndices, ref hitResults));
+        }
+        
+        if (capsulePointA.Length > 0)
+        {
+            _raycastBatchProcessor.PerformCapsulecasts(capsulePointA, capsulePointB, capsuleDirections, capsuleRadii, collisionMask.value, 
+                false,false, false,hits => OnRaycastResults(hits, capsuleIndices, ref hitResults));
         }
         
         for (int i = hitResults.Length; i-- > 0;) {
@@ -228,7 +273,9 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
         Projectile projectile = CreateProjectile(assetId);
         projectile.Initialize(startPos, startRot, Time.time,target, targetPos, direction);
         _activeProjectiles.Add(projectile);
-        if (projectile.radius > 0f) _spherecastCount++;
+        if (projectile.collisionDetection == CastType.SPHERECAST) _spherecastCount++;
+        else if (projectile.collisionDetection == CastType.BOXCAST) _boxcastCount++;
+        else if (projectile.collisionDetection == CastType.CAPSULECAST) _capsulecastCount++;
         return projectile;
     }
     
@@ -266,6 +313,8 @@ public class ProjectileManagerSO : GameModule<ProjectileManagerSO> {
     private void ReturnProjectile(Projectile projectile) {
         _projectilesToReturn.Add( projectile);
         _activeProjectiles.Remove( projectile);
-        if (projectile.radius > 0f) _spherecastCount--;
+        if (projectile.collisionDetection == CastType.SPHERECAST) _spherecastCount--;
+        else if (projectile.collisionDetection == CastType.BOXCAST) _boxcastCount--;
+        else if (projectile.collisionDetection == CastType.CAPSULECAST) _capsulecastCount--;
     }
 }

@@ -40,27 +40,28 @@ public class Projectile : MonoBehaviour
     private float trackTargetMaxAngle = 30;
     
     
-    [SerializeField] private bool spherecast;
-    [ShowField(nameof(spherecast))] public float radius;
-
-    private float _groundSpeed;
+    public CastType collisionDetection = CastType.RAYCAST;
+    [ShowField(nameof(NeedRadius))] public float radius;
+    [ShowField(nameof(collisionDetection), CastType.BOXCAST)] public Vector3 halfExtents;
+    [ShowField(nameof(collisionDetection), CastType.CAPSULECAST)] public Vector3 pointA;
+    [ShowField(nameof(collisionDetection), CastType.CAPSULECAST)] public Vector3 pointB;
+    
+    private bool NeedRadius => collisionDetection is CastType.SPHERECAST or CastType.CAPSULECAST;
+    [SerializeField,HideInInspector] private float groundSpeed;
+    [SerializeField,HideInInspector] private float acceleration;
     private float _ySpeed;
     private float _startTime;
     private Transform _target;
     private Vector3 _groundDirection;
-    private float _acceleration;
+    
     private float _trackTargetMaxRadiansPerSecond;
 
     [HideInInspector] public uint assetId;
     
     public Vector3 Direction => faceMoveDirection
         ? transform.forward 
-        : new Vector3(_groundDirection.x, _ySpeed / _groundSpeed, _groundDirection.z).normalized;
-
-    private void Awake()
-    {
-        Validate();
-    }
+        : new Vector3(_groundDirection.x, _ySpeed / groundSpeed, _groundDirection.z).normalized;
+    
 
     public void Initialize(Vector3 startPos, Quaternion startRot, float now,
         Transform target, Vector3? targetPos, Vector3? direction) 
@@ -116,22 +117,8 @@ public class Projectile : MonoBehaviour
         _trackTargetMaxRadiansPerSecond = 0;
         _groundDirection = new Vector3(direction.x, 0, direction.z).normalized;
         // this.direction = direction;
-        _ySpeed = _groundSpeed * direction.y / _groundDirection.magnitude;
+        _ySpeed = groundSpeed * direction.y / _groundDirection.magnitude;
         if(faceMoveDirection) transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
-    }
-    
-    public void Validate()
-    {
-        if(!spherecast) radius = -1f;
-        constantGroundSpeed = constantGroundSpeed || Mathf.Approximately(speed, endSpeed);
-        _groundSpeed = speed;
-        if (constantGroundSpeed)
-        {
-            changeSpeedTime = 0;
-            endSpeed = _groundSpeed;
-        }
-        _acceleration = constantGroundSpeed? 0 : (endSpeed - _groundSpeed) / changeSpeedTime;
-        if (aimType != AimType.Transform) followTarget = false;
     }
 
     private void CalculateRoute(Vector3 targetPos)
@@ -141,16 +128,16 @@ public class Projectile : MonoBehaviour
         
         if (constantGroundSpeed)
         { 
-            estimatedFlightTime = Vector3.Distance( new Vector3(targetPos.x,0,targetPos.z), 
-                new Vector3(transform.position.x,0,transform.position.z)) / _groundSpeed;
+            estimatedFlightTime = Vector3.Distance( targetPos.IgnoreY(), 
+                transform.position.IgnoreY()) / groundSpeed;
         }
         else
         {
             float d = Vector3.Distance(new Vector3(targetPos.x, 0, targetPos.z), new Vector3(transform.position.x, 0, transform.position.z));
-            float delta = d - 0.5f * (_groundSpeed + endSpeed) * changeSpeedTime;
+            float delta = d - 0.5f * (groundSpeed + endSpeed) * changeSpeedTime;
             estimatedFlightTime = delta > 0
                 ?  delta / endSpeed + changeSpeedTime 
-                : CalculateTime(_groundSpeed, _acceleration, d);
+                : CalculateTime(groundSpeed, acceleration, d);
 
         }
         _ySpeed = estimatedFlightTime <= 0 
@@ -158,7 +145,7 @@ public class Projectile : MonoBehaviour
             : gravity > 0 
                 ? yDiff / estimatedFlightTime + 0.5f * gravity * estimatedFlightTime 
                 : yDiff / estimatedFlightTime;
-        var direction = new Vector3(_groundDirection.x, _ySpeed / _groundSpeed, _groundDirection.z).normalized;
+        var direction = new Vector3(_groundDirection.x, _ySpeed / groundSpeed, _groundDirection.z).normalized;
         
         if(faceMoveDirection) transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
     }
@@ -197,9 +184,9 @@ public class Projectile : MonoBehaviour
         target = _target == null ? Vector3.zero : _target.position,
         trackTargetMaxRadiansPerSecond = _trackTargetMaxRadiansPerSecond,
         groundDirection = _groundDirection,
-        groundSpeed = _groundSpeed,
+        groundSpeed = groundSpeed,
         endGroundSpeed = endSpeed,
-        acceleration = _acceleration,
+        acceleration = acceleration,
         ySpeed = _ySpeed,
         gravity = gravity,
         faceMoveDirection = faceMoveDirection
@@ -207,7 +194,7 @@ public class Projectile : MonoBehaviour
 
     public void Read(ProjectileMoveResult moveResult)
     {
-        _groundSpeed = moveResult.groundSpeed;
+        groundSpeed = moveResult.groundSpeed;
         _ySpeed = moveResult.ySpeed;
         _groundDirection = moveResult.groundDirection;
     }
@@ -256,6 +243,25 @@ public class Projectile : MonoBehaviour
         return groundDirection * 0.5f * (newGroundSpeed + groundSpeed) * deltaTime +
                         Vector3.up * 0.5f * (newYSpeed + ySpeed) * deltaTime;
     }
+    
+#if UNITY_EDITOR
+    [Button]
+    public void Validate()
+    {
+        if(collisionDetection != CastType.SPHERECAST && collisionDetection != CastType.CAPSULECAST) radius = -1f;
+        if(collisionDetection != CastType.BOXCAST) halfExtents = Vector3.one * -1f;
+
+        constantGroundSpeed = constantGroundSpeed || Mathf.Approximately(speed, endSpeed);
+        groundSpeed = speed;
+        if (constantGroundSpeed)
+        {
+            changeSpeedTime = 0;
+            endSpeed = groundSpeed;
+        }
+        acceleration = constantGroundSpeed? 0 : (endSpeed - groundSpeed) / changeSpeedTime;
+        if (aimType != AimType.Transform) followTarget = false;
+    }
+#endif
 
     private void RenameComponent()
     {
@@ -265,10 +271,19 @@ public class Projectile : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        if(spherecast && radius > 0f)
+        if(collisionDetection == CastType.SPHERECAST && radius > 0f)
         {
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(transform.position, radius);
+        } else if(collisionDetection == CastType.BOXCAST && halfExtents.IsPositive())
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireCube(transform.position, halfExtents * 2);
+        } else if (collisionDetection == CastType.CAPSULECAST && radius > 0f)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(transform.position + pointA, radius);
+            Gizmos.DrawWireSphere(transform.position + pointB, radius);
         }
     }
 }

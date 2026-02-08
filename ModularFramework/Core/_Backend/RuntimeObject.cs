@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading;
 using ModularFramework.Utility;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -96,10 +95,9 @@ namespace ModularFramework
                 } else if(value is IDisposable disposable) {
                     try
                     {
-                        if(disposable is CancellationTokenSource cts) cts.Dispose();
                         disposable.Dispose();
                     }
-                    catch (Exception)
+                    catch (ObjectDisposedException)
                     {
                         // nothing
                     }
