@@ -1,5 +1,6 @@
 using System;
 using EditorAttributes;
+using KBCore.Refs;
 using ModularFramework;
 using UnityEngine;
 
@@ -10,14 +11,13 @@ public class BTRunner : MonoBehaviour,ILive
     [Suffix("s"),SerializeField] private float interval = 0.2f;
     public bool Live { get; set; }
     private Action _onAnimKeyEvent;
-    private Animator _animator;
+    [SerializeField,Self(Flag.Optional)] Animator animator;
     private float _btTimer = 0f;
     
-    private void Awake()
-    {
-        _animator = GetComponent<Animator>();
-    }
-
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
+    
     private void Start()
     {
         tree = tree.Clone();
@@ -47,7 +47,7 @@ public class BTRunner : MonoBehaviour,ILive
         {
             return;
         }
-        if(_animator!=null) _animator.SetBool(flag, true);
+        if(animator!=null) animator.SetBool(flag, true);
         
         Debug.Log($"Playing animation with flags: {flag}");
     }
@@ -57,7 +57,7 @@ public class BTRunner : MonoBehaviour,ILive
     public void StopAnim(string flag)
     {
         if(string.IsNullOrEmpty(flag)) return;
-        if(_animator!=null) _animator.SetBool(flag, false);
+        if(animator!=null) animator.SetBool(flag, false);
         Debug.Log($"Stopping animation with flags: {flag}");
         _onAnimKeyEvent = null;
     }

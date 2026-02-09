@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ModularFramework;
-using ModularFramework.Utility;
 using UnityEngine;
 
 [RequireComponent(typeof(Marker))]
@@ -89,7 +88,7 @@ public class ChatBubbleQueue : TextPrinterBase,IMark,ISavable
             {
                 var arr = line.Split("&&");
                 TextPrinter printer = CreateChatBubble(bubblePrefabs[int.Parse(arr[0])]);
-                printer.Textbox.text = arr[1];
+                printer.textbox.text = arr[1];
                 _bubbles.Add(printer);
             });
         }

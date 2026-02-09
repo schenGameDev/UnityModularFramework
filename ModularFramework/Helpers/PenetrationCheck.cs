@@ -1,5 +1,6 @@
 using System;
 using EditorAttributes;
+using KBCore.Refs;
 using ModularFramework;
 using UnityEngine;
 
@@ -13,12 +14,14 @@ public class PenetrationCheck : MonoBehaviour
     public event Action<Vector3> OnPenetrationStay;
     public event Action OnPenetrationEnd;
 
-    private Collider _collider;
+    [SerializeField,Self] private Collider _collider;
     [SerializeField,ReadOnly] private bool resolvingCollision;
     
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
     private void Start()
     {
-        _collider = GetComponent<Collider>();
         // OnPenetrationStart += correction =>
         // {
         //     float penetrationDepth = correction.magnitude;

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using KBCore.Refs;
 using ModularFramework;
 using ModularFramework.Utility;
-using TMPro;
 using UnityEngine;
 
 [RequireComponent(typeof(Marker), typeof(CanvasGroup))]
@@ -11,10 +11,17 @@ public class SingletonSelectableGroup : Selectable, ISelectableGroup
     [field:SerializeField] public string ChoiceGroupName { get; private set; }
     [field:SerializeField] public bool EnableOnAwake { get; private set; }
     public Action<int> OnSelect { get; set; }
+    
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
 
     protected override void Awake()
     {
-        TMP = GetComponentInChildren<TextMeshProUGUI>(true);
+        if (!tmp)
+        {
+            DebugUtil.Error("TMPro not found in children");
+        }
     }
 
     public void Activate(InkChoice choiceInfo, bool showHiddenChoice)
@@ -65,13 +72,12 @@ public class SingletonSelectableGroup : Selectable, ISelectableGroup
         }
     }
     
-    private CanvasGroup _cg;
+    [SerializeField,Self(Flag.Optional)] private CanvasGroup cg;
     protected override void Hide(bool hide)
     {
-        if(!_cg) _cg = GetComponent<CanvasGroup>();
-        _cg.interactable = !hide;
-        _cg.alpha = hide? 0 : 1;
-        _cg.blocksRaycasts = !hide;
+        cg.interactable = !hide;
+        cg.alpha = hide? 0 : 1;
+        cg.blocksRaycasts = !hide;
     }
     
     public void Activate(string text, Action onSelect)

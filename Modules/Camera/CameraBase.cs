@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using EditorAttributes;
+using KBCore.Refs;
 using ModularFramework;
-using ModularFramework.Utility;
 using Unity.Cinemachine;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -29,8 +29,12 @@ public abstract class CameraBase : MonoBehaviour,IMark
     [HideInChildren(typeof(EmptyCamera))] public virtual Vector3 Offset => Vector3.zero;
 
 #region General
-    [SerializeField,Rename("POV Change Speed During Transition")] float _povDelta = 20;
+    [SerializeField,Rename("POV Change Speed During Transition")] float povDelta = 20;
     [ReadOnly] public Vector3 Momentum;
+    
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
 
     public virtual void OnEnter(CameraTransitionType transitionType)
     {
@@ -45,8 +49,7 @@ public abstract class CameraBase : MonoBehaviour,IMark
     
     protected virtual void Start()
     {
-        _vc = GetComponent<CinemachineCamera>();
-        _pov = _vc.Lens.FieldOfView;
+        _pov = vc.Lens.FieldOfView;
         POV = _pov;
     }
 
@@ -68,7 +71,7 @@ public abstract class CameraBase : MonoBehaviour,IMark
     public Quaternion LastFocusRot {get; private set;}
     public float POV {get; private set;}
     private float _pov;
-    private CinemachineCamera _vc;
+    [SerializeField,Self] private CinemachineCamera vc;
 
     public void SaveCurrentPosAndRot() {
         LastCamPos = transform.position;
@@ -88,7 +91,7 @@ public abstract class CameraBase : MonoBehaviour,IMark
             RestrainMomentum(prevCam.Momentum);
         }
         POV = prevCam.POV;
-        _vc.Lens.FieldOfView = POV;
+        vc.Lens.FieldOfView = POV;
     }
 
     private Tuple<Vector3,Quaternion> FindFocusPointPositionAndFwdDirectionByCamera(Vector3 camPos,Quaternion camRot) {
@@ -103,13 +106,13 @@ public abstract class CameraBase : MonoBehaviour,IMark
     }
     protected void UpdatePOV() {
         if(POV == _pov) return;
-        _povDelta = povChangeSpeed * Time.deltaTime;
-        if(POV < _pov) POV = Mathf.Min(POV + _povDelta, _pov);
-        else POV = Mathf.Max(POV - _povDelta, _pov);
-        _vc.Lens.FieldOfView = POV;
+        povDelta = povChangeSpeed * Time.deltaTime;
+        if(POV < _pov) POV = Mathf.Min(POV + povDelta, _pov);
+        else POV = Mathf.Max(POV - povDelta, _pov);
+        vc.Lens.FieldOfView = POV;
     }
     
-    protected void ResetPOV() => _vc.Lens.FieldOfView = _pov;
+    protected void ResetPOV() => vc.Lens.FieldOfView = _pov;
 #endregion
 
 #region Shake
@@ -170,6 +173,7 @@ public abstract class CameraBase : MonoBehaviour,IMark
         SingletonRegistry<CameraManagerSO>.Instance?.Unregister(transform);
     }
     #endregion
+#if UNITY_EDITOR
     #region Editor
     protected abstract Transform CameraFocusSpawnPoint();
 
@@ -214,6 +218,7 @@ public abstract class CameraBase : MonoBehaviour,IMark
         Gizmos.DrawRay(pos + forward, left * 0.25f);
     }
     #endregion
+#endif
 }
 
 public enum CameraType {

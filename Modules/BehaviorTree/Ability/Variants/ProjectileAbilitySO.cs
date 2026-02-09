@@ -20,7 +20,8 @@ public class ProjectileAbilitySO : AbilitySO
     [Required] public Projectile projectilePrefab;
     [HideInInspector] public Vector3 projectileSpawnOffset;
 
-    [SerializeReference,Tooltip("Used when spawn position is not the targets, but a different position calculated from the targets (e.g. predict player movement)")] 
+    [SerializeReference,SubclassSelector]
+    [Tooltip("Used when spawn position is not the targets, but a different position calculated from the targets (e.g. predict player movement)")] 
     private IPositionCalculator positionCalculator;
     
     [SerializeField] bool matchCasterRotation = true;
@@ -43,7 +44,7 @@ public class ProjectileAbilitySO : AbilitySO
                 me.position + rotatedOffset, 
                 rotatedRotation,
                 me.transform, null, null);
-            projectile.GetComponent<ProjectileEffect>().onComplete = onComplete;
+            if(projectile.effect!=null) projectile.effect.onComplete = onComplete;
         }
         else if (positionCalculator != null)
         {
@@ -52,7 +53,7 @@ public class ProjectileAbilitySO : AbilitySO
                 me.position + rotatedOffset, 
                 rotatedRotation, 
                 null, spawnPosition, null);
-            projectile.GetComponent<ProjectileEffect>().onComplete = onComplete;
+            if(projectile.effect!=null) projectile.effect.onComplete = onComplete;
         }
         else
         {
@@ -62,7 +63,7 @@ public class ProjectileAbilitySO : AbilitySO
                     me.position + rotatedOffset, 
                     rotatedRotation, 
                     target.Transform, null, null);
-                projectile.GetComponent<ProjectileEffect>().onComplete = onComplete;
+                if(projectile.effect!=null) projectile.effect.onComplete = onComplete;
             }
         }
         
@@ -92,7 +93,7 @@ public class ProjectileAbilitySO : AbilitySO
                 me.position + rotatedOffset, 
                 rotatedRotation,
                 me.transform, null, null);
-            projectile.GetComponent<ProjectileEffect>().onComplete = onComplete;
+            if(projectile.effect!=null) projectile.effect.onComplete = onComplete;
         }
         else if (positionCalculator != null && targetPos.HasValue)
         {
@@ -101,7 +102,7 @@ public class ProjectileAbilitySO : AbilitySO
                 me.position + rotatedOffset, 
                 rotatedRotation, 
                 null, spawnPosition, null);
-            projectile.GetComponent<ProjectileEffect>().onComplete = onComplete;
+            if(projectile.effect!=null) projectile.effect.onComplete = onComplete;
         }
         else
         {
@@ -109,7 +110,7 @@ public class ProjectileAbilitySO : AbilitySO
                 me.position + rotatedOffset, 
                 rotatedRotation, 
                 null, targetPos, direction);
-            projectile.GetComponent<ProjectileEffect>().onComplete = onComplete;
+            if(projectile.effect!=null) projectile.effect.onComplete = onComplete;
         }
     }
 

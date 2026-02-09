@@ -8,13 +8,13 @@ public class BTRange : MonoBehaviour,IUniqueIdentifiable
 {
     [SerializeField,OnValueChanged(nameof(RenameComponent))] private string rangeName;
 
-    [SerializeReference] public ITransformTargetSelector targetSelector;
-    [SerializeReference] public ITransformTargetFilter[] targetFilters;
+    [SerializeReference,SubclassSelector] public ITransformTargetSelector targetSelector;
+    [SerializeReference,SubclassSelector] public ITransformTargetFilter[] targetFilters;
 
-    [SerializeField, HorizontalGroup(nameof(showGizmos), nameof(gizmosColor))]
-    private Void gizmosGroup;
-    [HideProperty] private bool showGizmos = true;
-    [HideProperty, ShowField(nameof(showGizmos)),HideLabel] private Color gizmosColor = Color.red;
+    [SerializeField,ToggleGroup("Gizmos", nameof(gizmosColor))] 
+    private bool showGizmos = true;
+    [SerializeField,HideProperty, HideLabel] 
+    private Color gizmosColor = Color.red;
 
     private void OnDrawGizmos()
     {

@@ -1,4 +1,5 @@
 using EditorAttributes;
+using KBCore.Refs;
 using ModularFramework;
 using Sisus.ComponentNames;
 using UnityEngine;
@@ -45,6 +46,8 @@ public class Projectile : MonoBehaviour
     [ShowField(nameof(collisionDetection), CastType.BOXCAST)] public Vector3 halfExtents;
     [ShowField(nameof(collisionDetection), CastType.CAPSULECAST)] public Vector3 pointA;
     [ShowField(nameof(collisionDetection), CastType.CAPSULECAST)] public Vector3 pointB;
+
+    [Self(Flag.Optional), HideInInspector] public ProjectileEffect effect;
     
     private bool NeedRadius => collisionDetection is CastType.SPHERECAST or CastType.CAPSULECAST;
     [SerializeField,HideInInspector] private float groundSpeed;
@@ -245,6 +248,8 @@ public class Projectile : MonoBehaviour
     }
     
 #if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+
     [Button]
     public void Validate()
     {

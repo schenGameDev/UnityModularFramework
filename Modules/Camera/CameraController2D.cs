@@ -1,3 +1,4 @@
+using KBCore.Refs;
 using ModularFramework;
 using UnityEngine;
 using UnityTimer;
@@ -8,7 +9,7 @@ public class CameraController2D : MonoBehaviour
     [SerializeField] private float time = 0.5f;
     [SerializeField] private float maxZoom = 8;
     
-    private Camera _camera;
+    [SerializeField,Self] private Camera _camera;
 
     private Vector3 _anchorRT, _anchorLB;
     
@@ -18,11 +19,13 @@ public class CameraController2D : MonoBehaviour
     private Vector3 _pos;
     private CountdownTimer _timer;
 
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
     
     protected void Awake()
     {
         SingletonRegistry<CameraController2D>.TryRegister(this);
-        _camera = GetComponent<Camera>();
         _defaultZoom = _camera.orthographicSize;
         _defaultCenter = _camera.transform.position;
         _zoom = _defaultZoom;

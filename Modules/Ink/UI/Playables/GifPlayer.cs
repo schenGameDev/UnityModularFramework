@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using EditorAttributes;
+using KBCore.Refs;
 using ModularFramework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,15 +12,12 @@ public class GifPlayer : Playable,IResetable
     [SerializeField] private Sprite[] frames;
     [SerializeField,Suffix("s")] private float interval = 0.2f;
     [SerializeField] private bool loop;
-    private Image _image;
+    [SerializeField,Self]private Image _image;
     private int _index;
     private CancellationTokenSource _cts;
-    
-    private void Awake()
-    {
-        _image = GetComponent<Image>();
-    }
-
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
     private void Start()
     {
         if(!disableOnAwake) Play();

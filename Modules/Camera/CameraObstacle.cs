@@ -1,7 +1,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using EditorAttributes;
+using KBCore.Refs;
 using UnityEngine;
+
 public class CameraObstacle : MonoBehaviour
 {
     // [SerializeField] private float _duration = 0.5f;
@@ -20,11 +22,16 @@ public class CameraObstacle : MonoBehaviour
     private Transform _mainCam;
 
     private bool _hidden = false;
+    [SerializeField, Child] MeshRenderer[] meshRenders;
     private (MeshRenderer,Material)[] _meshRenders;
 
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
+    
     private void Start() {
         _mainCam = Camera.main.transform;
-        _meshRenders = GetComponentsInChildren<MeshRenderer>().Select(mr=> (mr, new Material(mr.material))).ToArray();
+        _meshRenders = meshRenders.Select(mr=> (mr, new Material(mr.material))).ToArray();
     }
 
     private void LateUpdate() {

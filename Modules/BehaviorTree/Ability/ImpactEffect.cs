@@ -19,7 +19,7 @@ public class ImpactEffect : MonoBehaviour
     [ShowField(nameof(impactOverTime)),SerializeField,Min(0)] private int ticks;
     
     [SerializeField] RangeFilter rangeFilter;
-    [SerializeReference] public List<IEffectFactory<IDamageable>> effects = new();
+    [SerializeReference,SubclassSelector] public List<IEffectFactory<IDamageable>> effects = new();
     public Action onComplete;
     
     private Timer _timer;

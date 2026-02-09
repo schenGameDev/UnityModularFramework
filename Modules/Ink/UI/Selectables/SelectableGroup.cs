@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EditorAttributes;
+using KBCore.Refs;
 using ModularFramework;
-using ModularFramework.Utility;
 using UnityEngine;
 
 [RequireComponent(typeof(Marker), typeof(CanvasGroup))]
@@ -12,14 +12,17 @@ public class SelectableGroup : MonoBehaviour, ISelectableGroup
     [field: SerializeField] public string ChoiceGroupName { get; private set; }
     [field:SerializeField] public bool EnableOnAwake { get; private set; }
 
-    private List<Selectable> _selectables;
+    [SerializeField,Child] private Selectable[] selectables;
     [ReadOnly] public bool hasSelected;
     protected int lastIndex;
     private Dictionary<int,int> _choiceIndexMap = new ();
+    
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
 
     private void Awake()
     {
-        _selectables = GetComponentsInChildren<Selectable>().OrderBy(s => s.index).ToList();
         ResetState();
     }
 
@@ -50,7 +53,7 @@ public class SelectableGroup : MonoBehaviour, ISelectableGroup
 #endif
             if (choice.IsIndexOverriden) i = choice.index;
 
-            var b = _selectables[i];
+            var b = selectables[i];
 
             if (!showHiddenChoice && choice.hide)
             {
@@ -70,7 +73,7 @@ public class SelectableGroup : MonoBehaviour, ISelectableGroup
 
         }
 
-        _selectables.ForEachOrdered((j, s) =>
+        selectables.ForEachOrdered((j, s) =>
         {
             if (!usedChoices.Contains(j)) s.gameObject.SetActive(false);
         });
@@ -78,24 +81,26 @@ public class SelectableGroup : MonoBehaviour, ISelectableGroup
 
     public virtual void ResetState()
     {
-        _selectables.ForEach(s =>
-        {
-            s.hasSelected = false;
-            s.Live = false;
-            s.gameObject.SetActive(false);
-        });
+        selectables = selectables
+            .Peek(s =>
+            {
+                s.hasSelected = false;
+                s.Live = false;
+                s.gameObject.SetActive(false);
+            })
+            .OrderBy(s => s.index)
+            .ToArray();
         hasSelected = false;
         Hide(true);
     }
 
-    private CanvasGroup _cg;
+    [SerializeField,Self(Flag.Optional)]private CanvasGroup cg;
 
     public void Hide(bool hide)
     {
-        if (!_cg) _cg = GetComponent<CanvasGroup>();
-        _cg.interactable = !hide;
-        _cg.alpha = hide ? 0 : 1;
-        _cg.blocksRaycasts = !hide;
+        cg.interactable = !hide;
+        cg.alpha = hide ? 0 : 1;
+        cg.blocksRaycasts = !hide;
     }
     
     #region IRegistrySO

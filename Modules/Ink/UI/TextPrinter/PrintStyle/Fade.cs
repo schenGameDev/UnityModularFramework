@@ -42,7 +42,7 @@ public class Fade : PrintStyleBase
         }
         _cts = new CancellationTokenSource();
         Prepare();
-        Printer.Textbox.text = GetFinalText(text);
+        Printer.textbox.text = GetFinalText(text);
         Printer.Done = false;
         FadeIn(callback,_cts.Token).Forget();
     }
@@ -52,12 +52,12 @@ public class Fade : PrintStyleBase
         bool isCancelled = false;
         while(t< fadeInDuration && !isCancelled) 
         {
-            Printer.Textbox.color = Printer.Textbox.color.SetAlpha(math.min(1,t/fadeInDuration));
+            Printer.textbox.color = Printer.textbox.color.SetAlpha(math.min(1,t/fadeInDuration));
             t+=Time.deltaTime;
             isCancelled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
         }
         
-        Printer.Textbox.color = Printer.Textbox.color.SetAlpha(1);
+        Printer.textbox.color = Printer.textbox.color.SetAlpha(1);
         
         if(displayDuration>0) await UniTask.WaitForSeconds(displayDuration, cancellationToken: token).SuppressCancellationThrow();
         if(fadeOutDuration <= 0) return;
@@ -65,11 +65,11 @@ public class Fade : PrintStyleBase
         t = 0;
         while(t< fadeOutDuration && !isCancelled) 
         {
-            Printer.Textbox.color = Printer.Textbox.color.SetAlpha(math.max(0,1-t/fadeOutDuration));
+            Printer.textbox.color = Printer.textbox.color.SetAlpha(math.max(0,1-t/fadeOutDuration));
             t+=Time.deltaTime;
             isCancelled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
         }
-        Printer.Textbox.color = Printer.Textbox.color.SetAlpha(0);
+        Printer.textbox.color = Printer.textbox.color.SetAlpha(0);
         callback?.Invoke();
         Finish();
     }

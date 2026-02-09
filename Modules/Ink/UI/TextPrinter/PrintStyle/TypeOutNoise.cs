@@ -57,16 +57,16 @@ public class TypeOutNoise : PrintStyleBase
             if(!isTextTag) isTextTag = ch=='<';
             if (isTextTag)
             {
-                Printer.Textbox.text += ch;
+                Printer.textbox.text += ch;
                 if (ch == '>') isTextTag = false;
                 continue;
             }
            
             float t = timeGapBetweenLetters;
-            string txt = Printer.Textbox.text;
+            string txt = Printer.textbox.text;
             while (t > 0)
             {
-                Printer.Textbox.text = txt + RandomChar();
+                Printer.textbox.text = txt + RandomChar();
                 t-=Time.deltaTime;
                 bool isCanceled= await UniTask.NextFrame(cancellationToken:token).SuppressCancellationThrow();
                 if (isCanceled)
@@ -78,8 +78,8 @@ public class TypeOutNoise : PrintStyleBase
                     return;
                 }
             }
-            Printer.Textbox.text = txt + ch;
-            if (ReturnEarly && text.Length - Printer.Textbox.text.Length == 2)
+            Printer.textbox.text = txt + ch;
+            if (ReturnEarly && text.Length - Printer.textbox.text.Length == 2)
             {
                 callback?.Invoke();
                 ReturnedEarly = true;

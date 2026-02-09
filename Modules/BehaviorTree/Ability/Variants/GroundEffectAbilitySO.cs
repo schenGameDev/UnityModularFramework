@@ -14,7 +14,8 @@ public class GroundEffectAbilitySO : AbilitySO
     
     [SerializeField] private ImpactEffect impactEffectPrefab;
     [HideInInspector] public Vector3 groundEffectSpawnOffset;
-    [SerializeReference,Tooltip("Used when spawn position is not the targets, but a different position calculated from the targets (e.g. center of crowd)")] 
+    [SerializeReference,SubclassSelector]
+    [Tooltip("Used when spawn position is not the targets, but a different position calculated from the targets (e.g. center of crowd)")] 
     private IPositionCalculator positionCalculator;
     [SerializeField] bool matchCasterRotation = true;
 

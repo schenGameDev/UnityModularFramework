@@ -6,7 +6,6 @@ using EditorAttributes;
 using ModularFramework;
 using ModularFramework.Utility;
 using UnityEngine;
-using UnityEngine.Audio;
 using Void = EditorAttributes.Void;
 
 /// <summary>
@@ -246,7 +245,7 @@ public class MusicSystemSO : GameSystem<MusicSystemSO>
     }
 
     #endregion 
-    
+#if UNITY_EDITOR    
 #region Editor
     [Button]
     void PopulateDefaultPlaylist() {
@@ -255,6 +254,6 @@ public class MusicSystemSO : GameSystem<MusicSystemSO>
             tracks.ForEach(track => defaultPlaylist.Add(track.name));
         }
     }
-    
 #endregion
+#endif
 }

@@ -1,4 +1,5 @@
 using EditorAttributes;
+using KBCore.Refs;
 using ModularFramework;
 using ModularFramework.Utility;
 using TMPro;
@@ -16,20 +17,19 @@ public class Selectable : MonoBehaviour, ILive
     
     [ReadOnly] public bool hasSelected = false;
 
-    protected TextMeshProUGUI TMP;
-    private SelectableGroup _selectableGroup;
+    [SerializeField,Child(Flag.Optional | Flag.IncludeInactive)] protected TextMeshProUGUI tmp;
+    [SerializeField,Parent(Flag.Optional | Flag.IncludeInactive)] private SelectableGroup selectableGroup;
         
-    
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
     protected virtual void Awake()
     {
-        TMP = GetComponentInChildren<TextMeshProUGUI>(true);
-        _selectableGroup = GetComponentInParent<SelectableGroup>(true);
-        if (!_selectableGroup)
+        if (!selectableGroup)
         {
             DebugUtil.Error("SelectableGroup not found in parent");
         }
     }
-    
     public virtual void Select() {
         if(!Live && hasSelected) return;
         if (needConfirm)
@@ -49,7 +49,7 @@ public class Selectable : MonoBehaviour, ILive
         if (confirmed)
         {
             hasSelected = true;
-            _selectableGroup?.Select(index);
+            selectableGroup?.Select(index);
         }
     }
 
@@ -57,13 +57,13 @@ public class Selectable : MonoBehaviour, ILive
         if (txt != null)
         {
             text = txt;
-            if(TMP) TMP.text = text;
+            if(tmp) tmp.text = text;
         }
         hasSelected = false;
     }
 
     protected virtual void Hide(bool hide)
     {
-        _selectableGroup?.Hide(hide);
+        selectableGroup?.Hide(hide);
     }
 }

@@ -11,7 +11,7 @@ public class InstantAbilitySO : AbilitySO
                       "Can be used for melee attacks, instant spells, laser, buffs, etc.";
     }
     
-    [SerializeReference] public List<IEffectFactory<IDamageable>> effects = new();
+    [SerializeReference,SubclassSelector] public List<IEffectFactory<IDamageable>> effects = new();
 
     protected override void Apply(Transform me, List<IDamageable> targets, Action onComplete)
     {

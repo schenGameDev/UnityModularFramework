@@ -1,3 +1,4 @@
+using KBCore.Refs;
 using ModularFramework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,12 +10,11 @@ namespace UnityModularFramework {
     {
         [SerializeField] private VolumeType volumeType;
 
-        private Slider _slider;
+        [SerializeField,Self] private Slider slider;
         private Autowire<VolumeSystemSO> _volumeSystem = new();
 
         private void Start()
         {
-            _slider = GetComponent<Slider>();
             InitializeVolume();
         }
 
@@ -29,13 +29,13 @@ namespace UnityModularFramework {
             switch (volumeType)
             {
                 case VolumeType.MASTER:
-                    _slider.value = _volumeSystem.Get().GetMasterVolume();
+                    slider.value = _volumeSystem.Get().GetMasterVolume();
                     break;
                 case VolumeType.MUSIC:
-                    _slider.value = _volumeSystem.Get().GetMusicVolume();
+                    slider.value = _volumeSystem.Get().GetMusicVolume();
                     break;
                 case VolumeType.SFX:
-                    _slider.value = _volumeSystem.Get().GetSoundFxVolume();
+                    slider.value = _volumeSystem.Get().GetSoundFxVolume();
                     break;
             }
         }
@@ -55,5 +55,10 @@ namespace UnityModularFramework {
                     break;
             }
         }
+            
+#if UNITY_EDITOR
+        private void OnValidate() => this.ValidateRefs();
+#endif
     }
+
 }

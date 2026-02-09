@@ -12,7 +12,10 @@ namespace ModularFramework {
     {
         [Header("Game Modules")]
         [SerializeField,HideLabel,HelpBox("In boot-up order", MessageMode.None)]
-        [OnValueChanged(nameof(AddBootUpParameter))] private GameModule[] modules;
+#if UNITY_EDITOR
+        [OnValueChanged(nameof(AddBootUpParameter))] 
+#endif
+        private GameModule[] modules;
         [SerializeField,SerializedDictionary("Name","Value")] private SerializedDictionary<string,string> flags = new();
         [SerializeField,SerializedDictionary("Name","Ref Object")] private SerializedDictionary<string,GameObject> references = new();
 
@@ -239,7 +242,7 @@ namespace ModularFramework {
             _execQueue.Clear();
         }
     #endregion
-
+#if UNITY_EDITOR
     #region Editor
         [Button("Refresh Modules")]
         private void AddBootUpParameter() {
@@ -268,7 +271,7 @@ namespace ModularFramework {
         }
 
     #endregion
-
+#endif
     #region Dev
     [Header("Game Systems (Dev Only)")]
     [SerializeField,HideLabel]

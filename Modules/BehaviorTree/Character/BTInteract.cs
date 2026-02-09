@@ -1,5 +1,6 @@
 using System;
 using EditorAttributes;
+using KBCore.Refs;
 using ModularFramework;
 using Sisus.ComponentNames;
 using UnityEngine;
@@ -14,22 +15,21 @@ public abstract class BTInteract: MonoBehaviour, IUniqueIdentifiable
 
     protected Transform target;
     private Action<bool> _interactCallback;
-    private BTRunner _runner;
+    [SerializeField,Self]private BTRunner runner;
+    
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
     
     private void RenameComponent() => this.SetName($"Interact: {interactName}");
-
-    private void Awake()
-    {
-        _runner = GetComponent<BTRunner>();
-    }
-
+    
     public virtual void Interact(Transform target, Action<bool> callback)
     {
         this.target = target;
         if(_isInteracting) return;
         _isInteracting = true;
         _interactCallback = callback;
-        _runner.PlayAnim(animFlag, Stop);
+        runner.PlayAnim(animFlag, Stop);
     }
 
     protected abstract void InteractResult();

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using KBCore.Refs;
 using ModularFramework;
-using ModularFramework.Utility;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,14 +19,16 @@ public class SpriteController : MonoBehaviour,IMark
     //[SerializeField] private int index;
     [SerializeField] private float fadeTime = 0.3f;
 
-    private SpriteRenderer _sr;
-    private Image _img;
+    [SerializeField,Self(Flag.Optional)] private SpriteRenderer sr;
+    [SerializeField,Self(Flag.Optional)] private Image img;
     private bool _isSpriteRenderer;
 
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
+    
     protected void Awake() {
-        _sr = GetComponent<SpriteRenderer>();
-        if (_sr) _isSpriteRenderer = true;
-        else _img = GetComponent<Image>();
+        _isSpriteRenderer = sr;
         SetAlpha(0);
     }
 
@@ -78,24 +80,24 @@ public class SpriteController : MonoBehaviour,IMark
 
     private void SetAlpha(float alpha)
     {
-        if(_isSpriteRenderer) _sr.color = _sr.color.SetAlpha(alpha);
-        else _img.color = _img.color.SetAlpha(alpha);
+        if(_isSpriteRenderer) sr.color = sr.color.SetAlpha(alpha);
+        else img.color = img.color.SetAlpha(alpha);
     }
 
     private float GetAlpha()
     {
-        return _isSpriteRenderer? _sr.color.a : _img.color.a;
+        return _isSpriteRenderer? sr.color.a : img.color.a;
     }
 
     private void UpdateSprite(Sprite newSprite)
     {
-        if(_isSpriteRenderer) _sr.sprite = newSprite;
-        else _img.sprite =newSprite;
+        if(_isSpriteRenderer) sr.sprite = newSprite;
+        else img.sprite =newSprite;
     }
 
     public void SwapImage(Sprite newSprite, TransitionStyle outStyle = TransitionStyle.FADE, TransitionStyle inStyle = TransitionStyle.FADE)
     {
-        if ((!_img.sprite || outStyle == TransitionStyle.HARD) && inStyle == TransitionStyle.HARD)
+        if ((!SpriteExists() || outStyle == TransitionStyle.HARD) && inStyle == TransitionStyle.HARD)
         {
             UpdateSprite(newSprite);
             SetAlpha(1);
@@ -108,20 +110,22 @@ public class SpriteController : MonoBehaviour,IMark
             _cts = null;
         }
         _cts = new CancellationTokenSource();
-        if (_img.sprite && outStyle == TransitionStyle.FADE && inStyle == TransitionStyle.FADE)
+        bool spriteExists = SpriteExists();
+        if (spriteExists && outStyle == TransitionStyle.FADE && inStyle == TransitionStyle.FADE)
         {
             FadeSwap(newSprite, fadeTime, _cts.Token).Forget();
-        } else if (!_img.sprite || outStyle == TransitionStyle.HARD)
+        } else if (!spriteExists || outStyle == TransitionStyle.HARD)
         {
             UpdateSprite(newSprite);
             Fade(true, fadeTime, _cts.Token).Forget();
         }
-        else if(_img.sprite)
+        else
         {
             FadeOutHardIn(newSprite, fadeTime, _cts.Token).Forget();
         }
-       
     }
+    
+    private bool SpriteExists() => _isSpriteRenderer? sr.sprite != null : img.sprite != null;
 
     public void Clear(TransitionStyle outStyle = TransitionStyle.FADE)
     {

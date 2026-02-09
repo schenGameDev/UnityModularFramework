@@ -63,7 +63,7 @@ public class TypeOut : PrintStyleBase
             if(!isTextTag) isTextTag = ch=='<';
             if (isTextTag)
             {
-                Printer.Textbox.text += ch;
+                Printer.textbox.text += ch;
                 if (ch == '>') isTextTag = false;
                 continue;
             }
@@ -92,8 +92,8 @@ public class TypeOut : PrintStyleBase
                 if(Printer.endIndicator) Printer.endIndicator.SetActive(true);
                 return;
             }
-            Printer.Textbox.text += ch;
-            if (ReturnEarly && text.Length - Printer.Textbox.text.Length == 2)
+            Printer.textbox.text += ch;
+            if (ReturnEarly && text.Length - Printer.textbox.text.Length == 2)
             {
                 ReturnedEarly = true;
                 callback?.Invoke();
@@ -119,7 +119,7 @@ public class TypeOut : PrintStyleBase
             if(!isTextTag) isTextTag = ch=='<';
             if (isTextTag)
             {
-                Printer.Textbox.text += ch;
+                Printer.textbox.text += ch;
                 if (ch == '>') isTextTag = false;
                 continue;
             }
@@ -140,7 +140,7 @@ public class TypeOut : PrintStyleBase
             }
             
             float t = gap;
-            string txt =  Printer.Textbox.text;
+            string txt =  Printer.textbox.text;
             
             while (t > 0)
             {
@@ -152,8 +152,8 @@ public class TypeOut : PrintStyleBase
 
                 b += Time.deltaTime;
                 
-                if(printCursor)  Printer.Textbox.text = txt + cursorSymbol;
-                else  Printer.Textbox.text = txt;
+                if(printCursor)  Printer.textbox.text = txt + cursorSymbol;
+                else  Printer.textbox.text = txt;
                 
                 t-=Time.deltaTime;
                 bool isCanceled = await UniTask.NextFrame(cancellationToken:token).SuppressCancellationThrow();
@@ -167,8 +167,8 @@ public class TypeOut : PrintStyleBase
                 }
             }
 
-            Printer.Textbox.text = txt + ch;
-            if (ReturnEarly && text.Length - Printer.Textbox.text.Length == 2)
+            Printer.textbox.text = txt + ch;
+            if (ReturnEarly && text.Length - Printer.textbox.text.Length == 2)
             {
                 ReturnedEarly = true;
                 callback?.Invoke();

@@ -8,7 +8,8 @@ using UnityEngine;
 public class ProjectileEffect : MonoBehaviour
 {
     [SerializeField,PropertyDropdown] public ImpactEffect impactEffectPrefab;
-    [SerializeReference,HideField(nameof(impactEffectPrefab))] public List<IEffectFactory<IDamageable>> effects = new();
+    [SerializeReference,SubclassSelector,HideField(nameof(impactEffectPrefab))] 
+    public List<IEffectFactory<IDamageable>> effects = new();
     
     public Action onComplete;
     

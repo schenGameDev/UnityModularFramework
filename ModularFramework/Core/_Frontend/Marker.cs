@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KBCore.Refs;
 using UnityEngine;
 
 namespace ModularFramework {
@@ -13,6 +14,12 @@ namespace ModularFramework {
         /// This mark will be bufferred and re-injected at each scene
         /// </summary>
         [SerializeField] private bool buffered;
+        
+        [SerializeField,Self(Flag.Optional)] private InterfaceRef<IMark>[] marks;
+        
+#if UNITY_EDITOR
+        private void OnValidate() => this.ValidateRefs();
+#endif
 
         protected virtual void Start() {
             if(buffered) RegistryBuffer.Register(this);
@@ -28,17 +35,17 @@ namespace ModularFramework {
         public virtual void RegisterAll()
         {
             HashSet<Type> registeredTypes = new();
-            foreach (var imark in GetComponents<IMark>())
+            foreach (var imarkRef in marks)
             {
-                registeredTypes.AddRange(imark.RegisterSelf(registeredTypes));
+                registeredTypes.AddRange(imarkRef.Value.RegisterSelf(registeredTypes));
             }
         }
         
         protected virtual void UnregisterAll() {
 
-            foreach (var imark in GetComponents<IMark>())
+            foreach (var imarkRef in marks)
             {
-                imark.UnregisterSelf();
+                imarkRef.Value.UnregisterSelf();
             }
         }
     }

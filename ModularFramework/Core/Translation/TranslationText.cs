@@ -1,5 +1,6 @@
 using System;
 using EditorAttributes;
+using KBCore.Refs;
 using TMPro;
 using UnityEngine;
 
@@ -10,7 +11,7 @@ namespace ModularFramework.Utility
         [SerializeField,ReadOnly] protected string id;
         public string UniqueId => id;
         private string _text;
-        private TextMeshProUGUI _tmp;
+        [SerializeField,Self] private TextMeshProUGUI tmp;
 #if UNITY_EDITOR
         [SerializeField] private bool saved;
         [SerializeField] private TranslationDraftBucket draftBucket;
@@ -39,17 +40,18 @@ namespace ModularFramework.Utility
         {
             id = (DateTime.Now - new DateTime(2025, 1, 1)).TotalMilliseconds.ToString("0");
         }
+
+        private void OnValidate() => this.ValidateRefs();
 #endif
 
         private void Awake()
         {
-            _tmp = GetComponent<TextMeshProUGUI>();
-            _text = TranslationUtil.Translate(id, _tmp? _tmp.text : null);
+            _text = TranslationUtil.Translate(id, tmp? tmp.text : null);
         }
 
         protected virtual void Start()
         {
-            if (_tmp) _tmp.text = _text;
+            if (tmp) tmp.text = _text;
         }
     }
 }

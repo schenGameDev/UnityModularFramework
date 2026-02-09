@@ -1,4 +1,5 @@
 using EditorAttributes;
+using KBCore.Refs;
 using ModularFramework;
 using ModularFramework.Utility;
 using Pathfinding;
@@ -24,21 +25,18 @@ public class AstarAI : MonoBehaviour
 
     public bool TargetReached {get; private set;}
     public bool PathNotFound {get; private set;}
-    private Seeker _seeker;
-    private CharacterController _controller;
-    private BTRunner _runner;
+    [SerializeField,Self] private Seeker seeker;
+    [SerializeField,Self] private CharacterController controller;
+    [SerializeField,Self] private BTRunner runner;
 
     private int _currentWaypoint;
     private Path _path;
     private float _lastRepath = float.NegativeInfinity;
     private float _speedModifier = 1;
 
-
-    private void Awake() {
-        _seeker = GetComponent<Seeker>();
-        _controller = GetComponent<CharacterController>();
-        _runner = GetComponent<BTRunner>();
-    }
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
 
     private void OnEnable() {
         npcSpeedChangeEvent.AddListener(SetSpeedModifier);
@@ -56,15 +54,15 @@ public class AstarAI : MonoBehaviour
     }
 
     public void Teleport(Vector3 target) {
-        _controller.enabled = false;
+        controller.enabled = false;
         transform.position = PhysicsUtil.FindGroundPosition(target);
-        _controller.enabled = true;
+        controller.enabled = true;
     }
 
     public void Stop() {
         Reset();
         _speed = 0;
-        _controller.Move(Vector3.zero);
+        controller.Move(Vector3.zero);
     }
 
     public void Reset() {
@@ -85,7 +83,7 @@ public class AstarAI : MonoBehaviour
         _slowDownAtEnd = slowDownAtEnd;
         TargetReached = false;
         PathNotFound = false;
-        _seeker.StartPath(transform.position, _target.position, OnPathComplete);
+        seeker.StartPath(transform.position, _target.position, OnPathComplete);
     }
 
     public void SetNewTarget(Vector3 point, float speed, bool slowDownAtEnd) {
@@ -96,7 +94,7 @@ public class AstarAI : MonoBehaviour
         _targetPos = point;
         _target = null;
         _slowDownAtEnd = slowDownAtEnd;
-        _seeker.StartPath(GetTransformGroundPos(), _targetPos, OnPathComplete);
+        seeker.StartPath(GetTransformGroundPos(), _targetPos, OnPathComplete);
     }
 
     public void SetNewTargetUnFixed(Vector3 point, float speed, bool slowDownAtEnd) {
@@ -107,7 +105,7 @@ public class AstarAI : MonoBehaviour
         _targetPos = point;
         _target = null;
         _slowDownAtEnd = slowDownAtEnd;
-        _seeker.StartPath(GetTransformGroundPos(), _targetPos, OnPathComplete);
+        seeker.StartPath(GetTransformGroundPos(), _targetPos, OnPathComplete);
     }
 
     public void UpdateTarget(Vector3 point) {
@@ -131,9 +129,9 @@ public class AstarAI : MonoBehaviour
         if(_targetFixed) return;
         var pos = _target == null? _targetPos : _target.position;
         var tfGroundPos = GetTransformGroundPos();
-        if (Time.time > _lastRepath + REPATH_RATE && _seeker.IsDone() && Vector3.SqrMagnitude(tfGroundPos - pos) > 0.01f) {
+        if (Time.time > _lastRepath + REPATH_RATE && seeker.IsDone() && Vector3.SqrMagnitude(tfGroundPos - pos) > 0.01f) {
             _lastRepath = Time.time;
-            _seeker.StartPath(tfGroundPos, pos, OnPathComplete);
+            seeker.StartPath(tfGroundPos, pos, OnPathComplete);
         }
     }
 
@@ -142,7 +140,7 @@ public class AstarAI : MonoBehaviour
         RecalculatePath();
 
         if (_path == null) {
-            if(!_controller.isGrounded) _controller.SimpleMove(Vector3.down);
+            if(!controller.isGrounded) controller.SimpleMove(Vector3.down);
             return;
         }
 
@@ -176,7 +174,7 @@ public class AstarAI : MonoBehaviour
         var speedFactor = _slowDownAtEnd && reachedEndOfPath ? Mathf.Sqrt(Mathf.Sqrt(sqrDistanceToWaypoint)/NEXT_WAYPOINT_DISTANCE) : 1f;
         if(_path==null) return;
         Vector3 dir = (_path.vectorPath[_currentWaypoint] - tfGroundPos).normalized;
-        if(dir != Vector3.zero && _speed>0) _runner.FaceDirection(dir);
+        if(dir != Vector3.zero && _speed>0) this.runner.FaceDirection(dir);
         _velocity = _speed==0? Vector3.zero : _speedModifier * _speed * speedFactor * dir;
 
 
@@ -188,14 +186,14 @@ public class AstarAI : MonoBehaviour
             return;
         }
 
-        if (!_controller.SimpleMove(_velocity) || (_velocity.sqrMagnitude>0.01f && _controller.velocity is { x: 0, z: 0 }))
+        if (!controller.SimpleMove(_velocity) || (_velocity.sqrMagnitude>0.01f && controller.velocity is { x: 0, z: 0 }))
         {
             _stuckTimer += Time.fixedDeltaTime;
             if (!PathNotFound && _stuckTimer > 1f)
             {
                 Debug.Log($"{name} stuck.");
                 PathNotFound = true;
-                _seeker.CancelCurrentPathRequest();
+                seeker.CancelCurrentPathRequest();
             }
             else
             {

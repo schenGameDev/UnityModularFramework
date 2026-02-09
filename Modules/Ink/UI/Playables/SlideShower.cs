@@ -83,7 +83,7 @@ public class SlideShower : PlayableGroup
     }
     
     public override IEnumerable<string> GetStates() => profiles.Select(p => p.name);
-
+#if UNITY_EDITOR
     #region Editor
     [Header("Test")]
     [Rename("Index"),SerializeField] private int editorIndex = -1;
@@ -93,8 +93,8 @@ public class SlideShower : PlayableGroup
         if(editorIndex <0 || editorIndex >= profiles.Length) return;
         SetImage(frontImage, profiles[editorIndex]);
     }
-
     #endregion
+#endif
 }
 
 [Serializable]

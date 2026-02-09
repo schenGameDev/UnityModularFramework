@@ -23,13 +23,13 @@ public abstract class PrintStyleBase : ScriptableObject
     {
         if (noClearText)
         {
-            Printer.Textbox.text += "\n";
+            Printer.textbox.text += "\n";
         }
         else
         {
-            Printer.Textbox.text = string.Empty; 
+            Printer.textbox.text = string.Empty; 
         }
-        CachedText = Printer.Textbox.text;
+        CachedText = Printer.textbox.text;
         Printer.Done = false;
         ReturnedEarly = false;
     }
@@ -38,7 +38,7 @@ public abstract class PrintStyleBase : ScriptableObject
     {
         if (text != null)
         {
-            Printer.Textbox.text = GetFinalText(text);
+            Printer.textbox.text = GetFinalText(text);
         }
 
         Printer.Done = true;

@@ -2,23 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EditorAttributes;
+using KBCore.Refs;
 using ModularFramework;
 using ModularFramework.Utility;
+using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor.Animations;
 #endif
-using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
 public class AnimationPlayer : PlayableGroup
 {
-    private Animator _animator;
+    [SerializeField,Self] private Animator animator;
     [ReadOnly] public string[] animationStates;
     
-    private void Awake()
-    {
-        _animator = GetComponent<Animator>();
-    }
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
     
     public override void Play(Action<string> callback = null, string parameter = null) {
         base.Play(callback, parameter);
@@ -34,7 +34,7 @@ public class AnimationPlayer : PlayableGroup
             return;
         }
         CurrentState = animName;
-        _animator.CrossFade(animName, crossfade);
+        animator.CrossFade(animName, crossfade);
         if (OnTaskComplete != null)
         {
             await ((Func<bool>)IsAnimationFinished).WaitUntil();
@@ -44,7 +44,7 @@ public class AnimationPlayer : PlayableGroup
 
     private bool IsAnimationFinished()
     {
-        var currentStateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+        var currentStateInfo = animator.GetCurrentAnimatorStateInfo(0);
         return !currentStateInfo.IsName(CurrentState) || currentStateInfo.normalizedTime >= 1;
     }
     

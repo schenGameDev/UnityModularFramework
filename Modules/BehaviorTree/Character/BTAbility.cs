@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EditorAttributes;
+using KBCore.Refs;
 using ModularFramework;
 using Sisus.ComponentNames;
 using UnityEngine;
 using UnityTimer;
-using Void = EditorAttributes.Void;
 
 [AddComponentMenu("Behavior Tree/Ability"), RequireComponent(typeof(BTRunner))]
 public class BTAbility : MonoBehaviour, IUniqueIdentifiable, IReady
 {
     [Header("Targeting")]
-    [SerializeReference] public ITransformTargetSelector targetSelector;
+    [SerializeReference,SubclassSelector] public ITransformTargetSelector targetSelector;
     public RangeFilter rangeFilter;
     
     [Tooltip("Number of targets"),Min(0)] 
@@ -30,14 +30,13 @@ public class BTAbility : MonoBehaviour, IUniqueIdentifiable, IReady
     [Header("Cooldown")]
     [SerializeField,Min(0)] private float cooldown;
     
+    [SerializeField,ToggleGroup("Gizmos", nameof(gizmosColor))] 
+    private bool showGizmos = true;
+    [SerializeField,HideProperty, HideLabel] 
+    private Color gizmosColor = Color.red;
+    
     [Header("Runtime")]
     [ShowInInspector, ReadOnly] private bool _isCastingAbility;
-    
-    [SerializeField, HorizontalGroup(nameof(showGizmos), nameof(gizmosColor))]
-    private Void gizmosGroup;
-    [HideProperty] private bool showGizmos = true;
-    [HideProperty, ShowField(nameof(showGizmos)),HideLabel] private Color gizmosColor = Color.red;
-
     [ReadOnly,ShowInInspector] protected bool isReady = true;
     
     public bool Ready => isReady;
@@ -45,13 +44,16 @@ public class BTAbility : MonoBehaviour, IUniqueIdentifiable, IReady
     
     private List<IDamageable> _targets;
     private Action<bool> _abilityReleaseCallback;
-    private BTRunner _runner;
+    [SerializeField,Self] private BTRunner runner;
     private CountdownTimer _cooldownTimer;
     private Vector3 _initialAimPosition;
 
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
+    
     private void Awake()
     {
-        _runner = GetComponent<BTRunner>();
         if (targetSelector == null)
         {
             Debug.LogWarning($"No Target Selector assigned to Ability {AbilityName}!");
@@ -98,11 +100,11 @@ public class BTAbility : MonoBehaviour, IUniqueIdentifiable, IReady
         if (_targets != null && _targets.Count > 0)
         {
             _initialAimPosition = _targets[0].Transform.position;
-            _runner.FaceTarget(_initialAimPosition);
+            runner.FaceTarget(_initialAimPosition);
         }
         _isCastingAbility = true;
         _abilityReleaseCallback = callback;
-        _runner.PlayAnim(animFlag, Release);
+        runner.PlayAnim(animFlag, Release);
         AimAtTargets();
         ShowAbilityImpactArea();
     }
@@ -137,7 +139,7 @@ public class BTAbility : MonoBehaviour, IUniqueIdentifiable, IReady
     /// </summary>
     private void CastComplete() 
     {
-        _runner.StopAnim(animFlag);
+        runner.StopAnim(animFlag);
         _abilityReleaseCallback?.Invoke(true);
         AimAtTargets(false);
         _isCastingAbility = false;
@@ -149,7 +151,7 @@ public class BTAbility : MonoBehaviour, IUniqueIdentifiable, IReady
 
     public void Interrupt()
     {
-        _runner.StopAnim(animFlag);
+        runner.StopAnim(animFlag);
         _abilityReleaseCallback?.Invoke(false);
         AimAtTargets(false);
         _isCastingAbility = false;

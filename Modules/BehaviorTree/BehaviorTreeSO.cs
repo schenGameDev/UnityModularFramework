@@ -16,7 +16,7 @@ public class BehaviorTreeSO : ScriptableObject
     public AstarAI AI { get; private set; }
     public List<BTNode> nodes = new();
     
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
 
     #region Editor
     public BTNode CreateNode(Type type) {

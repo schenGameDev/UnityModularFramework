@@ -1,6 +1,7 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using EditorAttributes;
+using KBCore.Refs;
 using ModularFramework.Commons;
 using Unity.Cinemachine;
 using Unity.Cinemachine.TargetTracking;
@@ -23,9 +24,16 @@ public abstract class MovingCameraBase : CameraBase {
     [HideInInspector,Rename("Max Speed"),SerializeField,Suffix("deg/s")] protected float rollMaxSpeed=60;
     [HideInInspector,Rename("Acceleration"),SerializeField,Suffix("deg/s2")] protected float rollAcceleration=20;
 
+    [SerializeField,Self(Flag.Optional)] private CinemachineFollow follow;
+    [SerializeField,Self(Flag.Optional)] private CinemachineRotateWithFollowTarget followRot;
+    
     public override Vector3 Offset => cameraOffSet;
 
     protected float delayTimer,rollSpeed;
+    
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
 
     protected virtual void Awake() {
         delayTimer = followDelay;
@@ -60,15 +68,13 @@ public abstract class MovingCameraBase : CameraBase {
 
     protected void SetFollowOffset(Vector3 offset)
     {
-        var follow = GetComponent<CinemachineFollow>();
         if (follow) {
             follow.FollowOffset = offset;
             follow.TrackerSettings.BindingMode = BindingMode.LockToTarget;
             follow.TrackerSettings.PositionDamping = Vector3.zero;
             follow.TrackerSettings.RotationDamping = Vector3.zero;
         }
-
-        var followRot = GetComponent<CinemachineRotateWithFollowTarget>();
+        
         if (followRot) {
             followRot.Damping = 0;
         }

@@ -17,7 +17,7 @@ namespace ModularFramework.Utility
         }
         
         public void Delete(string id) => dictionary.Remove(id);
-        
+#if UNITY_EDITOR        
         [Button]
         private void GenerateSpreadSheet()
         {
@@ -38,4 +38,5 @@ namespace ModularFramework.Utility
             Debug.Log("Translation draft bucket created at " + path);
         }
     }
+#endif
 }

@@ -1,4 +1,5 @@
 using System;
+using KBCore.Refs;
 using TMPro;
 using UnityEngine;
 
@@ -8,17 +9,20 @@ public class ConfirmationGroup : MonoBehaviour
     public const string DEFAULT_CONFIRMATION_GROUP = "confirmation";
 
     [field:SerializeField] public string ChoiceGroupName { get; private set; }
-    [SerializeField] private TextMeshProUGUI confirmText;
+    [SerializeField,Child] private TextMeshProUGUI confirmText;
     
     private Action<bool> _callback;
 
+#if UNITY_EDITOR
+    private void OnValidate() => this.ValidateRefs();
+#endif
+    
     private void Awake()
     {
         if (DEFAULT_CONFIRMATION_GROUP == ChoiceGroupName)
         {
             Instance = this;
         }
-        confirmText = GetComponentInChildren<TextMeshProUGUI>();
         Deactivate();
     }
 
