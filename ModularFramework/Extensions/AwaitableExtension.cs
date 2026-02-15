@@ -64,5 +64,22 @@ namespace ModularFramework
             Poll();
             return source.Awaitable;
         }
+        
+        // get off main thread to avoid blocking
+        // await Awaitable.BackgroundThreadAsync();
+        // will switch to main thread after async method completes
+        // or call Awaitable.MainThreadAsync() to switch back to main thread inside async method.
+        
+        // watch out for gameObject destruction during scene transition, need to cancel
+        // CancellationTokenSource cts;
+        // void OnEnable() => cts= new CancellationTokenSource();
+        // void OnDisable() => cts.Cancel();
+        // await someAwaitable(cts.Token);
+        //
+        // async Awaitable SomeAwaitable(CancellationToken token) {
+        //     await Awaitable.WaitForSecondsAsync(1f, token);
+        // }
+        // don't await the same Awaitable twice, otherwise the second await will never complete.
+        // don't store an awaitable in a variable, it will be recycled even saved in variable.
     }
 }
