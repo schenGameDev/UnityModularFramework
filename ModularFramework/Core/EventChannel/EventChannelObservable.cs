@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ModularFramework {
     [Serializable]
-    public class Observable<T> {
+    public class EventChannelObservable<T> : IDisposable {
         [SerializeField] T value;
         [SerializeField] EventChannel<T> onValueChanged;
 
@@ -12,16 +12,17 @@ namespace ModularFramework {
             set => Set(value);
         }
 
-        public static implicit operator T(Observable<T> observable) => observable.value;
+        public static implicit operator T(EventChannelObservable<T> observable) => observable.value;
 
-        public Observable(T value, EventChannel<T> callback = null) {
+        public EventChannelObservable(T value) {
             this.value = value;
-            onValueChanged = callback;
         }
+        
+        public EventChannelObservable() {}
 
-        public void Set(T value) {
-            if (Equals(this.value, value)) return;
-            this.value = value;
+        public void Set(T newValue) {
+            if (Equals(value, newValue)) return;
+            value = newValue;
             Invoke();
         }
 
