@@ -43,11 +43,12 @@ public static class DictionaryExtension {
         return true;
     }
 
-    public static void RemoveWhere<TKey,TValue>(this IDictionary<TKey, TValue> dict, Predicate<TKey> match) {
+    public static int RemoveWhere<TKey,TValue>(this IDictionary<TKey, TValue> dict, Predicate<TKey> match) {
         var toRemove = dict.Keys.Where(k=>match(k)).ToList();
         foreach (var key in toRemove) {
             dict.Remove(key);
         }
+        return toRemove.Count;
     }
 
     public static void RemoveIfValue<TKey,TValue>(this IDictionary<TKey, TValue> dict, Predicate<TValue> match) {
@@ -57,11 +58,12 @@ public static class DictionaryExtension {
         }
     }
 
-    public static void RemoveWhere<TKey,TValue>(this IDictionary<TKey, TValue> dict, Func<TKey, TValue, bool> match) {
+    public static int RemoveWhere<TKey,TValue>(this IDictionary<TKey, TValue> dict, Func<TKey, TValue, bool> match) {
         var toRemove = dict.Where(e=>match(e.Key, e.Value)).Select(e=>e.Key).ToList();
         foreach (var key in toRemove) {
             dict.Remove(key);
         }
+        return toRemove.Count;
     }
 
     public static void RemoveAll<TKey,TValue>(this IDictionary<TKey,TValue> dict, IEnumerable<TKey> keys) {

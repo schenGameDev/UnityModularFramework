@@ -35,18 +35,17 @@ public static class CollectionsExtension {
         foreach(T i in others) collection.Remove(i);
     }
 
-    public static bool RemoveWhere<T>(this ICollection<T> list, Predicate<T> match) {
-        List<T> index = new();
-        int i = 0;
-        foreach (T item in list) {
+    public static int RemoveWhere<T>(this ICollection<T> collection, Predicate<T> match) {
+        List<T> toRemove = new();
+        foreach (var item in collection) {
             if(match(item)) {
-                index.Add(item);
+                toRemove.Add(item);
             }
-            i+=1;
         }
-        if(index.Count == 0) return false;
-        foreach(T j in index) list.Remove(j);
-        return true;
+
+        if (toRemove.Count == 0) return 0;
+        foreach(var j in toRemove) collection.Remove(j);
+        return collection.Count;
     }
 
     public static bool IsEmpty<T>(this ICollection<T> collection)

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 
 public static class ListExtension {
-    private static System.Random rng = new System.Random();
+    private static Random rng = new Random();
 
     public static void Shuffle<T>(this IList<T> list)
     { // New Fisher-Yates
@@ -14,7 +14,7 @@ public static class ListExtension {
             (list[k], list[n]) = (list[n], list[k]);
         }
     }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T AddAndReturn<T>(this IList<T> list, T ele) {
         list.Add(ele);
         return ele;
@@ -24,19 +24,19 @@ public static class ListExtension {
         list.Insert(index, ele);
         return ele;
     }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T RemoveAtAndReturn<T>(this IList<T> list, int n) {
         var ele = list[n];
         list.RemoveAt(n);
         return ele;
     }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Pop<T>(this IList<T> list) {
         var ele = list[^1];
         list.RemoveAt(list.Count - 1);
         return ele;
     }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static List<int> FindAllIndex<T>(this IList<T> list, T target) {
         int count = 0;
         List<int> found = new();
@@ -106,4 +106,17 @@ public static class ListExtension {
     {
         return new List<T> { source };
     }
+    
+    public static int RemoveWhere<T>(this IList<T> list, Predicate<T> match) {
+        List<int> toRemove = new List<int>();
+        for (int i = 0; i < list.Count; ++i)
+            if (match(list[i]))
+                toRemove.Add(i);
+
+        foreach (int index in toRemove)
+            list.RemoveAt(index);
+
+        return toRemove.Count;
+    }
+
 }

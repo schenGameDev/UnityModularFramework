@@ -529,7 +529,7 @@ public class InkSystemSO : GameSystem<InkSystemSO>
         // cancel prev task
         if (taskHandler is InkConstants.TASK_HIDE_CG)
         {
-            if (_taskHistory.RemoveWhere(th => th.Item1 == taskHandler && th.Item2 == parameter))
+            if (_taskHistory.RemoveWhere(th => th.Item1 == taskHandler && th.Item2 == parameter) > 0)
             {
                 return;
             }
