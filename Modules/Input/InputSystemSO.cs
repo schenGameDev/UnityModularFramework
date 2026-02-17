@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using EditorAttributes;
 using ModularFramework;
-using ModularFramework.Utility;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -96,8 +96,11 @@ public partial class InputSystemSO : GameSystem<InputSystemSO>,ILive {
         {
             return;
         }
-        
-        CheckInputDevice(context);
+
+        if (CheckInputDevice(context))
+        {
+            Debug.Log($"Switch to {InputDevice}");
+        }
         
         switch (actionChannel.channel)
         {
@@ -119,6 +122,17 @@ public partial class InputSystemSO : GameSystem<InputSystemSO>,ILive {
         }
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int Scroll(Vector2 scrollVector)
+    {
+        return scrollVector.y switch
+        {
+            0 => 0,
+            > 0 => 1,
+            _ => -1
+        };
+    }
+    
     public Vector3 GetViewWorldDirection(Vector2 cameraVector)
     {
         Vector3 viewDirection;
@@ -133,6 +147,8 @@ public partial class InputSystemSO : GameSystem<InputSystemSO>,ILive {
     
     private const float MOUSE_DEAD_ZONE = 1f; // 0 ~ infinity
     private const float GAMEPAD_DEAD_ZONE = 0.2f; // 0 ~ 1
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool WithinViewDeadZone(Vector3 dir) {
         if (InputDevice == InputDeviceType.KEYBOARD_MOUSE)
             return Mathf.Abs(dir.x) < MOUSE_DEAD_ZONE &&
@@ -155,33 +171,32 @@ public partial class InputSystemSO : GameSystem<InputSystemSO>,ILive {
         return dir;
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsActiveTiming(ActionTiming mask, ActionTiming currentTiming) 
         => (mask & currentTiming) != ActionTiming.NONE;
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ActionTiming GetActionTiming(InputAction.CallbackContext context)
     {
         if (context.started) return ActionTiming.STARTED;
         if (context.performed) return ActionTiming.PERFORMED;
-        if (context.canceled) return ActionTiming.CANCELED;
-        return ActionTiming.NONE;
+        return context.canceled ? ActionTiming.CANCELED : ActionTiming.NONE;
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool CheckInputDevice(InputAction.CallbackContext context) {
-        if (InputDevice!=InputDeviceType.GAMEPAD && (context.control.device is Gamepad))
+        if (InputDevice!=InputDeviceType.GAMEPAD && context.control.device is Gamepad)
         {
             InputDevice = InputDeviceType.GAMEPAD;
             Cursor.visible = false;
-            DebugUtil.DebugLog("Switch to Gamepad");
             return true;
         } 
         if (InputDevice != InputDeviceType.KEYBOARD_MOUSE && context.control.device is Keyboard or Mouse)
         {
             InputDevice = InputDeviceType.KEYBOARD_MOUSE;
             Cursor.visible = true;
-            DebugUtil.DebugLog("Switch to Keyboard/Mouse");
             return true;
         }
-
         return false;
     }
 }

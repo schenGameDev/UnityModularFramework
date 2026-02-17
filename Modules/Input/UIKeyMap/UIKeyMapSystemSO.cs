@@ -83,6 +83,7 @@ public class UIKeyMapSystemSO : GameSystem<UIKeyMapSystemSO>, IRegistrySO, ILive
         }
         if (CheckInputDevice(context))
         {
+            Debug.Log($"Switch to {InputSystemSO.InputDevice}");
             UpdateIcon();
         }
         

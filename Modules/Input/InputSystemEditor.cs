@@ -11,12 +11,12 @@ public partial class InputSystemSO
     public enum InputDeviceType {KEYBOARD_MOUSE,GAMEPAD}
 
     [Flags]
-    private enum ActionTiming
+    private enum ActionTiming : byte
     {
         NONE = 0,
-        STARTED = 1,
-        PERFORMED = 2,
-        CANCELED = 4
+        STARTED = 1 << 1,
+        PERFORMED = 1 << 2,
+        CANCELED = 1 << 3
     }
 
     public const string NONE_ACTION = "None";
