@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using EditorAttributes;
 using ModularFramework;
 using ModularFramework.Commons;
@@ -41,6 +42,8 @@ public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
     
     [Header("Bucket")]
     [SerializeField] private SpriteBucket spriteBucket;
+
+    [SerializeField] private TranslationString[] characters;
     
     
     [FoldoutGroup("Event Channels", nameof(inkTaskChannel))]
@@ -49,9 +52,6 @@ public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
     [HideInInspector,SerializeField] InkTaskEventChannel inkTaskChannel;
 
     [Header("Runtime")]
-
-    // [RuntimeObject] private Button _nextButton;
-    // [RuntimeObject] private Button _skipButton;
     
     [RuntimeObject] private readonly Dictionary<string,ISelectableGroup> _selectableGroups = new();
     [RuntimeObject] private readonly Dictionary<string,TextPrinterBase> _dialogBoxes = new();
@@ -252,7 +252,7 @@ public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
     {
         if (line.dialogue && (string.IsNullOrEmpty(line.dialogBoxId) || line.dialogBoxId == DEFAULT_DIALOG_BOX))
         {
-            string characterName = line.hide? HIDDEN_CHARACTER_NAME : TranslationUtil.Translate(line.character);
+            string characterName = line.hide? HIDDEN_CHARACTER_NAME : GetCharacterName(line.character);
             _dialogBoxes[CHARACTER_NAME].gameObject.SetActive(true);
             _dialogBoxes[CHARACTER_NAME].Print(characterName);
         }
@@ -261,6 +261,12 @@ public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
             _dialogBoxes[CHARACTER_NAME].gameObject.SetActive(false);
         }
         
+    }
+    
+    private string GetCharacterName(string characterId)
+    {
+        var t = characters.Where(c => c.text == characterId).GetFirst();
+        return t.IsEmpty? characterId : t.Get();
     }
 
     private readonly Flip _skipped = new();

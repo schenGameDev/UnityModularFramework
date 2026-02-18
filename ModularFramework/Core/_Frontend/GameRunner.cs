@@ -33,6 +33,7 @@ namespace ModularFramework {
         protected void Awake() {
             SingletonRegistry<GameRunner>.TryRegister(this);
             LoadSystemsForDev();
+            TranslationUtil.Load(gameObject.scene.name);
             foreach(var module in modules) {
                 module.SceneAwake();
                 if(!module.CentrallyManaged && module.OperateEveryFrame) {

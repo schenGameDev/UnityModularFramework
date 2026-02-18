@@ -7,12 +7,12 @@ using UnityEngine.UI;
 /// display text somewhere else after clicked
 /// </summary>
 [RequireComponent(typeof(Button))]
-public class Readable : TranslationText
+public class Readable : MonoBehaviour
 {
     private static readonly int STOP = Animator.StringToHash("Stop");
     public const string DEFAULT_PRINTER = "info";
     
-    [SerializeField,TextArea] private string text;
+    [SerializeField] private TranslationString text;
     [SerializeField] public string printerName;
     [SerializeField] private TextPrinter printer;
     [SerializeField] private GameObject detail;
@@ -20,7 +20,7 @@ public class Readable : TranslationText
     
     private bool _isShow;
     
-    protected override void Start()
+    protected void Start()
     {
         if (!printer)
         {
@@ -78,7 +78,4 @@ public class Readable : TranslationText
     {
         //GetComponent<Image>()?.;
     }
-#if UNITY_EDITOR
-    protected override string GetDraftText() => text;
-#endif
 }

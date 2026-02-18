@@ -158,7 +158,6 @@ namespace ModularFramework
         #region Language
         public void ChangeLanguage(Language language)
         {
-            TranslationUtil.Load(language);
             TranslationUtil.SaveLanguagePref(language);
             LoadStartScene();
         }
