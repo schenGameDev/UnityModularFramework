@@ -128,5 +128,12 @@ namespace ModularFramework.Utility {
         {
             return Mathf.Lerp(from2, to2, Mathf.InverseLerp(from1, to1, value));
         }
+        
+        public static uint GenerateUniqueId() {
+            var random = new System.Random();
+            uint thirtyBits = (uint) random.Next(1 << 30);
+            uint twoBits = (uint) random.Next(1 << 2);
+            return (thirtyBits << 2) | twoBits;
+        }
     }
 }

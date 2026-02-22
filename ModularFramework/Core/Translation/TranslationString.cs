@@ -1,7 +1,6 @@
 using System;
 using EditorAttributes;
 using UnityEngine;
-using Random = System.Random;
 #if UNITY_EDITOR
 using UnityEditor.SceneManagement;
 #endif
@@ -35,7 +34,7 @@ namespace ModularFramework.Utility
             }
             if(id == 0)
             {
-                id =RegenerateId();
+                id = MathUtil.GenerateUniqueId();
                 if (bank.ContainsKey(id))
                 {
                     Debug.LogWarning($"Duplicate id: {id}");
@@ -56,14 +55,6 @@ namespace ModularFramework.Utility
             id = 0;
             text = string.Empty;
             Debug.Log("Clean success");
-        }
-
-        private uint RegenerateId()
-        {
-            var random = new Random();
-            uint thirtyBits = (uint) random.Next(1 << 30);
-            uint twoBits = (uint) random.Next(1 << 2);
-            return (thirtyBits << 2) | twoBits;
         }
 #endif
     }

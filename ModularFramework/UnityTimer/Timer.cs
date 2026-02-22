@@ -45,6 +45,7 @@ namespace UnityTimer {
 
         protected float initialTime;
         protected int initialFrameCount;
+        protected uint delayStartScheduled;
 
         public float Progress => Mathf.Clamp(mode == Mode.TIME? CurrentTime / initialTime : CurrentFrameCount / initialFrameCount, 0, 1);
 
@@ -55,12 +56,19 @@ namespace UnityTimer {
 
         public void Start() {
             Reset();
-
+            delayStartScheduled = 0;
             if (!IsRunning) {
                 IsRunning = true;
                 TimerManager.RegisterTimer(this);
                 OnTimerStart.Invoke();
             }
+        }
+        
+        public void DelayStart(float delay)
+        {
+            var schedule = new ScheduledAction(delay, Start);
+            TimerManager.Schedule(schedule);
+            delayStartScheduled = schedule.id;
         }
 
         public void Stop() {
@@ -68,6 +76,11 @@ namespace UnityTimer {
                 IsRunning = false;
                 TimerManager.DeregisterTimer(this);
                 OnTimerStop.Invoke();
+            }
+            else if (delayStartScheduled > 0)
+            {
+                TimerManager.RemoveSchedule(delayStartScheduled);
+                delayStartScheduled = 0;
             }
         }
 
