@@ -1,6 +1,7 @@
-using UnityEngine;
-
-public class InkTaskPrinter : InkPrinter
+namespace ModularFramework.Modules.Ink
 {
-    public string taskName;
+    public class InkTaskPrinter : InkPrinter
+    {
+        public string taskName;
+    }
 }

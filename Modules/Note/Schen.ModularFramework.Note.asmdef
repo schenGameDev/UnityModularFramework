@@ -1,0 +1,16 @@
+{
+    "name": "Schen.ModularFramework.Note",
+    "rootNamespace": "ModularFramework.Modules.Note",
+    "references": [
+        "GUID:add39933988c64884972442c66f4f932"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,17 +1,24 @@
 using System;
 
-public class NoPrintStyle : PrintStyleBase
+namespace ModularFramework.Modules.Ink
 {
-    public override void OnPrint(string text, Action callback)
+    public class NoPrintStyle : PrintStyleBase
     {
-        Prepare();
-        if(Printer.endIndicator) Printer.endIndicator.SetActive(false);
-        Finish(text);
-        callback?.Invoke();
+        public override void OnPrint(string text, Action callback)
+        {
+            Prepare();
+            if (Printer.endIndicator) Printer.endIndicator.SetActive(false);
+            Finish(text);
+            callback?.Invoke();
+        }
+
+        public override void OnSkip()
+        {
+        }
+
+        public override void OnDestroy()
+        {
+        }
+
     }
-
-    public override void OnSkip(){}
-    
-    public override void OnDestroy(){}
-
 }

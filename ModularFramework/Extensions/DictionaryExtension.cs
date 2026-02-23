@@ -32,7 +32,18 @@ public static class DictionaryExtension {
         }
         return ret;
     }
-
+    
+    /// <summary>
+    /// Adds the specified key and value to the dictionary if the key does not already exist. If the key exists,
+    /// the provided action will be executed with the existing value as parameter.
+    /// </summary>
+    /// <param name="dict"></param>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <param name="action"></param>
+    /// <typeparam name="TKey"></typeparam>
+    /// <typeparam name="TValue"></typeparam>
+    /// <returns></returns>
     public static bool AddOrCompute<TKey,TValue>(this IDictionary<TKey, TValue> dict,
                                                 TKey key, TValue value, Action<TValue> action) {
         if(dict.TryGetValue(key, out TValue v)) {

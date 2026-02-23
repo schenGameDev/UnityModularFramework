@@ -1,4 +1,7 @@
-public static class NoteConstants
+namespace ModularFramework.Modules.Note
 {
-    public const string KEY_NOTE = "Notes";
+    public static class NoteConstants
+    {
+        public const string KEY_NOTE = "Notes";
+    }
 }

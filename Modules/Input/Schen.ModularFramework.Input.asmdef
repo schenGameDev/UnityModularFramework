@@ -1,0 +1,19 @@
+{
+    "name": "Schen.ModularFramework.Input",
+    "rootNamespace": "ModularFramework.Modules.Input",
+    "references": [
+        "GUID:add39933988c64884972442c66f4f932",
+        "GUID:febaf25a60dafbd44941357b21678606",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:d8b63aba1907145bea998dd612889d6b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -3,89 +3,98 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using EditorAttributes;
 using KBCore.Refs;
-using ModularFramework;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GifPlayer : Playable,IResetable
+namespace ModularFramework.Modules.Ink
 {
-    [SerializeField] private Sprite[] frames;
-    [SerializeField,Suffix("s")] private float interval = 0.2f;
-    [SerializeField] private bool loop;
-    [SerializeField,Self]private Image _image;
-    private int _index;
-    private CancellationTokenSource _cts;
+    public class GifPlayer : Playable, IResetable
+    {
+        [SerializeField] private Sprite[] frames;
+        [SerializeField, Suffix("s")] private float interval = 0.2f;
+        [SerializeField] private bool loop;
+        [SerializeField, Self] private Image _image;
+        private int _index;
+        private CancellationTokenSource _cts;
 #if UNITY_EDITOR
-    private void OnValidate() => this.ValidateRefs();
+        private void OnValidate() => this.ValidateRefs();
 #endif
-    private void Start()
-    {
-        if(!disableOnAwake) Play();
-    }
-
-    public override void Play(Action<string> callback=null, string parameter=null)
-    {
-        base.Play(callback, parameter);
-        if (_cts != null)
+        private void Start()
         {
-            _cts.Cancel();
-            _cts.Dispose();
-            _cts = null;
+            if (!disableOnAwake) Play();
         }
-        _cts = new CancellationTokenSource();
-        PlayGif(_cts.Token).Forget();
-    }
-    
-    public override void End()
-    {
-        _cts?.Cancel();
-    }
 
-    private async UniTaskVoid PlayGif(CancellationToken token)
-    {
-        float t = 0;
-        _image.sprite = frames[_index++];
-        if (loop) OnTaskComplete?.Invoke(InkConstants.TASK_PLAY_CG);
-        
-        do
+        public override void Play(Action<string> callback = null, string parameter = null)
         {
-            if (t >= interval)
+            base.Play(callback, parameter);
+            if (_cts != null)
             {
-                t = 0;
-                _image.sprite = frames[_index++];
-                if (loop && _index >= frames.Length) _index = 0;
+                _cts.Cancel();
+                _cts.Dispose();
+                _cts = null;
             }
-            
-            t+=Time.deltaTime;
-            bool isCancelled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
-            if(isCancelled) break;
-        } while (loop || _index < frames.Length);
-        
-        _cts?.Dispose();
-        _cts = null;
-        if (!loop) OnTaskComplete?.Invoke(InkConstants.TASK_PLAY_CG);
-        if (TryGetComponent<SpriteFadeOut>(out var fadeOut))
-        {
-            fadeOut.FadeOut();
+
+            _cts = new CancellationTokenSource();
+            PlayGif(_cts.Token).Forget();
         }
-        else
+
+        public override void End()
         {
-            gameObject.SetActive(false);
+            _cts?.Cancel();
         }
-        ResetState();
+
+        private async UniTaskVoid PlayGif(CancellationToken token)
+        {
+            float t = 0;
+            _image.sprite = frames[_index++];
+            if (loop) OnTaskComplete?.Invoke(InkConstants.TASK_PLAY_CG);
+
+            do
+            {
+                if (t >= interval)
+                {
+                    t = 0;
+                    _image.sprite = frames[_index++];
+                    if (loop && _index >= frames.Length) _index = 0;
+                }
+
+                t += Time.deltaTime;
+                bool isCancelled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
+                if (isCancelled) break;
+            } while (loop || _index < frames.Length);
+
+            _cts?.Dispose();
+            _cts = null;
+            if (!loop) OnTaskComplete?.Invoke(InkConstants.TASK_PLAY_CG);
+            if (TryGetComponent<SpriteFadeOut>(out var fadeOut))
+            {
+                fadeOut.FadeOut();
+            }
+            else
+            {
+                gameObject.SetActive(false);
+            }
+
+            ResetState();
+        }
+
+        #region IResetable
+
+        public void ResetState()
+        {
+            _index = 0;
+        }
+
+        #endregion
+
+        #region ISavable
+
+        public override void Load()
+        {
+            _index = 0;
+            base.Load();
+        }
+
+        #endregion
     }
-    #region IResetable
-    public void ResetState()
-    {
-        _index = 0;
-    }
-    #endregion
-    
-    #region ISavable
-    public override void Load()
-    {
-        _index = 0;
-        base.Load();
-    } 
-    #endregion
 }

@@ -1,0 +1,18 @@
+{
+    "name": "Schen.ModularFramework.Sound",
+    "rootNamespace": "ModularFramework.Modules.Sound",
+    "references": [
+        "GUID:add39933988c64884972442c66f4f932",
+        "GUID:febaf25a60dafbd44941357b21678606",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

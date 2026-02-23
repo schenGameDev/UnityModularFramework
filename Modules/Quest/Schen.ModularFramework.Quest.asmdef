@@ -1,0 +1,16 @@
+{
+    "name": "Schen.ModularFramework.Quest",
+    "rootNamespace": "ModularFramework.Modules.Quest",
+    "references": [
+        "GUID:add39933988c64884972442c66f4f932"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

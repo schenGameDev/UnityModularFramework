@@ -2,388 +2,445 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EditorAttributes;
-using ModularFramework;
 using ModularFramework.Commons;
 using ModularFramework.Utility;
 using UnityEngine;
 using UnityTimer;
 using Void = EditorAttributes.Void;
 
-[CreateAssetMenu(fileName = "InkUIIntegration_SO", menuName = "Game Module/Ink/Ink UI Integration")]
-public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
+namespace ModularFramework.Modules.Ink
 {
-    public bool CanSkipOrNext { get; private set; } = true;
-
-    // key selectable
-    public static readonly string DEFAULT_CHOICE_GROUP = "default";
-    // key textPrinter
-    public static readonly string DEFAULT_DIALOG_BOX = "default";
-    //private static readonly string CHAPTER_TITLE = "CHAPTER_TITLE";
-    private static readonly string CHARACTER_NAME = "CHARACTER_NAME";
-
-    private static readonly string HIDDEN_CHARACTER_NAME = "???";
-    // key sprite
-    
-    
-    [Header("Config")]
-    [SerializeField] private string storyName;
-    public enum AutoPlaySpeed { NONE, SLOW, NORMAL, FAST, ULTRAFAST}
-    public static AutoPlaySpeed PlaySpeed = AutoPlaySpeed.NORMAL;
-    private float AutoPlayDelay => PlaySpeed switch
+    [CreateAssetMenu(fileName = "InkUIIntegration_SO", menuName = "Game Module/Ink/Ink UI Integration")]
+    public class InkUIIntegrationSO : GameModule<InkUIIntegrationSO>, IRegistrySO
     {
-        AutoPlaySpeed.NONE => 999f,
-        AutoPlaySpeed.SLOW => 3f,
-        AutoPlaySpeed.NORMAL => 1f,
-        AutoPlaySpeed.FAST => 0.5f,
-        AutoPlaySpeed.ULTRAFAST => 0.1f,
-        _ => throw new ArgumentOutOfRangeException()
-    };
-    [SerializeField] private bool showHiddenChoice = true;
-    
-    [Header("Bucket")]
-    [SerializeField] private SpriteBucket spriteBucket;
+        public bool CanSkipOrNext { get; private set; } = true;
 
-    [SerializeField] private TranslationString[] characters;
-    
-    
-    [FoldoutGroup("Event Channels", nameof(inkTaskChannel))]
-    [SerializeField] private Void eventChannelGroup;
-    // [HideInInspector,SerializeField] EventChannel<(string,Keeper)> varChangeChannel;
-    [HideInInspector,SerializeField] InkTaskEventChannel inkTaskChannel;
+        // key selectable
+        public static readonly string DEFAULT_CHOICE_GROUP = "default";
 
-    [Header("Runtime")]
-    
-    [RuntimeObject] private readonly Dictionary<string,ISelectableGroup> _selectableGroups = new();
-    [RuntimeObject] private readonly Dictionary<string,TextPrinterBase> _dialogBoxes = new();
-    [RuntimeObject] private readonly Dictionary<string,SpriteController> _sprites = new();
-    [RuntimeObject] private readonly Dictionary<string,Playable> _playables = new();
-    
-    [RuntimeObject] public string currentSceneName;
-    [RuntimeObject] private string _currentLineBox = DEFAULT_DIALOG_BOX;
-    
-    private readonly Autowire<InkSystemSO> _inkSystem = new();
-    
-    #region General
-    public InkUIIntegrationSO() {
-        updateMode = UpdateMode.NONE;
-    }
-    
-        
-    protected override void OnAwake() { }
-    protected override void OnStart()
-    {
-        CanSkipOrNext = true;
-        if(currentSceneName=="") currentSceneName = _inkSystem.Get().GetLastSceneName();
-    }
-    
-    protected override void OnUpdate() { }
-    protected override void OnLateUpdate() { }
-    protected override void OnSceneDestroy() { }
-    protected override void OnDraw() { }
+        // key textPrinter
+        public static readonly string DEFAULT_DIALOG_BOX = "default";
 
-    private void OnEnable() {
-        inkTaskChannel?.AddListener(HandleTask);
-        InkSystemSO.InkTextAction += HandleText;
-    }
-    
-    private void OnDisable() {
-        inkTaskChannel?.RemoveListener(HandleTask);
-        InkSystemSO.InkTextAction -= HandleText;
-    }
+        //private static readonly string CHAPTER_TITLE = "CHAPTER_TITLE";
+        private static readonly string CHARACTER_NAME = "CHARACTER_NAME";
 
-    private void HandleText(Either<InkLine, InkChoice> either)
-    {
-        if(either.IsLeft) SetupLine(either.Left);
-        else
+        private static readonly string HIDDEN_CHARACTER_NAME = "???";
+        // key sprite
+
+
+        [Header("Config")] [SerializeField] private string storyName;
+
+        public enum AutoPlaySpeed
         {
-            SetupChoiceBox(either.Right);
+            NONE,
+            SLOW,
+            NORMAL,
+            FAST,
+            ULTRAFAST
         }
-    }
 
-    public void Clean()
-    {
-        // disable all persistent overhaul
-        _selectableGroups[DEFAULT_CHOICE_GROUP].ResetState();
-        _dialogBoxes[DEFAULT_DIALOG_BOX].Clean();
-    }
-    #endregion
-    
-    #region Registry
-    public void Register(Transform transform)
-    {
-        bool found = false;
-        bool enabled = false;
-        if (transform.TryGetComponent<ISelectableGroup>(out var selectableGroup))
+        public static AutoPlaySpeed PlaySpeed = AutoPlaySpeed.NORMAL;
+
+        private float AutoPlayDelay => PlaySpeed switch
         {
-            if (_selectableGroups.TryAdd(selectableGroup.ChoiceGroupName, selectableGroup))
+            AutoPlaySpeed.NONE => 999f,
+            AutoPlaySpeed.SLOW => 3f,
+            AutoPlaySpeed.NORMAL => 1f,
+            AutoPlaySpeed.FAST => 0.5f,
+            AutoPlaySpeed.ULTRAFAST => 0.1f,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        [SerializeField] private bool showHiddenChoice = true;
+
+        [Header("Bucket")] [SerializeField] private SpriteBucket spriteBucket;
+
+        [SerializeField] private TranslationString[] characters;
+
+
+        [FoldoutGroup("Event Channels", nameof(inkTaskChannel))] [SerializeField]
+        private Void eventChannelGroup;
+
+        // [HideInInspector,SerializeField] EventChannel<(string,Keeper)> varChangeChannel;
+        [HideInInspector, SerializeField] InkTaskEventChannel inkTaskChannel;
+
+        [Header("Runtime")] [RuntimeObject]
+        private readonly Dictionary<string, ISelectableGroup> _selectableGroups = new();
+
+        [RuntimeObject] private readonly Dictionary<string, TextPrinterBase> _dialogBoxes = new();
+        [RuntimeObject] private readonly Dictionary<string, SpriteController> _sprites = new();
+        [RuntimeObject] private readonly Dictionary<string, Playable> _playables = new();
+
+        [RuntimeObject] public string currentSceneName;
+        [RuntimeObject] private string _currentLineBox = DEFAULT_DIALOG_BOX;
+
+        private readonly Autowire<InkSystemSO> _inkSystem = new();
+
+        #region General
+
+        public InkUIIntegrationSO()
+        {
+            updateMode = UpdateMode.NONE;
+        }
+
+
+        protected override void OnAwake()
+        {
+        }
+
+        protected override void OnStart()
+        {
+            CanSkipOrNext = true;
+            if (currentSceneName == "") currentSceneName = _inkSystem.Get().GetLastSceneName();
+        }
+
+        protected override void OnUpdate()
+        {
+        }
+
+        protected override void OnLateUpdate()
+        {
+        }
+
+        protected override void OnSceneDestroy()
+        {
+        }
+
+        protected override void OnDraw()
+        {
+        }
+
+        private void OnEnable()
+        {
+            inkTaskChannel?.AddListener(HandleTask);
+            InkSystemSO.InkTextAction += HandleText;
+        }
+
+        private void OnDisable()
+        {
+            inkTaskChannel?.RemoveListener(HandleTask);
+            InkSystemSO.InkTextAction -= HandleText;
+        }
+
+        private void HandleText(Either<InkLine, InkChoice> either)
+        {
+            if (either.IsLeft) SetupLine(either.Left);
+            else
             {
-                found = true;
-                enabled = selectableGroup.EnableOnAwake;
-                selectableGroup.OnSelect += SelectChoice;
+                SetupChoiceBox(either.Right);
             }
-            else DebugUtil.Error("Duplicate gameObject " + selectableGroup.ChoiceGroupName, name);
-        }
-        
-        if (transform.TryGetComponent<TextPrinterBase>(out var textPrinter))
-        {
-            if (textPrinter is InkTaskPrinter itp)
-            {
-                if(_dialogBoxes.TryAdd(itp.taskName, textPrinter)) found = true;
-                else DebugUtil.Error("Duplicate gameObject " + textPrinter.printerName, name);
-            } else if (_dialogBoxes.TryAdd(textPrinter.printerName, textPrinter))
-            {
-                found = true;
-            } else DebugUtil.Error("Duplicate gameObject " + textPrinter.printerName, name);
-        }
-        
-        if (transform.TryGetComponent<SpriteController>(out var spriteController))
-        {
-            if (_sprites.TryAdd(transform.name, spriteController))
-            {
-                found = true;
-            } else DebugUtil.Error("Duplicate gameObject " + transform.name, name);
         }
 
-        foreach(var playable in transform.GetComponents<Playable>())
+        public void Clean()
         {
-            if (playable is PlayableGroup playableGroup)
+            // disable all persistent overhaul
+            _selectableGroups[DEFAULT_CHOICE_GROUP].ResetState();
+            _dialogBoxes[DEFAULT_DIALOG_BOX].Clean();
+        }
+
+        #endregion
+
+        #region Registry
+
+        public void Register(Transform transform)
+        {
+            bool found = false;
+            bool enabled = false;
+            if (transform.TryGetComponent<ISelectableGroup>(out var selectableGroup))
             {
-                foreach (var state in playableGroup.GetStates())
+                if (_selectableGroups.TryAdd(selectableGroup.ChoiceGroupName, selectableGroup))
                 {
-                    if (_playables.TryAdd(state, playable))
+                    found = true;
+                    enabled = selectableGroup.EnableOnAwake;
+                    selectableGroup.OnSelect += SelectChoice;
+                }
+                else DebugUtil.Error("Duplicate gameObject " + selectableGroup.ChoiceGroupName, name);
+            }
+
+            if (transform.TryGetComponent<TextPrinterBase>(out var textPrinter))
+            {
+                if (textPrinter is InkTaskPrinter itp)
+                {
+                    if (_dialogBoxes.TryAdd(itp.taskName, textPrinter)) found = true;
+                    else DebugUtil.Error("Duplicate gameObject " + textPrinter.printerName, name);
+                }
+                else if (_dialogBoxes.TryAdd(textPrinter.printerName, textPrinter))
+                {
+                    found = true;
+                }
+                else DebugUtil.Error("Duplicate gameObject " + textPrinter.printerName, name);
+            }
+
+            if (transform.TryGetComponent<SpriteController>(out var spriteController))
+            {
+                if (_sprites.TryAdd(transform.name, spriteController))
+                {
+                    found = true;
+                }
+                else DebugUtil.Error("Duplicate gameObject " + transform.name, name);
+            }
+
+            foreach (var playable in transform.GetComponents<Playable>())
+            {
+                if (playable is PlayableGroup playableGroup)
+                {
+                    foreach (var state in playableGroup.GetStates())
                     {
-                        found = true;
+                        if (_playables.TryAdd(state, playable))
+                        {
+                            found = true;
+                        }
+                    }
+
+                    enabled = !playable.disableOnAwake;
+                }
+                else if (_playables.TryAdd(playable.playbaleName, playable))
+                {
+                    found = true;
+                    enabled = !playable.disableOnAwake;
+                }
+                else DebugUtil.Error("Duplicate gameObject " + playable.playbaleName, name);
+            }
+
+            transform.gameObject.SetActive(enabled);
+            if (found) return;
+
+            DebugUtil.Error(
+                "Selectable/TextPrinter/SpriteController/Playable is not found on gameObject " + transform.name, name);
+        }
+
+        public void Unregister(Transform transform)
+        {
+            if (transform.TryGetComponent<ISelectableGroup>(out var selectableGroup))
+            {
+                _selectableGroups.Remove(selectableGroup.ChoiceGroupName);
+            }
+
+            if (transform.TryGetComponent<TextPrinterBase>(out var textPrinter))
+            {
+                _dialogBoxes.Remove(textPrinter.printerName);
+            }
+
+            if (transform.TryGetComponent<SpriteController>(out var spriteController))
+            {
+                _sprites.Remove(transform.name);
+            }
+
+            if (transform.TryGetComponent<Playable>(out var playable))
+            {
+                if (playable is PlayableGroup playableGroup)
+                {
+                    foreach (var state in playableGroup.GetStates())
+                    {
+                        _playables.Remove(state);
                     }
                 }
-                enabled = !playable.disableOnAwake;
-            } 
-            else if (_playables.TryAdd(playable.playbaleName, playable))
-            {
-                found = true;
-                enabled = !playable.disableOnAwake;
-            } else DebugUtil.Error("Duplicate gameObject " + playable.playbaleName, name);
-        }
-        
-        transform.gameObject.SetActive(enabled);
-        if(found) return;
-        
-        DebugUtil.Error("Selectable/TextPrinter/SpriteController/Playable is not found on gameObject " + transform.name, name);
-    }
-    
-    public void Unregister(Transform transform)
-    {
-        if (transform.TryGetComponent<ISelectableGroup>(out var selectableGroup))
-        {
-            _selectableGroups.Remove(selectableGroup.ChoiceGroupName);
-        }
-        if (transform.TryGetComponent<TextPrinterBase>(out var textPrinter))
-        {
-            _dialogBoxes.Remove(textPrinter.printerName);
-        }
-        if (transform.TryGetComponent<SpriteController>(out var spriteController))
-        {
-            _sprites.Remove(transform.name);
-        }
-        if (transform.TryGetComponent<Playable>(out var playable))
-        {
-            if (playable is PlayableGroup playableGroup)
-            {
-                foreach (var state in playableGroup.GetStates())
+                else
                 {
-                    _playables.Remove(state);
+                    _playables.Remove(playable.playbaleName);
                 }
             }
+        }
+
+        #endregion
+
+        // no data stored, not in lifecycle, cross scene
+        // UI buttons
+        // animation, character expression, character staging (front back)
+        // background image change
+
+        // // UI: Start story, exit, choose, next line
+        // // ink: trigger effect
+        // // animation template: bg change, cross fade
+        // // character sprite fade, appear: pre-marked location
+
+        #region Line
+
+        private TextPrinterBase _dialogBox;
+        private bool _lineInterrupted = false;
+
+        private void SetupLine(InkLine line)
+        {
+
+            string dialogBoxName;
+            if (!string.IsNullOrEmpty(line.dialogBoxId))
+            {
+                _currentLineBox = line.dialogBoxId;
+            }
+
+            dialogBoxName = _currentLineBox;
+
+            if (_dialogBox && dialogBoxName != _dialogBox.name) _dialogBox.Clean();
+
+            string text = line.text;
+
+            if (line.dialogue)
+                SetupCharacterImage(line);
+
+            _dialogBox = _dialogBoxes[dialogBoxName];
+            _dialogBox.gameObject.SetActive(true);
+
+            // interrupted
+            _lineInterrupted = line.interrupted;
+            _dialogBox.ReturnEarly = line.interrupted;
+
+            if (_dialogBox is ChatBubbleQueue) _dialogBox.Print(text, AutoPlay, line.dialogBoxSubId);
+            else _dialogBox.Print(text, AutoPlay);
+
+            _skipped.ResetState();
+
+            SetupSpeaker(line);
+
+
+        }
+
+        private void SetupSpeaker(InkLine line)
+        {
+            if (line.dialogue && (string.IsNullOrEmpty(line.dialogBoxId) || line.dialogBoxId == DEFAULT_DIALOG_BOX))
+            {
+                string characterName = line.hide ? HIDDEN_CHARACTER_NAME : GetCharacterName(line.character);
+                _dialogBoxes[CHARACTER_NAME].gameObject.SetActive(true);
+                _dialogBoxes[CHARACTER_NAME].Print(characterName);
+            }
             else
             {
-                _playables.Remove(playable.playbaleName);
+                _dialogBoxes[CHARACTER_NAME].gameObject.SetActive(false);
+            }
+
+        }
+
+        private string GetCharacterName(string characterId)
+        {
+            var t = characters.Where(c => c.text == characterId).GetFirst();
+            return t.IsEmpty ? characterId : t.Get();
+        }
+
+        private readonly Flip _skipped = new();
+
+        public void SkipOrNext()
+        {
+            if (_dialogBox)
+            {
+                if (!_skipped && !_dialogBox.Done) _dialogBox.Skip();
+                else
+                {
+                    _autoPlayTimer?.Stop();
+                    if (_dialogBox.hideWhenNotUsed) _dialogBox.gameObject.SetActive(false);
+                    _inkSystem.Get().Next();
+                }
             }
         }
-    }
-    #endregion
-    // no data stored, not in lifecycle, cross scene
-    // UI buttons
-    // animation, character expression, character staging (front back)
-    // background image change
-    
-    // // UI: Start story, exit, choose, next line
-    // // ink: trigger effect
-    // // animation template: bg change, cross fade
-    // // character sprite fade, appear: pre-marked location
 
-    #region Line
+        private string _lastPortraitPosition;
 
-    private TextPrinterBase _dialogBox;
-    private bool _lineInterrupted = false;
-    private void SetupLine(InkLine line)
-    {
-        
-        string dialogBoxName;
-        if (!string.IsNullOrEmpty(line.dialogBoxId))
+        private void SetupCharacterImage(InkLine line)
         {
-            _currentLineBox = line.dialogBoxId;
-        }
-        dialogBoxName = _currentLineBox;
-        
-        if(_dialogBox && dialogBoxName != _dialogBox.name) _dialogBox.Clean();
-        
-        string text = line.text;
-
-        if(line.dialogue)
-            SetupCharacterImage(line);
-        
-        _dialogBox = _dialogBoxes[dialogBoxName];
-        _dialogBox.gameObject.SetActive(true);
-        
-        // interrupted
-        _lineInterrupted = line.interrupted;
-        _dialogBox.ReturnEarly = line.interrupted;
-        
-        if(_dialogBox is ChatBubbleQueue) _dialogBox.Print(text,AutoPlay, line.dialogBoxSubId);
-        else _dialogBox.Print(text,AutoPlay);
-        
-        _skipped.ResetState();
-       
-        SetupSpeaker(line);
-        
-
-    }
-    
-    private void SetupSpeaker(InkLine line)
-    {
-        if (line.dialogue && (string.IsNullOrEmpty(line.dialogBoxId) || line.dialogBoxId == DEFAULT_DIALOG_BOX))
-        {
-            string characterName = line.hide? HIDDEN_CHARACTER_NAME : GetCharacterName(line.character);
-            _dialogBoxes[CHARACTER_NAME].gameObject.SetActive(true);
-            _dialogBoxes[CHARACTER_NAME].Print(characterName);
-        }
-        else
-        {
-            _dialogBoxes[CHARACTER_NAME].gameObject.SetActive(false);
-        }
-        
-    }
-    
-    private string GetCharacterName(string characterId)
-    {
-        var t = characters.Where(c => c.text == characterId).GetFirst();
-        return t.IsEmpty? characterId : t.Get();
-    }
-
-    private readonly Flip _skipped = new();
-    public void SkipOrNext()
-    {
-        if (_dialogBox)
-        {
-            if( !_skipped && !_dialogBox.Done) _dialogBox.Skip();
-            else
+            if (line.portraitId.IsEmpty()) return;
+            if (_lastPortraitPosition != line.portraitPosition)
             {
-                _autoPlayTimer?.Stop();
-                if(_dialogBox.hideWhenNotUsed) _dialogBox.gameObject.SetActive(false);
+                _sprites[_lastPortraitPosition].Clear();
+            }
+
+            var sc = _sprites[line.portraitPosition];
+            sc.SwapImage(spriteBucket.Get(line.portraitId).Get());
+            _lastPortraitPosition = line.portraitPosition;
+        }
+
+        #endregion
+
+        #region Choice
+
+        private string _choiceGroupName;
+
+        private void SetupChoiceBox(InkChoice choiceInfo)
+        {
+            if (_dialogBox) _dialogBox.Clean();
+            Debug.Log($"Choice {choiceInfo.groupId}");
+            _choiceGroupName = choiceInfo.groupId.IsEmpty() ? DEFAULT_CHOICE_GROUP : choiceInfo.groupId;
+            _selectableGroups[_choiceGroupName].Activate(choiceInfo, showHiddenChoice);
+
+            CanSkipOrNext = false;
+        }
+
+        private void ResetSelectableGroup(string groupName)
+        {
+            if (!_selectableGroups.TryGetValue(groupName, out var selectableGroup)) return;
+            selectableGroup.ResetState();
+        }
+
+        public void SelectChoice(int index)
+        {
+            Debug.Log($"Select choice {index}");
+            ResetSelectableGroup(_choiceGroupName);
+            _choiceGroupName = "";
+            CanSkipOrNext = true;
+            _inkSystem.Get().Next(index);
+        }
+
+        #endregion
+
+        #region Task
+
+        private void HandleTask((string, string, Action<string>) task)
+        {
+            string taskName = task.Item1;
+            string parameter = task.Item2;
+            Action<string> callback = task.Item3;
+
+            var op = _dialogBoxes.Get(taskName)
+                .Do(db => db.Print(parameter, () => { callback?.Invoke(taskName); }));
+            if (op.HasValue) return;
+
+            if (taskName == InkConstants.TASK_PLAY_CG)
+            {
+                _playables[parameter]?.Play(callback, parameter);
+                return;
+            }
+
+            if (taskName == InkConstants.TASK_HIDE_CG)
+            {
+                _playables[parameter]?.End();
+                callback(taskName);
+                return;
+            }
+        }
+
+
+        #endregion
+
+        #region AutoPlay
+
+        Timer _autoPlayTimer;
+
+        private void AutoPlay() // only in line
+        {
+            if (_lineInterrupted)
+            {
                 _inkSystem.Get().Next();
             }
-        }
-    }
 
-    private string _lastPortraitPosition;
-    private void SetupCharacterImage(InkLine line)
-    {
-        if(line.portraitId.IsEmpty() ) return;
-        if (_lastPortraitPosition != line.portraitPosition)
-        {
-            _sprites[_lastPortraitPosition].Clear();
-        }
-        var sc = _sprites[line.portraitPosition];
-        sc.SwapImage(spriteBucket.Get(line.portraitId).Get());
-        _lastPortraitPosition = line.portraitPosition;
-    }
-    
-    #endregion
-    #region Choice
-    private string _choiceGroupName;
-    private void SetupChoiceBox(InkChoice choiceInfo)
-    {
-        if(_dialogBox)_dialogBox.Clean();
-        Debug.Log($"Choice {choiceInfo.groupId}");
-        _choiceGroupName = choiceInfo.groupId.IsEmpty()? DEFAULT_CHOICE_GROUP : choiceInfo.groupId;
-        _selectableGroups[_choiceGroupName].Activate(choiceInfo, showHiddenChoice);
-        
-        CanSkipOrNext = false;
-    }
-    
-    private void ResetSelectableGroup(string groupName) {
-        if(!_selectableGroups.TryGetValue(groupName, out var selectableGroup)) return;
-        selectableGroup.ResetState();
-    }
-    
-    public void SelectChoice(int index) {
-        Debug.Log($"Select choice {index}");
-        ResetSelectableGroup(_choiceGroupName);
-        _choiceGroupName="";
-        CanSkipOrNext = true;
-        _inkSystem.Get().Next(index);
-    }
-    
-    #endregion
-    
-    #region Task
-
-    private void HandleTask((string, string, Action<string>) task)
-    {
-        string taskName = task.Item1;
-        string parameter = task.Item2;
-        Action<string> callback = task.Item3;
-        
-        var op = _dialogBoxes.Get(taskName)
-            .Do(db =>db.Print(parameter, () => { callback?.Invoke(taskName); }));
-        if(op.HasValue) return;
-        
-        if (taskName == InkConstants.TASK_PLAY_CG)
-        {
-            _playables[parameter]?.Play(callback, parameter);
-            return;
-        } 
-        if (taskName == InkConstants.TASK_HIDE_CG)
-        {
-            _playables[parameter]?.End();
-            callback(taskName);
-            return;
-        } 
-    }
-
-    
-    #endregion
-
-    #region AutoPlay
-  
-    Timer _autoPlayTimer;
-    private void AutoPlay() // only in line
-    {
-        if (_lineInterrupted)
-        {
-            _inkSystem.Get().Next();
-        }
-        if (PlaySpeed != AutoPlaySpeed.NONE)
-        {
-            if (_autoPlayTimer == null)
+            if (PlaySpeed != AutoPlaySpeed.NONE)
             {
-                _autoPlayTimer = new CountdownTimer(AutoPlayDelay);
-                _autoPlayTimer.OnTimerStop += () => _inkSystem.Get().Next();
+                if (_autoPlayTimer == null)
+                {
+                    _autoPlayTimer = new CountdownTimer(AutoPlayDelay);
+                    _autoPlayTimer.OnTimerStop += () => _inkSystem.Get().Next();
+                }
+
+                _autoPlayTimer.Start();
             }
-            
-            _autoPlayTimer.Reset();
-            _autoPlayTimer.Start();
         }
-    }
 
-    public void PauseAutoPlay()
-    {
-        if(PlaySpeed != AutoPlaySpeed.NONE)  _autoPlayTimer?.Pause();
-    }
+        public void PauseAutoPlay()
+        {
+            if (PlaySpeed != AutoPlaySpeed.NONE) _autoPlayTimer?.Pause();
+        }
 
-    public void ResumeAutoPlay()
-    {
-        if(PlaySpeed != AutoPlaySpeed.NONE)  _autoPlayTimer?.Resume();
+        public void ResumeAutoPlay()
+        {
+            if (PlaySpeed != AutoPlaySpeed.NONE) _autoPlayTimer?.Resume();
+        }
+
+        #endregion
     }
-    
-    #endregion
 }

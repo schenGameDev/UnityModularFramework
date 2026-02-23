@@ -1,0 +1,23 @@
+{
+    "name": "Schen.ModularFramework.Ability",
+    "rootNamespace": "ModularFramework.Modules.Ability",
+    "references": [
+        "GUID:add39933988c64884972442c66f4f932",
+        "GUID:febaf25a60dafbd44941357b21678606",
+        "GUID:49b49c76ee64f6b41bf28ef951cb0e50",
+        "GUID:2665a8d13d1b3f18800f46e256720795",
+        "GUID:07f361844810b4ed49572ccf92e0ac0c",
+        "GUID:33759803a11f4d538227861a78aba30b",
+        "GUID:dd59ccde2a8bfc34fb17f834ba257ab2",
+        "GUID:b36d2927ecdb7814fb00c523cd575420"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

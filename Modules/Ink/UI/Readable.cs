@@ -3,79 +3,88 @@ using ModularFramework.Utility;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// display text somewhere else after clicked
-/// </summary>
-[RequireComponent(typeof(Button))]
-public class Readable : MonoBehaviour
+namespace ModularFramework.Modules.Ink
 {
-    private static readonly int STOP = Animator.StringToHash("Stop");
-    public const string DEFAULT_PRINTER = "info";
-    
-    [SerializeField] private TranslationString text;
-    [SerializeField] public string printerName;
-    [SerializeField] private TextPrinter printer;
-    [SerializeField] private GameObject detail;
-    [SerializeField] private Animator indicator;
-    
-    private bool _isShow;
-    
-    protected void Start()
+    /// <summary>
+    /// display text somewhere else after clicked
+    /// </summary>
+    [RequireComponent(typeof(Button))]
+    public class Readable : MonoBehaviour
     {
-        if (!printer)
-        {
-            printer = TextPrinter.INSTANCES.Get(string.IsNullOrEmpty(printerName)? DEFAULT_PRINTER : printerName).OrElse(null); // other scene printer
-        } else
-        {
-            printer.gameObject.SetActive(false); // local scene printer
-        }
-    } // stop parent Start
-    
-    public void Read()
-    {
-        if(!printer && !detail) return;
-        if(_isShow) return;
-        Print();
-        if (detail)
-        {
-            detail.SetActive(true);
-        }
-        _isShow = true;
-        if(indicator) indicator.SetBool(STOP, true);
-    }
-    
-    private void Print() => printer?.Print(text, PrintDone);
+        private static readonly int STOP = Animator.StringToHash("Stop");
+        public const string DEFAULT_PRINTER = "info";
 
-    private void Skip()
-    {
-        if(!printer || !_isShow) return;
-        if (printer.Done)
+        [SerializeField] private TranslationString text;
+        [SerializeField] public string printerName;
+        [SerializeField] private TextPrinter printer;
+        [SerializeField] private GameObject detail;
+        [SerializeField] private Animator indicator;
+
+        private bool _isShow;
+
+        protected void Start()
         {
+            if (!printer)
+            {
+                printer = TextPrinter.INSTANCES.Get(string.IsNullOrEmpty(printerName) ? DEFAULT_PRINTER : printerName)
+                    .OrElse(null); // other scene printer
+            }
+            else
+            {
+                printer.gameObject.SetActive(false); // local scene printer
+            }
+        } // stop parent Start
+
+        public void Read()
+        {
+            if (!printer && !detail) return;
+            if (_isShow) return;
+            Print();
+            if (detail)
+            {
+                detail.SetActive(true);
+            }
+
+            _isShow = true;
+            if (indicator) indicator.SetBool(STOP, true);
+        }
+
+        private void Print() => printer?.Print(text, PrintDone);
+
+        private void Skip()
+        {
+            if (!printer || !_isShow) return;
+            if (printer.Done)
+            {
+                printer.Clean();
+            }
+            else printer.Skip();
+        }
+
+        private readonly Flip _waitPlayerConfirm = new();
+
+        private void PrintDone()
+        {
+            if (!_isShow) return;
+
+            if (!_waitPlayerConfirm)
+            {
+                return;
+            }
+
             printer.Clean();
+
+            if (detail)
+            {
+                detail.SetActive(false);
+            }
+
+            _isShow = false;
         }
-        else printer.Skip();
-    }
 
-    private readonly Flip _waitPlayerConfirm = new();
-    private void PrintDone()
-    {
-        if(!_isShow) return;
-
-        if (!_waitPlayerConfirm)
+        public void OnHover()
         {
-            return;
+            //GetComponent<Image>()?.;
         }
-        printer.Clean();
-        
-        if (detail)
-        {
-            detail.SetActive(false);
-        }
-        _isShow = false;
-    }
-
-    public void OnHover()
-    {
-        //GetComponent<Image>()?.;
     }
 }

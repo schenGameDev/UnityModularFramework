@@ -1,0 +1,24 @@
+{
+    "name": "Schen.ModularFramework.Camera",
+    "rootNamespace": "ModularFramework.Modules.Camera",
+    "references": [
+        "GUID:add39933988c64884972442c66f4f932",
+        "GUID:febaf25a60dafbd44941357b21678606",
+        "GUID:33759803a11f4d538227861a78aba30b",
+        "GUID:d525ad6bd40672747bde77962f1c401e",
+        "GUID:4307f53044263cf4b835bd812fc161a4",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:0982ee25b9a594e1baab137726f3c3cb",
+        "GUID:27812d6e22c25417b9ee8d5b09744558"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

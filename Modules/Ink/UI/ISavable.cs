@@ -1,20 +1,23 @@
 using System.Collections.Generic;
 using ModularFramework.Commons;
 
-public interface ISavable
+namespace ModularFramework.Modules.Ink
 {
-    public string Id { get; }
-
-    public Dictionary<string, AnyValue> GetState()
+    public interface ISavable
     {
-        return SavableState.GetSavableStates(this);
-    }
+        public string Id { get; }
 
-    public void RestoreState(Dictionary<string, AnyValue> savedStates)
-    {
-        SavableState.SetSavableStates(this, savedStates);
-    }
+        public Dictionary<string, AnyValue> GetState()
+        {
+            return SavableState.GetSavableStates(this);
+        }
 
-    public void Load();
+        public void RestoreState(Dictionary<string, AnyValue> savedStates)
+        {
+            SavableState.SetSavableStates(this, savedStates);
+        }
+
+        public void Load();
+    }
 }
 

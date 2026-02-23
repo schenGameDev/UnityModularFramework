@@ -1,0 +1,22 @@
+{
+    "name": "Schen.ModularFramework.Player",
+    "rootNamespace": "",
+    "references": [
+        "GUID:add39933988c64884972442c66f4f932",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:febaf25a60dafbd44941357b21678606",
+        "GUID:07f361844810b4ed49572ccf92e0ac0c",
+        "GUID:50c7071e53a8e4704872fa73f48697f6",
+        "GUID:0982ee25b9a594e1baab137726f3c3cb",
+        "GUID:49b49c76ee64f6b41bf28ef951cb0e50"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

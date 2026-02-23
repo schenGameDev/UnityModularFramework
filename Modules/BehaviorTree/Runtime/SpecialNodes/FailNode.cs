@@ -1,0 +1,20 @@
+using UnityEngine;
+
+namespace ModularFramework.Modules.BehaviorTree
+{
+    public class FailNode : SingletonNode
+    {
+        protected override State OnUpdate()
+        {
+            return State.Failure;
+        }
+
+        public override Color HeaderColor => new Color32(135, 69, 11, 255);
+
+        FailNode()
+        {
+            description = "Always fail";
+            titleCustomizable = false;
+        }
+    }
+}

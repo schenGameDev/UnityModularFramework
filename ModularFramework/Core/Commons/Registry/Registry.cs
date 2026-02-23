@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using ModularFramework.Commons;
 
 namespace ModularFramework
@@ -9,18 +10,24 @@ namespace ModularFramework
     {
         private static readonly HashSet<T> ITEMS = new();
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryAdd(T item) =>  item!=null && ITEMS.Add(item);
         
-        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Remove(T item) => ITEMS.Remove(item);
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int RemoveWhere(Predicate<T> predicate) => ITEMS.RemoveWhere(predicate);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Contains(T item) =>  ITEMS.Contains(item);
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Clear() => ITEMS.Clear();
 
         public static IEnumerable<T> All => ITEMS;
+        
+        public static int Count => ITEMS.Count;
 
         public static Optional<T> GetFirst() =>  ITEMS.GetFirst();
         

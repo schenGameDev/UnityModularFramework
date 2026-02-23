@@ -1,10 +1,15 @@
 using UnityEngine;
 
-public class FixPositionCamera : CameraBase
+namespace ModularFramework.Modules.Camera
 {
-    public FixPositionCamera() {
-        type = CameraType.FIXED;
-    }
+    public class FixPositionCamera : CameraBase
+    {
+        public FixPositionCamera()
+        {
+            type = CameraType.FIXED;
+        }
 
-    protected override Transform CameraFocusSpawnPoint() => null;
+        public override bool Ready => true;
+        protected override Transform CameraFocusSpawnPoint() => null;
+    }
 }

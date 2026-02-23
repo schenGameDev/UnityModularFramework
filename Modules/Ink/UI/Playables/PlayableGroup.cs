@@ -1,9 +1,12 @@
 using System.Collections.Generic;
 
-public abstract class PlayableGroup : Playable
+namespace ModularFramework.Modules.Ink
 {
-    [SavableState] protected string CurrentState;
+    public abstract class PlayableGroup : Playable
+    {
+        [SavableState] protected string CurrentState;
 
-    public abstract IEnumerable<string> GetStates();
+        public abstract IEnumerable<string> GetStates();
 
+    }
 }

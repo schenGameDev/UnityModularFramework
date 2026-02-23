@@ -1,162 +1,192 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using EditorAttributes;
-using ModularFramework;
+using ModularFramework.Modules.Camera;
 using UnityEngine;
 using Void = EditorAttributes.Void;
 
-[CreateAssetMenu(fileName ="LockManager_SO",menuName ="Game Module/Target Lock")]
-public class LockManagerSO : GameModule<LockManagerSO>, IRegistrySO
+namespace ModularFramework.Modules.LockTarget
 {
-    [Header("Config")]
-    [SerializeField] private float _maxLockDistance = 10;
-    [SerializeField] private bool _autoLock = true;
-
-    [FoldoutGroup("Event Channels", nameof(_cameraManager), nameof(_lockEvent), nameof(_switchLockTargetEvent))]
-    [SerializeField] private Void _eventChannelGroup;
-
-    [HideInInspector,SerializeField] private CameraManagerSO _cameraManager;
-    [HideInInspector,SerializeField] private EventChannel _lockEvent;
-    [HideInInspector,SerializeField] private EventChannel<bool> _switchLockTargetEvent;
-
-    [Header("Runtime")]
-#if UNITY_EDITOR
-    [ReadOnly,SerializeField,RuntimeObject] private string[] _lockableInScene;
-#endif
-    [ReadOnly,RuntimeObject] public bool IsLock;
-    [ReadOnly,RuntimeObject] public Transform LockTarget;
-
-    [RuntimeObject] private HashSet<Transform> _lockableSet=new();
-    [SceneRef("PLAYER")] private Transform Player;
-    [SceneFlag("LOCK_CAMERA")] private string _lockCameraName;
-
-    public LockManagerSO() {
-        updateMode = UpdateMode.EVERY_N_FRAME;
-    }
-    
-    protected override void OnAwake() { }
-    protected override void OnStart() { }
-    protected override void OnUpdate() { }
-    protected override void OnLateUpdate() { }
-    protected override void OnSceneDestroy() { }
-    protected override void OnDraw() { }
-    
-    
-    private void OnEnable() {
-        _lockEvent.AddListener(LockUnlock);
-        _switchLockTargetEvent.AddListener(SwitchTarget);
-    }
-
-    private void OnDisable() {
-        _lockEvent.RemoveListener(LockUnlock);
-        _switchLockTargetEvent.RemoveListener(SwitchTarget);
-    }
-
-    public void LockUnlock()
+    [CreateAssetMenu(fileName = "LockManager_SO", menuName = "Game Module/Target Lock")]
+    public class LockManagerSO : GameModule<LockManagerSO>
     {
-        if(IsLock) {
-            // unlock
-            if(LockTarget!=null) LockTarget.GetComponent<Lockable>().Lock(false);
-            LockTarget = null;
-            _cameraManager.BackToPrevCamera(CameraTransitionType.SMOOTH);
-        } else {
-            // lock
-            if(_lockableSet==null || _lockableSet.Count==0) return;
+        [Header("Config")] [SerializeField] private float maxLockDistance = 10;
+        [SerializeField] private bool autoLock = true;
 
-            List<(Transform,float)> lockableInCamera = GetLockableInCamera();
+        [FoldoutGroup("Event Channels", nameof(lockEvent), nameof(switchLockTargetEvent))] [SerializeField]
+        private Void eventChannelGroup;
 
-            if(lockableInCamera.Count==0) return;
+        [HideInInspector, SerializeField] private EventChannel lockEvent;
+        [HideInInspector, SerializeField] private EventChannel<bool> switchLockTargetEvent;
 
-            LockTarget = lockableInCamera[0].Item1;
-            LockTarget.GetComponent<Lockable>().Lock(true);
+        [Header("Runtime")] [RuntimeObject] private Autowire<CameraManagerSO> _cameraManager = new();
+        [ReadOnly, RuntimeObject] public bool isLock;
+        [ReadOnly, RuntimeObject] public Transform lockOnTarget;
+        [RuntimeObject] private float _sqrMaxLockDistance;
 
-            _cameraManager.CameraTransitionTo(_lockCameraName,CameraTransitionType.SMOOTH);
+        [SceneRef("PLAYER")] private Transform _player;
+        [SceneFlag("LOCK_CAMERA")] private string _lockCameraName;
+
+        public LockManagerSO()
+        {
+            updateMode = UpdateMode.EVERY_N_FRAME;
         }
 
-        IsLock = !IsLock;
-    }
+        protected override void OnAwake()
+        {
+        }
 
-    private List<(Transform, float)> GetLockableInCamera() {
-        return _lockableSet
-                .Where(l => Vector3.Distance(Player.position,l.position) < _maxLockDistance)
-                .Select(l => (l, l.GetComponent<Lockable>().DisToScreenCenter()))
+        protected override void OnStart()
+        {
+        }
+
+        protected override void OnUpdate()
+        {
+            AutoLock();
+        }
+
+        protected override void OnLateUpdate()
+        {
+        }
+
+        protected override void OnSceneDestroy()
+        {
+        }
+
+        protected override void OnDraw()
+        {
+        }
+
+
+        private void OnEnable()
+        {
+            lockEvent.AddListener(LockUnlock);
+            switchLockTargetEvent.AddListener(SwitchTarget);
+            _sqrMaxLockDistance = maxLockDistance * maxLockDistance;
+        }
+
+        private void OnDisable()
+        {
+            lockEvent.RemoveListener(LockUnlock);
+            switchLockTargetEvent.RemoveListener(SwitchTarget);
+        }
+
+        public void LockUnlock()
+        {
+            if (isLock)
+            {
+                // unlock
+                if (lockOnTarget != null) lockOnTarget.GetComponent<Lockable>().Lock(false);
+                lockOnTarget = null;
+                _cameraManager.Get().BackToPrevCamera(CameraTransitionType.SMOOTH);
+            }
+            else
+            {
+                // lock
+                List<(Transform, float)> lockableInCamera = GetLockableInCamera();
+
+                if (lockableInCamera.Count == 0) return;
+
+                lockOnTarget = lockableInCamera[0].Item1;
+                lockOnTarget.GetComponent<Lockable>().Lock(true);
+
+                _cameraManager.Get().CameraTransitionTo(_lockCameraName, CameraTransitionType.SMOOTH);
+            }
+
+            isLock = !isLock;
+        }
+
+        private List<(Transform, float)> GetLockableInCamera()
+        {
+            return Registry<Lockable>.All
+                .Where(l => Vector3.SqrMagnitude(_player.position - l.transform.position) < _sqrMaxLockDistance)
+                .Select(l => (l.transform, l.DisToScreenCenter()))
                 .Where(t => t.Item2 < 1)
                 .OrderBy(t => t.Item2)
                 .ToList();
-    }
-
-    [RuntimeObject] private bool _isAutoLockedBefore;
-    public void CheckLockInDistance() {
-        if(IsLock && (LockTarget == null ||
-                      Vector3.Distance(Player.position, LockTarget.position) > _maxLockDistance)) {
-            LockUnlock();
-        } else if(!IsLock && _autoLock && !_isAutoLockedBefore) {
-            LockUnlock();
-            if(IsLock) _isAutoLockedBefore = true;
-        } else if(!IsLock && _isAutoLockedBefore && GetLockableInCamera().Count == 0) {
-            _isAutoLockedBefore = false; // reset
         }
-    }
 
-    public bool LockTargetExist() => GetLockableInCamera().Count > 0;
+        [RuntimeObject] private bool _isAutoLockedBefore;
 
-    public void Register(Transform lockable) {
-        if(_lockableSet.Contains(lockable)) return;
-        _lockableSet.Add(lockable);
-        DisplayLockableNames();
-    }
-
-    public void Unregister(Transform lockable) {
-        if(!_lockableSet.Contains(lockable)) return;
-        _lockableSet.Remove(lockable);
-        DisplayLockableNames();
-    }
-
-    private void DisplayLockableNames() {
-#if UNITY_EDITOR
-        _lockableInScene = _lockableSet.Select(x => x.name).ToArray();
-#endif
-    }
-
-    public void TargetLost() {
-        if(IsLock) LockUnlock();
-    }
-
-    public void SwitchTarget(bool isRightSide) { // + right, - left
-        if(!IsLock || _lockableSet==null || _lockableSet.Count<=1) return;
-        List<Transform> lockableInCamera = _lockableSet
-                .Select(l=> new Tuple<Transform,float>(l, l.GetComponent<Lockable>().HorizontalDisToScreenLeft()))
-                .Where(l=>l.Item2<=1)
-                .OrderBy(l=>l.Item2)
-                .Select(l=>l.Item1)
-                .ToList();
-        if(LockTarget==null || lockableInCamera.Count<=1) return;
-
-        Transform newTarget = null;
-        Transform prev=lockableInCamera.Last();
-        foreach(var l in lockableInCamera) {
-            if(!isRightSide && l == LockTarget) {
-                newTarget = prev;
-                break;
-            } else if(isRightSide && prev==LockTarget) {
-                newTarget = l;
-                break;
+        public void AutoLock()
+        {
+            if (isLock && (lockOnTarget == null ||
+                           Vector3.SqrMagnitude(_player.position - lockOnTarget.position) > _sqrMaxLockDistance))
+            {
+                LockUnlock();
             }
-            prev = l;
+            else if (!isLock && autoLock && !_isAutoLockedBefore)
+            {
+                LockUnlock();
+                if (isLock) _isAutoLockedBefore = true;
+            }
+            else if (!isLock && _isAutoLockedBefore && GetLockableInCamera().Count == 0)
+            {
+                _isAutoLockedBefore = false; // reset
+            }
         }
-        if(newTarget == null && prev ==LockTarget) newTarget = lockableInCamera[0];
 
-        if(newTarget!=null) {
-            LockTarget.GetComponent<Lockable>().Lock(false);
-            LockTarget = newTarget;
-            LockTarget.GetComponent<Lockable>().Lock(true);
+        public bool LockTargetExist() => GetLockableInCamera().Count > 0;
+
+#if UNITY_EDITOR
+        [Button]
+        private void DisplayLockableNames()
+        {
+            Debug.Log(string.Join(",", Registry<Lockable>.All.Select(x => x.name)));
+        }
+#endif
+
+        public void TargetLost()
+        {
+            if (isLock) LockUnlock();
         }
 
+        public void SwitchTarget(bool isRightSide)
+        {
+            // + right, - left
+            if (!isLock || lockOnTarget == null || Registry<Lockable>.Count <= 1) return;
+            List<Transform> lockableInCamera = Registry<Lockable>.All
+                .Select(l => (l.transform, l.GetComponent<Lockable>().HorizontalDisToScreenLeft()))
+                .Where(l => l.Item2 <= 1)
+                .OrderBy(l => l.Item2)
+                .Select(l => l.Item1)
+                .ToList();
+            if (lockableInCamera.Count <= 1) return;
 
-    }
+            Transform newTarget = null;
+            Transform prev = lockableInCamera.Last();
+            foreach (var l in lockableInCamera)
+            {
+                if (!isRightSide && l == lockOnTarget)
+                {
+                    newTarget = prev;
+                    break;
+                }
+                else if (isRightSide && prev == lockOnTarget)
+                {
+                    newTarget = l;
+                    break;
+                }
 
-    private float CalculateDistanceToCamera(Transform lockable) {
-        return Vector3.Distance(lockable.position,Camera.main.transform.position);
+                prev = l;
+            }
+
+            if (newTarget == null && prev == lockOnTarget) newTarget = lockableInCamera[0];
+
+            if (newTarget != null)
+            {
+                lockOnTarget.GetComponent<Lockable>().Lock(false);
+                lockOnTarget = newTarget;
+                lockOnTarget.GetComponent<Lockable>().Lock(true);
+            }
+
+
+        }
+
+        private float CalculateDistanceToCamera(Transform lockable)
+        {
+            return Vector3.Distance(lockable.position,
+                SingletonRegistry<GameBuilder>.Instance.MainCamera.transform.position);
+        }
     }
 }

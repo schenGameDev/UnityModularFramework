@@ -1,76 +1,84 @@
 using System;
 using System.Collections.Generic;
 using KBCore.Refs;
-using ModularFramework;
+using ModularFramework.Modules.Sound;
 using TMPro;
 using UnityEngine;
 
-public class TextPrinter : TextPrinterBase
+namespace ModularFramework.Modules.Ink
 {
-    public static readonly Dictionary<string,TextPrinter> INSTANCES = new ();
-    
-    [SerializeField] private bool staticPrinter;
-    [SerializeField] public GameObject endIndicator;
-    
-    [SerializeField] protected string soundName;
-
-    [SerializeField] private PrintStyleBase printStyle;
-    
-    private PrintStyleBase _printStyleInstance;
-    
-    protected Autowire<SoundManagerSO> SoundManager = new();
-    [SerializeField, Child(Flag.IncludeInactive)] public TextMeshProUGUI textbox;
-    private Action _callback;
-
-    protected void Awake()
+    public class TextPrinter : TextPrinterBase
     {
-        _printStyleInstance = printStyle ? Instantiate(printStyle) : ScriptableObject.CreateInstance<NoPrintStyle>();
-        _printStyleInstance.Printer = this;
-        if(endIndicator) endIndicator.SetActive(false);
+        public static readonly Dictionary<string, TextPrinter> INSTANCES = new();
 
-        if (staticPrinter)
+        [SerializeField] private bool staticPrinter;
+        [SerializeField] public GameObject endIndicator;
+
+        [SerializeField] protected string soundName;
+
+        [SerializeField] private PrintStyleBase printStyle;
+
+        private PrintStyleBase _printStyleInstance;
+
+        protected Autowire<SoundManagerSO> SoundManager = new();
+
+        [SerializeField, Child(Flag.IncludeInactive)]
+        public TextMeshProUGUI textbox;
+
+        private Action _callback;
+
+        protected void Awake()
         {
-            INSTANCES.Add(printerName, this);
-            gameObject.SetActive(false);
-        }
-    }
+            _printStyleInstance =
+                printStyle ? Instantiate(printStyle) : ScriptableObject.CreateInstance<NoPrintStyle>();
+            _printStyleInstance.Printer = this;
+            if (endIndicator) endIndicator.SetActive(false);
 
-    public override void Skip()
-    {
-        if (Done)
+            if (staticPrinter)
+            {
+                INSTANCES.Add(printerName, this);
+                gameObject.SetActive(false);
+            }
+        }
+
+        public override void Skip()
         {
-            _callback?.Invoke();
-            return;
+            if (Done)
+            {
+                _callback?.Invoke();
+                return;
+            }
+
+            _printStyleInstance.OnSkip();
         }
-        _printStyleInstance.OnSkip();
-    }
 
-    public override void Clean() // click again to hide
-    {
-        if(hideWhenNotUsed) gameObject.SetActive(false);
-        else if(!_printStyleInstance.noClearText) textbox.text = "";
-        ReturnEarly = false;
-        Done = false;
-        _callback = null;
-    }
+        public override void Clean() // click again to hide
+        {
+            if (hideWhenNotUsed) gameObject.SetActive(false);
+            else if (!_printStyleInstance.noClearText) textbox.text = "";
+            ReturnEarly = false;
+            Done = false;
+            _callback = null;
+        }
 
-    public override void Print(string text, Action callback, params string[] parameters)
-    {
-        gameObject.SetActive(true);
-        _callback = callback;
-        _printStyleInstance.ReturnEarly = ReturnEarly;
-        _printStyleInstance.OnPrint(text, callback);
-    }
+        public override void Print(string text, Action callback, params string[] parameters)
+        {
+            gameObject.SetActive(true);
+            _callback = callback;
+            _printStyleInstance.ReturnEarly = ReturnEarly;
+            _printStyleInstance.OnPrint(text, callback);
+        }
 
-    private void OnDestroy()
-    {
-        _printStyleInstance.OnDestroy();
-        INSTANCES.Remove(printerName);
-    }
+        private void OnDestroy()
+        {
+            _printStyleInstance.OnDestroy();
+            INSTANCES.Remove(printerName);
+        }
 
 #if UNITY_EDITOR
-    private void OnValidate() => this.ValidateRefs();
+        private void OnValidate() => this.ValidateRefs();
 #endif
 
-    public SoundPlayer GetSoundPlayer() => SoundManager.Get()?.PlayLoopSound(soundName);
+        public SoundPlayer GetSoundPlayer() => SoundManager.Get()?.PlayLoopSound(soundName);
+    }
 }

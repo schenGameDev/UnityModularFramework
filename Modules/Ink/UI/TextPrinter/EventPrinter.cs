@@ -1,17 +1,19 @@
-using ModularFramework;
 using UnityEngine;
 
-public class EventPrinter : TextPrinter
+namespace ModularFramework.Modules.Ink
 {
-    [SerializeField] private EventChannel<string> eventChannel;
-    
-    private void OnEnable()
+    public class EventPrinter : TextPrinter
     {
-        eventChannel?.AddListener(Print);
-    }
+        [SerializeField] private EventChannel<string> eventChannel;
 
-    private void OnDisable()
-    {
-        eventChannel?.RemoveListener(Print);
+        private void OnEnable()
+        {
+            eventChannel?.AddListener(Print);
+        }
+
+        private void OnDisable()
+        {
+            eventChannel?.RemoveListener(Print);
+        }
     }
 }

@@ -1,0 +1,17 @@
+{
+    "name": "schen.BehaviorTree.Editor",
+    "rootNamespace": "ModularFramework.Modules.BehaviorTree.Editor",
+    "references": [
+        "GUID:c7323172f7dcc4a4f9b58af37a46e769",
+        "GUID:add39933988c64884972442c66f4f932"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

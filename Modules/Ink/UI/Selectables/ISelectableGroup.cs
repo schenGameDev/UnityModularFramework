@@ -1,12 +1,14 @@
 using System;
-using ModularFramework;
 
-public interface ISelectableGroup : IResetable, IMark
+namespace ModularFramework.Modules.Ink
 {
-    public string ChoiceGroupName { get; }
-    public bool EnableOnAwake { get; }
-    public void Activate(InkChoice choiceInfo, bool showHiddenChoice);
-    public void Select(int index);
-    public Action<int> OnSelect { get; set; }
+    public interface ISelectableGroup : IResetable, IMark
+    {
+        public string ChoiceGroupName { get; }
+        public bool EnableOnAwake { get; }
+        public void Activate(InkChoice choiceInfo, bool showHiddenChoice);
+        public void Select(int index);
+        public Action<int> OnSelect { get; set; }
 
+    }
 }
