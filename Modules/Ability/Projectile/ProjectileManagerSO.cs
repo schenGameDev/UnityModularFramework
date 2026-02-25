@@ -56,6 +56,10 @@ namespace ModularFramework.Modules.Ability
                     Projectile projectile = _activeProjectiles[i];
                     if (projectile.ReachEndOfLife(now))
                     {
+                        if (projectile.effect != null)
+                        {
+                            projectile.effect.Arrive(null, projectile.transform.position);
+                        }
                         ReturnProjectile(projectile);
                         continue;
                     }
@@ -287,9 +291,15 @@ namespace ModularFramework.Modules.Ability
                 if (hits[i].collider != null)
                 {
                     int index = indexMapping[i];
-                    hitResults[index] = true;
-                    _activeProjectiles[index].GetComponent<ProjectileEffect>().Arrive(hits[i].transform, hits[i].point);
-
+                    var projectileEffect = _activeProjectiles[index].effect;
+                    if (projectileEffect != null)
+                    {
+                        hitResults[index] = projectileEffect.Arrive(hits[i].transform, hits[i].point);
+                    }
+                    else
+                    {
+                        hitResults[index] = true;
+                    }
                 }
             }
         }

@@ -24,18 +24,16 @@ namespace ModularFramework.Modules.BehaviorTree
         [Tooltip("if targets move out of range at time of release, they will not be targeted")]
         public bool verifyRangeAtDamageTime = true;
 
-        [Header("Casting")] [Required, SerializeField, PropertyDropdown, OnValueChanged(nameof(RenameComponent))]
+        [Header("Casting")] 
+        [Required, SerializeField, PropertyDropdown, OnValueChanged(nameof(RenameComponent))]
         private AbilitySO ability;
 
-        [SerializeField, ShowField(nameof(HasOffset))]
+        [SerializeField, ShowField(nameof(HasOffset)), DrawHandle]
         private Vector3 spawnEffectOffset;
 
         [SerializeField, Tooltip("Casting animation")]
         private string animFlag;
-
-        [Header("Cooldown")] [SerializeField, Min(0)]
-        private float cooldown;
-
+        
         [SerializeField, ToggleGroup("Gizmos", nameof(gizmosColor))]
         private bool showGizmos = true;
 
@@ -71,18 +69,18 @@ namespace ModularFramework.Modules.BehaviorTree
             {
                 if (ability is ProjectileAbilitySO p)
                 {
-                    p.projectileSpawnOffset = spawnEffectOffset;
+                    
                     p.RegisterProjectile();
                 }
-                else if (ability is GroundEffectAbilitySO g) g.groundEffectSpawnOffset = spawnEffectOffset;
+                ability.emitOffset = spawnEffectOffset;
             }
         }
 
         private void Start()
         {
-            if (cooldown > 0)
+            if (ability.cooldown > 0)
             {
-                _cooldownTimer = new CountdownTimer(cooldown);
+                _cooldownTimer = new CountdownTimer(ability.cooldown);
                 _cooldownTimer.OnTimerStart += () => isReady = false;
                 _cooldownTimer.OnTimerStop += () => isReady = true;
             }
@@ -136,9 +134,7 @@ namespace ModularFramework.Modules.BehaviorTree
             if (_targets.Count == 0)
             {
                 Debug.LogWarning($"{AbilityName} Missed, targets not within range");
-                if (ability is ProjectileAbilitySO p) p.DryFire(transform, _initialAimPosition, null, CastComplete);
-                else if (ability is GroundEffectAbilitySO g) g.DryFire(transform, _initialAimPosition, CastComplete);
-                else CastComplete();
+                ability.ReleasePosition(transform, _initialAimPosition, CastComplete);
                 return;
             }
 
@@ -148,7 +144,7 @@ namespace ModularFramework.Modules.BehaviorTree
         /// <summary>
         /// for continuous casting end: one effect ends, complete the cast
         /// </summary>
-        private void CastComplete()
+        private void CastComplete(AbilitySO abilitySo)
         {
             runner.StopAnim(animFlag);
             _abilityReleaseCallback?.Invoke(true);
@@ -193,7 +189,7 @@ namespace ModularFramework.Modules.BehaviorTree
             }
         }
 
-        public bool TargetAtSelf => ability != null && ability.targetSelf;
+        public bool TargetAtSelf => ability != null && ability.AimMethod() == AimType.Self;
 
         private string AbilityName => ability == null
             ? "Unassigned"

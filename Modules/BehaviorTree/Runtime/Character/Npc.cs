@@ -12,7 +12,7 @@ namespace ModularFramework.Modules.BehaviorTree
         [Header("Runtime")] public bool isStunned;
         public bool isFallen;
         public Transform tauntedBy;
-        public int health;
+        public float health;
 
         public void AimedAtBy(bool isAiming, Transform attacker, string details = null)
         {
@@ -75,7 +75,7 @@ namespace ModularFramework.Modules.BehaviorTree
             Debug.Log("Removing special condition: " + specialCondition);
         }
 
-        public void TakeDamage(int damageAmount, DamageType damageType)
+        public void TakeDamage(float damageAmount, DamageType damageType)
         {
             if (damageType == DamageType.Physical)
             {

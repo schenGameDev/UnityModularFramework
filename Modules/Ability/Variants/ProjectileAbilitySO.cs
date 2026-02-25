@@ -18,16 +18,17 @@ namespace ModularFramework.Modules.Ability
                           "Can be used for fireball, missile etc.";
         }
 
-        [Required] public Projectile projectilePrefab;
-        [HideInInspector] public Vector3 projectileSpawnOffset;
-
+        [Required,PropertyDropdown] public Projectile projectilePrefab;
+        [SerializeField] private float maxRange;
+        
         [SerializeReference, SubclassSelector]
-        [Tooltip(
-            "Used when spawn position is not the targets, but a different position calculated from the targets (e.g. predict player movement)")]
+        [Tooltip("Used when spawn position is not the targets, but a different position calculated from the targets (e.g. predict player movement)")]
         private IPositionCalculator positionCalculator;
 
         [SerializeField] bool matchCasterRotation = true;
 
+        public override float AimRange() => maxRange;
+        public override AimType AimMethod() => projectilePrefab.aimType;
         private uint _projectileId;
 
         protected override void Apply(Transform me, List<IDamageable> targets, Action onComplete)
@@ -39,9 +40,9 @@ namespace ModularFramework.Modules.Ability
                 return;
             }
 
-            Vector3 rotatedOffset = me.rotation * projectileSpawnOffset;
+            Vector3 rotatedOffset = me.rotation * emitOffset;
             Quaternion rotatedRotation = matchCasterRotation ? me.rotation : Quaternion.identity;
-            if (targetSelf)
+            if (AimMethod() == AimType.Self)
             {
                 var projectile = projectileManager.SpawnProjectile(_projectileId,
                     me.position + rotatedOffset,
@@ -73,51 +74,84 @@ namespace ModularFramework.Modules.Ability
 
         }
 
-        public void DryFire(Transform me, Vector3? targetPos, Vector3? direction, Action onComplete)
+        public override void ReleaseDirection(Transform me, Vector3 direction, Action<AbilitySO> onComplete)
         {
             if (!SingletonRegistry<ProjectileManagerSO>.TryGet(out var projectileManager))
             {
                 Debug.LogError("Projectile Manager not found");
-                onComplete?.Invoke();
+                onComplete?.Invoke(this);
                 return;
             }
-
-            PlayVisualSoundEffects(me, null);
+            PlayVisualSoundEffects(me, null, null, new List<Vector3>() {direction});
             if (!continuousCasting)
             {
-                onComplete?.Invoke();
+                onComplete?.Invoke(this);
                 onComplete = null;
             }
-
-            Vector3 rotatedOffset = me.rotation * projectileSpawnOffset;
-            Quaternion rotatedRotation = matchCasterRotation ? me.rotation : Quaternion.identity;
-
-            if (targetSelf)
+        
+            Vector3 rotatedOffset = me.rotation * emitOffset;
+            Quaternion rotatedRotation = matchCasterRotation? me.rotation : Quaternion.identity;
+            Projectile projectile;
+            if (AimMethod() == AimType.Self)
             {
-                var projectile = projectileManager.SpawnProjectile(_projectileId,
-                    me.position + rotatedOffset,
+                projectile = projectileManager.SpawnProjectile(_projectileId, 
+                    me.position + rotatedOffset, 
                     rotatedRotation,
                     me.transform, null, null);
-                if (projectile.effect != null) projectile.effect.onComplete = onComplete;
-            }
-            else if (positionCalculator != null && targetPos.HasValue)
-            {
-                Vector3 spawnPosition =
-                    positionCalculator.GetPosition(me.position, new List<Vector3>() { targetPos.Value });
-                var projectile = projectileManager.SpawnProjectile(_projectileId,
-                    me.position + rotatedOffset,
-                    rotatedRotation,
-                    null, spawnPosition, null);
-                if (projectile.effect != null) projectile.effect.onComplete = onComplete;
             }
             else
             {
-                var projectile = projectileManager.SpawnProjectile(_projectileId,
+                projectile = projectileManager.SpawnProjectile(_projectileId, 
+                    me.position + rotatedOffset, 
+                    rotatedRotation, 
+                    null, null, direction);
+            }
+            projectile.effect.onComplete = () => onComplete?.Invoke(this);
+        }
+        
+        public override void ReleasePosition(Transform me, Vector3 targetPos,Action<AbilitySO> onComplete)
+        {
+            if (!SingletonRegistry<ProjectileManagerSO>.TryGet(out var projectileManager))
+            {
+                Debug.LogError("Projectile Manager not found");
+                onComplete?.Invoke(this);
+                return;
+            }
+            PlayVisualSoundEffects(me, null, new List<Vector3>() {targetPos}, null);
+            if (!continuousCasting)
+            {
+                onComplete?.Invoke(this);
+                onComplete = null;
+            }
+
+            Vector3 rotatedOffset = me.rotation * emitOffset;
+            Quaternion rotatedRotation = matchCasterRotation ? me.rotation : Quaternion.identity;
+
+            Projectile projectile;
+            if (AimMethod() == AimType.Self)
+            {
+                projectile = projectileManager.SpawnProjectile(_projectileId,
                     me.position + rotatedOffset,
                     rotatedRotation,
-                    null, targetPos, direction);
-                if (projectile.effect != null) projectile.effect.onComplete = onComplete;
+                    me.transform, null, null);
             }
+            else if (positionCalculator != null)
+            {
+                Vector3 spawnPosition =
+                    positionCalculator.GetPosition(me.position, new List<Vector3>() { targetPos });
+                projectile = projectileManager.SpawnProjectile(_projectileId,
+                    me.position + rotatedOffset,
+                    rotatedRotation,
+                    null, spawnPosition, null);
+            }
+            else
+            {
+                projectile = projectileManager.SpawnProjectile(_projectileId,
+                    me.position + rotatedOffset,
+                    rotatedRotation,
+                    null, targetPos, null);
+            }
+            if (projectile.effect != null) projectile.effect.onComplete = () => onComplete?.Invoke(this);
         }
 
         public void RegisterProjectile()
@@ -125,5 +159,15 @@ namespace ModularFramework.Modules.Ability
             if (!SingletonRegistry<ProjectileManagerSO>.TryGet(out var projectileManager)) return;
             _projectileId = projectileManager.RegisterProjectile(projectilePrefab);
         }
+        
+#if UNITY_EDITOR
+        [Button]
+        private void Validate()
+        {
+            if (projectilePrefab == null) return;
+            projectilePrefab.Validate();
+            projectilePrefab.CalculateLifetime(maxRange);
+        }
+#endif
     }
 }

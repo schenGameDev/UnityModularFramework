@@ -47,11 +47,6 @@ namespace ModularFramework.Modules.Ability
             CleanUp();
         }
 
-        public bool IsTargetValid(IDamageable target)
-        {
-            return damageTarget.HasFlag(target.TargetType);
-        }
-
         private void CleanUp()
         {
             _target = null;
@@ -72,6 +67,11 @@ namespace ModularFramework.Modules.Ability
         {
             return new DamageOverTimeEffect(damageType, damageTarget, ticks, tickInterval, damagePerTick);
         }
+        
+        public bool IsTargetValid(IDamageable target)
+        {
+            return damageTarget.HasFlag(target.TargetType);
+        }
     }
 
     [Serializable]
@@ -85,6 +85,11 @@ namespace ModularFramework.Modules.Ability
         public IEffect<IDamageable> Create()
         {
             return new DamageOverTimeEffect(DamageType.Physical, healTarget, ticks, tickInterval, -healPerTick);
+        }
+        
+        public bool IsTargetValid(IDamageable target)
+        {
+            return healTarget.HasFlag(target.TargetType);
         }
     }
 }

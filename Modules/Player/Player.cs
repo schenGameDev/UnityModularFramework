@@ -61,12 +61,12 @@ public class Player : Character,IDamageable
     }
     
     
-    public void TakeDamage(int amount, DamageType damageType)
+    public void TakeDamage(float amount, DamageType damageType)
     {
         if(damageType == DamageType.Physical) TakePhysicalDamage(amount);
     }
 
-    private void TakePhysicalDamage(int amount)
+    private void TakePhysicalDamage(float amount)
     {
         health -= amount;
         OnHealthChanged();

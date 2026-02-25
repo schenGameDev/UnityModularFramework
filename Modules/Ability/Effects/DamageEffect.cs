@@ -6,7 +6,7 @@ namespace ModularFramework.Modules.Ability
     [Serializable]
     public struct DamageEffect : IEffect<IDamageable>
     {
-        public int damageAmount;
+        public float damageAmount;
         public DamageType damageType;
         public DamageTarget damageTarget;
         public DamageTarget ApplyTarget => damageTarget;
@@ -21,11 +21,6 @@ namespace ModularFramework.Modules.Ability
         public void Cancel()
         {
             OnCompleted?.Invoke(this);
-        }
-
-        public bool IsTargetValid(IDamageable target)
-        {
-            return damageTarget.HasFlag(target.TargetType);
         }
     }
 
@@ -45,6 +40,11 @@ namespace ModularFramework.Modules.Ability
                 damageTarget = damageTarget
             };
         }
+        
+        public bool IsTargetValid(IDamageable target)
+        {
+            return damageTarget.HasFlag(target.TargetType);
+        }
     }
 
     [Serializable]
@@ -61,6 +61,11 @@ namespace ModularFramework.Modules.Ability
                 damageType = DamageType.Physical,
                 damageTarget = healTarget
             };
+        }
+        
+        public bool IsTargetValid(IDamageable target)
+        {
+            return healTarget.HasFlag(target.TargetType);
         }
     }
 }

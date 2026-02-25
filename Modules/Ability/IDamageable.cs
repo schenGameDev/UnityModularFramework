@@ -4,7 +4,7 @@ namespace ModularFramework.Modules.Ability
 {
     public interface IDamageable
     {
-        public void TakeDamage(int damageAmount, DamageType damageType);
+        public void TakeDamage(float damageAmount, DamageType damageType);
 
         public void TakeEffect(IEffect<IDamageable> effect);
 

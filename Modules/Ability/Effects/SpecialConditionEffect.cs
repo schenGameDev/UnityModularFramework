@@ -43,11 +43,6 @@ namespace ModularFramework.Modules.Ability
             CleanUp();
         }
 
-        public bool IsTargetValid(IDamageable target)
-        {
-            return true;
-        }
-
         public void CleanUp()
         {
             _target = null;
@@ -64,6 +59,11 @@ namespace ModularFramework.Modules.Ability
         public IEffect<IDamageable> Create()
         {
             return new SpecialConditionEffect(specialCondition, duration);
+        }
+        
+        public bool IsTargetValid(IDamageable target)
+        {
+            return true;
         }
     }
 

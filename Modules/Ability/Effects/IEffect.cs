@@ -6,7 +6,6 @@ namespace ModularFramework.Modules.Ability
     {
         void Apply(TTarget target);
         void Cancel();
-        bool IsTargetValid(TTarget target);
         DamageTarget ApplyTarget { get; }
         event Action<IEffect<TTarget>> OnCompleted;
     }
@@ -14,6 +13,7 @@ namespace ModularFramework.Modules.Ability
     public interface IEffectFactory<TTarget>
     {
         IEffect<TTarget> Create();
+        bool IsTargetValid(TTarget target);
     }
 
 
@@ -28,13 +28,13 @@ namespace ModularFramework.Modules.Ability
     }
 
     [Flags]
-    public enum DamageTarget
+    public enum DamageTarget : byte
     {
         None = 0,
-        Player = 1,
-        Equipment = 2,
-        NPC = 4,
-        Monster = 8,
+        Player = 1 << 0,
+        Equipment = 1 << 1,
+        NPC = 1 << 2,
+        Monster = 1 << 3,
         All = Player | Equipment | NPC | Monster
     }
 }

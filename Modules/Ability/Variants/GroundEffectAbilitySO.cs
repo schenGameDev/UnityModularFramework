@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EditorAttributes;
 using UnityEngine;
 
 namespace ModularFramework.Modules.Ability
@@ -16,7 +17,6 @@ namespace ModularFramework.Modules.Ability
         }
 
         [SerializeField] private ImpactEffect impactEffectPrefab;
-        [HideInInspector] public Vector3 groundEffectSpawnOffset;
 
         [SerializeReference, SubclassSelector]
         [Tooltip(
@@ -24,10 +24,15 @@ namespace ModularFramework.Modules.Ability
         private IPositionCalculator positionCalculator;
 
         [SerializeField] bool matchCasterRotation = true;
-
+        [SerializeField] private bool targetSelf;
+        [SerializeField,HideField(nameof(targetSelf))] private float maxRange;
+        
+        public override AimType AimMethod() => targetSelf ? AimType.Self : AimType.Position;
+        public override float AimRange() => targetSelf? 0 : maxRange;
+        
         protected override void Apply(Transform me, List<IDamageable> targets, Action onComplete)
         {
-            Vector3 rotatedOffset = me.rotation * groundEffectSpawnOffset;
+            Vector3 rotatedOffset = me.rotation * emitOffset;
             Quaternion rotatedRotation = matchCasterRotation ? me.rotation : Quaternion.identity;
 
             if (targetSelf)
@@ -53,33 +58,33 @@ namespace ModularFramework.Modules.Ability
             }
         }
 
-        public void DryFire(Transform me, Vector3 targetPos, Action onComplete)
+        public override void ReleasePosition(Transform me, Vector3 targetPos, Action<AbilitySO> onComplete)
         {
-            PlayVisualSoundEffects(me, null);
+            PlayVisualSoundEffects(me, null,new List<Vector3>() {targetPos}, null);
             if (!continuousCasting)
             {
-                onComplete?.Invoke();
+                onComplete?.Invoke(this);
                 onComplete = null;
             }
 
-            Vector3 rotatedOffset = me.rotation * groundEffectSpawnOffset;
+            Vector3 rotatedOffset = me.rotation * emitOffset;
             Quaternion rotatedRotation = matchCasterRotation ? me.rotation : Quaternion.identity;
 
             if (targetSelf)
             {
                 var groundEffect = Instantiate(impactEffectPrefab, me.position + rotatedOffset, rotatedRotation);
-                groundEffect.onComplete = onComplete;
+                groundEffect.onComplete = () => onComplete?.Invoke(this);
             }
             else if (positionCalculator != null)
             {
                 Vector3 spawnPosition = positionCalculator.GetPosition(me.position, new List<Vector3>() { targetPos });
                 var groundEffect = Instantiate(impactEffectPrefab, spawnPosition + rotatedOffset, rotatedRotation);
-                groundEffect.onComplete = onComplete;
+                groundEffect.onComplete = () => onComplete?.Invoke(this);
             }
             else
             {
                 var groundEffect = Instantiate(impactEffectPrefab, targetPos + rotatedOffset, rotatedRotation);
-                groundEffect.onComplete = onComplete;
+                groundEffect.onComplete = () => onComplete?.Invoke(this);
             }
         }
     }

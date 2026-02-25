@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using EditorAttributes;
 using KBCore.Refs;
 using Sisus.ComponentNames;
@@ -34,13 +36,6 @@ namespace ModularFramework.Modules.Ability
 
         [SerializeField, Min(0), Suffix("/s")] private float gravity = 0f;
 
-        public enum AimType
-        {
-            Direction,
-            Transform,
-            Position,
-        }
-
         public AimType aimType;
 
         [SerializeField, ShowField(nameof(aimType), AimType.Transform)]
@@ -65,12 +60,14 @@ namespace ModularFramework.Modules.Ability
         [Self(Flag.Optional), HideInInspector] public ProjectileEffect effect;
 
         private bool NeedRadius => collisionDetection is CastType.SPHERECAST or CastType.CAPSULECAST;
+        
         [SerializeField, HideInInspector] private float groundSpeed;
         [SerializeField, HideInInspector] private float acceleration;
         private float _ySpeed;
         private float _startTime;
         private Transform _target;
         private Vector3 _groundDirection;
+        private Vector3 _startPosition;
 
         private float _trackTargetMaxRadiansPerSecond;
 
@@ -80,14 +77,23 @@ namespace ModularFramework.Modules.Ability
             ? transform.forward
             : new Vector3(_groundDirection.x, _ySpeed / groundSpeed, _groundDirection.z).normalized;
 
+        public void Initialize(ProjectileInitialState initialState)
+        {
+            _target = initialState.target;
+            _trackTargetMaxRadiansPerSecond = initialState.trackTargetMaxRadiansPerSecond;
+            _groundDirection = initialState.groundDirection;
+            groundSpeed = initialState.groundSpeed;
+            _ySpeed = initialState.ySpeed;
+            _startPosition = transform.position;
+        }
 
-        public void Initialize(Vector3 startPos, Quaternion startRot, float now,
+        public ProjectileInitialState Initialize(Vector3 startPos, Quaternion startRot, float now,
             Transform target, Vector3? targetPos, Vector3? direction)
         {
             _startTime = now;
             transform.position = startPos;
             transform.rotation = startRot;
-
+            _startPosition = startPos;
             switch (aimType)
             {
                 case AimType.Direction:
@@ -98,12 +104,11 @@ namespace ModularFramework.Modules.Ability
                                                   ? targetPos.Value - startPos
                                                   : Vector3.zero));
                     break;
-                case AimType.Transform when target != null:
+                case AimType.Transform or AimType.Self when target != null:
                     InitializeByTransform(target);
                     break;
-                case AimType.Transform:
-                case AimType.Position:
-                    if (AimType.Transform == aimType)
+                case AimType.Transform or AimType.Self or AimType.Position:
+                    if (aimType is AimType.Transform or AimType.Self)
                     {
                         Debug.LogError($"{nameof(target)} is null but AimType is Transform, fall back to Position");
                     }
@@ -111,7 +116,14 @@ namespace ModularFramework.Modules.Ability
                     InitializeByPosition(target != null ? target.position : targetPos ?? Vector3.zero);
                     break;
             }
-
+            return new ProjectileInitialState()
+            {
+                groundDirection = _groundDirection,
+                groundSpeed = groundSpeed,
+                ySpeed = _ySpeed,
+                target = _target,
+                trackTargetMaxRadiansPerSecond = _trackTargetMaxRadiansPerSecond
+            };
         }
 
         private void InitializeByTransform(Transform target)
@@ -136,9 +148,9 @@ namespace ModularFramework.Modules.Ability
         {
             _target = null;
             _trackTargetMaxRadiansPerSecond = 0;
-            _groundDirection = new Vector3(direction.x, 0, direction.z).normalized;
-            // this.direction = direction;
-            _ySpeed = groundSpeed * direction.y / _groundDirection.magnitude;
+            var groundVector = new Vector3(direction.x, 0, direction.z);
+            _groundDirection = groundVector.normalized;
+            _ySpeed = groundSpeed * direction.y / groundVector.magnitude;
             if (faceMoveDirection) transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
         }
 
@@ -222,7 +234,56 @@ namespace ModularFramework.Modules.Ability
             _groundDirection = moveResult.groundDirection;
         }
 
+        public Vector3[] GetTrajectory()
+        {
+            var endPosition = transform.position;
+            if (aimType is AimType.Direction)
+            {
+                return new[] {_startPosition, endPosition};
+            }
 
+            List<Vector3> trajectory = new List<Vector3>();
+            trajectory.Add(_startPosition);
+
+            const float sampleTime = 0.5f;
+            Vector3 currentPos = _startPosition;
+            float currentGroundSpeed = groundSpeed;
+            float currentYSpeed = _ySpeed;
+
+            float totalHorizontalDist = Vector3.Distance(
+                new Vector3(_startPosition.x, 0, _startPosition.z),
+                new Vector3(endPosition.x, 0, endPosition.z));
+            float traveledHorizontalDist = 0f;
+
+            while (traveledHorizontalDist < totalHorizontalDist)
+            {
+                Vector3 displacement = ChangeDirectionAndSpeed(
+                    currentGroundSpeed, endSpeed, acceleration,
+                    _groundDirection, currentYSpeed, gravity, sampleTime,
+                    out float newGroundSpeed, out float newYSpeed);
+
+                float stepHorizontalDist = new Vector3(displacement.x, 0, displacement.z).magnitude;
+                if (stepHorizontalDist <= 0) break;
+
+                float remaining = totalHorizontalDist - traveledHorizontalDist;
+                if (stepHorizontalDist > remaining)
+                {
+                    float ratio = remaining / stepHorizontalDist;
+                    displacement *= ratio;
+                    newGroundSpeed = Mathf.Lerp(currentGroundSpeed, newGroundSpeed, ratio);
+                    newYSpeed = Mathf.Lerp(currentYSpeed, newYSpeed, ratio);
+                }
+
+                traveledHorizontalDist += stepHorizontalDist;
+                currentPos += displacement;
+                currentGroundSpeed = newGroundSpeed;
+                currentYSpeed = newYSpeed;
+                trajectory.Add(currentPos);
+            }
+
+            return trajectory.ToArray();
+        }
+        
         public static Vector3 TrackTarget(Vector3 target, Vector3 me, Vector3 groundDirection,
             float trackTargetMaxRadiansPerSecond, float deltaTime)
         {
@@ -270,13 +331,20 @@ namespace ModularFramework.Modules.Ability
 
 #if UNITY_EDITOR
         private void OnValidate() => this.ValidateRefs();
-
+        
+        public void CalculateLifetime(float maxRange)
+        {
+            if (aimType == AimType.Direction)
+            {
+                lifetime = constantGroundSpeed? maxRange / speed : CalculateTime(speed, acceleration, maxRange);
+            }
+        }
+    
         [Button]
         public void Validate()
         {
-            if (collisionDetection != CastType.SPHERECAST && collisionDetection != CastType.CAPSULECAST) radius = -1f;
-            if (collisionDetection != CastType.BOXCAST) halfExtents = Vector3.one * -1f;
-
+            if(collisionDetection != CastType.SPHERECAST && collisionDetection != CastType.CAPSULECAST) radius = -1f;
+            if(collisionDetection != CastType.BOXCAST) halfExtents = Vector3.one * -1f;
             constantGroundSpeed = constantGroundSpeed || Mathf.Approximately(speed, endSpeed);
             groundSpeed = speed;
             if (constantGroundSpeed)
@@ -284,8 +352,7 @@ namespace ModularFramework.Modules.Ability
                 changeSpeedTime = 0;
                 endSpeed = groundSpeed;
             }
-
-            acceleration = constantGroundSpeed ? 0 : (endSpeed - groundSpeed) / changeSpeedTime;
+            acceleration = constantGroundSpeed? 0 : (endSpeed - groundSpeed) / changeSpeedTime;
             if (aimType != AimType.Transform) followTarget = false;
         }
 #endif
@@ -315,5 +382,25 @@ namespace ModularFramework.Modules.Ability
                 Gizmos.DrawWireSphere(transform.position + pointB, radius);
             }
         }
+    }
+    
+    [Serializable]
+    public struct ProjectileInitialState
+    {
+        // public Vector3 targetPos;
+        // public uint targetNetId;
+        public Transform target;
+        public float trackTargetMaxRadiansPerSecond;
+        public Vector3 groundDirection;
+        public float groundSpeed;
+        public float ySpeed;
+    }
+    
+    public enum AimType
+    {
+        Direction,
+        Transform,
+        Position,
+        Self
     }
 }
