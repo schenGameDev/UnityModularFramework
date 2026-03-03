@@ -16,7 +16,8 @@ namespace ModularFramework.Modules.Ability
         public List<IEffectFactory<IDamageable>> effects = new();
         [SerializeField] private DamageTarget penetrate;
         [SerializeField] private bool isBeam;
-        [ShowField(nameof(isBeam)),HelpBox("must have assetIdentity")] public LineRenderer beamPrefab;
+        [ShowField(nameof(isBeam)),HelpBox("must have assetIdentity")] 
+        public LineRenderer beamPrefab;
         [SerializeField, Self] private Projectile projectile;
         
         public Action onComplete;
@@ -45,6 +46,7 @@ namespace ModularFramework.Modules.Ability
                     impactEffect.SetBeam(_beam, _beamId);
                     _beam = null;
                 }
+                impactEffect.onComplete = onComplete;
             }
             else
             {
@@ -94,7 +96,9 @@ namespace ModularFramework.Modules.Ability
             }
     
             if(beam == null) return;
-            beam.SetPositions(projectile.GetTrajectory());
+            var points = projectile.GetTrajectory();
+            beam.positionCount = points.Length;
+            beam.SetPositions(points);
             _beam = beam;
         }
         
@@ -103,7 +107,8 @@ namespace ModularFramework.Modules.Ability
             return new ObjectPool<LineRenderer>(
                 createFunc: () =>
                 {
-                    var beam = Instantiate(prefab);
+                    var beam = Instantiate(prefab,Vector3.zero, Quaternion.identity,
+                        SingletonRegistry<ProjectileManagerSO>.Instance.effectParent);
                     beam.gameObject.SetActive(false);
                     return beam;
                 },
@@ -130,6 +135,7 @@ namespace ModularFramework.Modules.Ability
             if (!isBeam || _beam == null) return;
             var points = projectile.GetTrajectory();
             if (points.Length < 2) return;
+            _beam.positionCount = points.Length;
             _beam.SetPositions(points);
         }
 

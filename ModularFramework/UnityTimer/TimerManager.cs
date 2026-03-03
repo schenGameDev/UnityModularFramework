@@ -38,6 +38,11 @@ namespace UnityTimer {
         public static Action<float> Tick;
         
         static List<ScheduledAction> actionQueue = new();
+        public static void Schedule(float delay, Action action)
+        {
+            Schedule(new ScheduledAction(delay, action));
+        }
+        
         public static void Schedule(ScheduledAction scheduledAction)
         {
             actionQueue.Add(scheduledAction);

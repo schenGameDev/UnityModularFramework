@@ -74,6 +74,8 @@ public class HitTimeDpdtDmgEffectFactory : IEffectFactory<IDamageable>
         return damageTarget.HasFlag(target.TargetType);
     }
     
+    public DamageTarget ApplyTarget => damageTarget;
+    
     public void Reset()
     {
         _lastHitTargets.Clear();

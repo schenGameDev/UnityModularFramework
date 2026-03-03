@@ -26,7 +26,9 @@ namespace ModularFramework.Modules.Ability
         [ShowField(nameof(impactOverTime)), SerializeField, Min(0)]
         private int ticks;
 
-        [SerializeField] RangeFilter rangeFilter;
+        [HelpBox("Filter ignored in beam")] 
+        public RangeFilter rangeFilter;
+        [SerializeField] private bool showImpactZone = true;
         [SerializeReference, SubclassSelector] public List<IEffectFactory<IDamageable>> effects = new();
         public Action onComplete;
 
@@ -38,6 +40,7 @@ namespace ModularFramework.Modules.Ability
         private uint _beamId;
         private Vector3[] _beamPoints;
         private LineRenderer _beam;
+        private ImpactZoneIndicator _indicator;
 
         //public override void OnStartServer()
         private void Start()
@@ -67,6 +70,7 @@ namespace ModularFramework.Modules.Ability
                     Destroy(gameObject);
                 }
             }
+            if(showImpactZone) ShowImpactZone();
         }
 
         public void SetBeam(LineRenderer beam, uint beamId)
@@ -77,6 +81,8 @@ namespace ModularFramework.Modules.Ability
             _beamPoints = new Vector3[_beam.positionCount];
             _beam.GetPositions(_beamPoints);
         }
+
+        private bool IsBeam => _beamPoints is { Length: > 1 };
         
         private HashSet<DamageTarget> GetAllTargetTypes()
         {
@@ -136,21 +142,32 @@ namespace ModularFramework.Modules.Ability
             //NetworkServer.
             Destroy(gameObject);
         }
+        
+        private void ShowImpactZone()
+        {
+            if(IsBeam) return;
+            if (_indicator == null)
+            {
+                _indicator = PrefabPool<ImpactZoneIndicator>.Get();
+            }
+            _indicator.ShowInLocalCoordinate(transform,Vector3.zero, Vector3.forward, rangeFilter, Color.orange);
+        }
 
         private void OnDrawGizmos()
         {
+            if (Application.isPlaying) return;
             if(rangeFilter.minMaxRange == Vector2.zero) return;
             Gizmos.color = Color.red;
             var lineCollection = rangeFilter.GetRangeSector(transform);
             GizmosExtension.DrawPolygons(lineCollection);
         }
 
-        RaycastHit[] _hits = new RaycastHit[10];
-        Collider[] _hitColliders = new Collider[10];
+        private readonly RaycastHit[] _hits = new RaycastHit[10];
+        private readonly Collider[] _hitColliders = new Collider[10];
         private IEnumerable<IDamageable> GetTargetsInRangeByDamageType(DamageTarget damageTarget)
         {
             List<IDamageable> targetsInRange = new ();
-            if (_beamPoints is { Length: > 1 })
+            if (IsBeam)
             {
                 for (int i = 0; i < _beamPoints.Length - 1; i++)
                 {
@@ -223,6 +240,12 @@ namespace ModularFramework.Modules.Ability
             {
                 PrefabPool<LineRenderer>.Release(_beam, _beamId);
                 _beam = null;
+            }
+
+            if (_indicator != null)
+            {
+                PrefabPool<ImpactZoneIndicator>.Release(_indicator);
+                _indicator = null;
             }
         }
 

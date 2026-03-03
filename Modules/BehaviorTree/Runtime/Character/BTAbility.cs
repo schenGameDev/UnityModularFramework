@@ -53,6 +53,7 @@ namespace ModularFramework.Modules.BehaviorTree
         [SerializeField, Self] private BTRunner runner;
         private CountdownTimer _cooldownTimer;
         private Vector3 _initialAimPosition;
+        private ImpactZoneIndicator _impactZoneIndicator;
 
 #if UNITY_EDITOR
         private void OnValidate() => this.ValidateRefs();
@@ -176,12 +177,43 @@ namespace ModularFramework.Modules.BehaviorTree
 
         private void ShowAbilityImpactArea(bool on = true)
         {
+            if (on)
+            {
+                if (_impactZoneIndicator == null)
+                {
+                    _impactZoneIndicator = PrefabPool<ImpactZoneIndicator>.Get();
+                }
+                _impactZoneIndicator.ShowInLocalCoordinate(transform,Vector3.zero, Vector3.forward, rangeFilter, Color.orange);
+            }
+            else if (_impactZoneIndicator != null)
+            {
+                PrefabPool<ImpactZoneIndicator>.Release(_impactZoneIndicator);
+                _impactZoneIndicator = null;
+            }
+        }
+        
+        private void CleanUp()
+        {
+            if (_impactZoneIndicator != null)
+            {
+                PrefabPool<ImpactZoneIndicator>.Release(_impactZoneIndicator);
+                _impactZoneIndicator = null;
+            }
+        }
 
+        private void OnDisable()
+        {
+            CleanUp();
+        }
+
+        private void OnDestroy()
+        {
+            CleanUp();
         }
 
         private void OnDrawGizmos()
         {
-            if (showGizmos && (_isCastingAbility || !Application.isPlaying))
+            if (showGizmos && !Application.isPlaying)
             {
                 Gizmos.color = gizmosColor;
                 GizmosExtension.DrawPolygons(rangeFilter.GetRangeSector(transform));

@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 // https://github.com/adammyhre/Unity-Improved-Timers.git
@@ -16,12 +15,12 @@ namespace UnityTimer {
 
         protected override void CustomTick() {
             if (!IsRunning) return;
-            if (CurrentTime >= _timeThreshold) {
-                CurrentTime -= _timeThreshold;
+            if (currentTime >= _timeThreshold) {
+                currentTime -= _timeThreshold;
             }
             base.Tick();
-            if (CurrentTime < _timeThreshold) {
-                CurrentTime += Time.deltaTime;
+            if (currentTime < _timeThreshold) {
+                currentTime += Time.deltaTime;
             }
         }
 

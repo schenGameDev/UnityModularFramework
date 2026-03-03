@@ -1,0 +1,2 @@
+Add Silhouette.asset to Universal Renderer Data.
+Change Layer Mask to the layer you want to have silhouette behind obstable.

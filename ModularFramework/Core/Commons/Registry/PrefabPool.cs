@@ -41,6 +41,18 @@ namespace ModularFramework
             return true;
         }
 
+        public static bool Register(T prefab, Func<T, ObjectPool<T>> createPoolFunc)
+        {
+            if (POOL.Count == 1 && POOL.ContainsKey(0))
+            {
+                Debug.Log($"prefab pool of {typeof(T).Name} is in single prefab mode, new prefab will be ignored");
+                return false;
+            }
+            Debug.LogWarning($"PrefabPool of {typeof(T).Name} will be in single prefab mode.");
+            POOL.Add(0, createPoolFunc(prefab));
+            return true;
+        }
+
         public static uint Register(T prefab, Func<uint,T,ObjectPool<T>> createPoolFunc)
         {
             if (POOL.Count == 1 && POOL.ContainsKey(0))

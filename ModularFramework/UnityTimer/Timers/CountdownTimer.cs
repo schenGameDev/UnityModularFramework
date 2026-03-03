@@ -1,4 +1,5 @@
 using UnityEngine;
+
 // https://github.com/adammyhre/Unity-Improved-Timers.git
 namespace UnityTimer {
     /// <summary>
@@ -9,17 +10,17 @@ namespace UnityTimer {
         public float DeltaTime {get; protected set;}
         protected override void CustomTick() {
             if (!IsRunning) return;
-            if(CurrentTime > 0) {
-                CurrentTime -= Time.deltaTime;
-                DeltaTime += Time.deltaTime;
+            if(currentTime > 0) {
+                currentTime -= Time.deltaTime;
+                DeltaTime = Time.deltaTime;
             }
             OnTick.Invoke();
-            if (CurrentTime <= 0) {
+            if (currentTime <= 0) {
                 Stop();
             }
         }
 
-        protected override bool FinishCondition() => CurrentTime <= 0;
+        protected override bool FinishCondition() => currentTime <= 0;
 
         protected override void CustomReset()
         {

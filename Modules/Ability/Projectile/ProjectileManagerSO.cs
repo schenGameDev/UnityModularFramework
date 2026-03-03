@@ -54,6 +54,7 @@ namespace ModularFramework.Modules.Ability
                 for (int i = _activeProjectiles.Count; i-- > 0;)
                 {
                     Projectile projectile = _activeProjectiles[i];
+                    projectile.SavePosition();
                     if (projectile.ReachEndOfLife(now))
                     {
                         if (projectile.effect != null)

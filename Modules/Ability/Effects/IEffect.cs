@@ -14,6 +14,7 @@ namespace ModularFramework.Modules.Ability
     {
         IEffect<TTarget> Create();
         bool IsTargetValid(TTarget target);
+        DamageTarget ApplyTarget { get; }
     }
 
 

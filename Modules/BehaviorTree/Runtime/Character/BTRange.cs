@@ -22,7 +22,7 @@ namespace ModularFramework.Modules.BehaviorTree
 
         private void OnDrawGizmos()
         {
-            if (showGizmos && Application.isEditor && targetFilters != null)
+            if (showGizmos && targetFilters != null)
             {
 
                 foreach (var filter in targetFilters)

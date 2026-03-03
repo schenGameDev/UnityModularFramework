@@ -72,6 +72,8 @@ namespace ModularFramework.Modules.Ability
         {
             return damageTarget.HasFlag(target.TargetType);
         }
+        
+        public DamageTarget ApplyTarget => damageTarget;
     }
 
     [Serializable]
@@ -91,5 +93,7 @@ namespace ModularFramework.Modules.Ability
         {
             return healTarget.HasFlag(target.TargetType);
         }
+        
+        public DamageTarget ApplyTarget => healTarget;
     }
 }

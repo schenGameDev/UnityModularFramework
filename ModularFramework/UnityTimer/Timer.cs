@@ -23,7 +23,7 @@ namespace UnityTimer {
 
         public override void Reset()
         {
-            if(mode == Mode.TIME) CurrentTime = initialTime;
+            if(mode == Mode.TIME) currentTime = initialTime;
             else CurrentFrameCount = initialFrameCount;
             ((T)this).CustomReset();
         }
@@ -34,7 +34,6 @@ namespace UnityTimer {
 
     }
     public abstract class Timer : IDisposable {
-        public float CurrentTime { get; protected set; }
         public int CurrentFrameCount { get; protected set; }
 
         public bool IsRunning { get; private set; }
@@ -43,12 +42,15 @@ namespace UnityTimer {
         protected enum Mode {FRAME, TIME}
         protected Mode mode;
 
+        protected float currentTime;
         protected float initialTime;
         protected int initialFrameCount;
         protected uint delayStartScheduled;
 
-        public float Progress => Mathf.Clamp(mode == Mode.TIME? CurrentTime / initialTime : CurrentFrameCount / initialFrameCount, 0, 1);
-
+        public float Progress => 1 - Mathf.Clamp(mode == Mode.TIME? currentTime / initialTime : 1f * CurrentFrameCount / initialFrameCount, 0, 1);
+        public float RemainingTime => currentTime;
+        public float PassedTime => initialTime - currentTime;
+        
         public Action OnTimerStart = delegate { };
         public Action OnTick = delegate { };
         public Action OnTimerStop = delegate { };
@@ -81,6 +83,10 @@ namespace UnityTimer {
             {
                 TimerManager.RemoveSchedule(delayStartScheduled);
                 delayStartScheduled = 0;
+            }
+            else
+            {
+                TimerManager.DeregisterTimer(this);
             }
         }
 

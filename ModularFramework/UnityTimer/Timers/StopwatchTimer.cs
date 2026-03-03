@@ -10,7 +10,7 @@ namespace UnityTimer {
 
         protected override void CustomTick() {
             if (IsRunning) {
-                CurrentTime += Time.deltaTime;
+                currentTime += Time.deltaTime;
                 OnTick.Invoke();
             }
         }

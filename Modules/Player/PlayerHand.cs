@@ -53,6 +53,7 @@
 //         ChangeWeapon0();
 //         _collisionMask = SingletonRegistry<ProjectileManagerSO>.Instance.collisionMask;
 //         weaponSlots.ForEach(w => w.RegisterProjectile());
+//         RegisterProjectile()
 //     }
 //
 //     private void Update()

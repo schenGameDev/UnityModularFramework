@@ -13,6 +13,8 @@ namespace ModularFramework.Modules.Ability
     [DisallowMultipleComponent, RequireComponent(typeof(AssetIdentity))]
     public class Projectile : MonoBehaviour
     {
+        private const float SAMPLE_TIME = 0.2f;
+        
         [Header("Config"), OnValueChanged(nameof(RenameComponent))]
         public bool isPooling;
 
@@ -63,6 +65,10 @@ namespace ModularFramework.Modules.Ability
         
         [SerializeField, HideInInspector] private float groundSpeed;
         [SerializeField, HideInInspector] private float acceleration;
+        
+        [SerializeField] bool saveTrajectory;
+        
+        private float _startYSpeed;
         private float _ySpeed;
         private float _startTime;
         private Transform _target;
@@ -70,13 +76,17 @@ namespace ModularFramework.Modules.Ability
         private Vector3 _startPosition;
 
         private float _trackTargetMaxRadiansPerSecond;
-
+        private readonly List<Vector3> _trajectory = new();
+        
         [HideInInspector] public uint assetId;
 
         public Vector3 Direction => faceMoveDirection
             ? transform.forward
             : new Vector3(_groundDirection.x, _ySpeed / groundSpeed, _groundDirection.z).normalized;
 
+        public bool ReachEndOfLife(float now) => lifetime <= now - _startTime;
+
+        #region Initialization
         public void Initialize(ProjectileInitialState initialState)
         {
             _target = initialState.target;
@@ -85,6 +95,9 @@ namespace ModularFramework.Modules.Ability
             groundSpeed = initialState.groundSpeed;
             _ySpeed = initialState.ySpeed;
             _startPosition = transform.position;
+            _trajectory.Clear();
+            _trajectory.Add(_startPosition);
+            _startYSpeed = _ySpeed;
         }
 
         public ProjectileInitialState Initialize(Vector3 startPos, Quaternion startRot, float now,
@@ -94,6 +107,8 @@ namespace ModularFramework.Modules.Ability
             transform.position = startPos;
             transform.rotation = startRot;
             _startPosition = startPos;
+            _trajectory.Clear();
+            _trajectory.Add(startPos);
             switch (aimType)
             {
                 case AimType.Direction:
@@ -116,6 +131,9 @@ namespace ModularFramework.Modules.Ability
                     InitializeByPosition(target != null ? target.position : targetPos ?? Vector3.zero);
                     break;
             }
+            
+            _startYSpeed = _ySpeed;
+            
             return new ProjectileInitialState()
             {
                 groundDirection = _groundDirection,
@@ -153,39 +171,47 @@ namespace ModularFramework.Modules.Ability
             _ySpeed = groundSpeed * direction.y / groundVector.magnitude;
             if (faceMoveDirection) transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
         }
+        #endregion
 
+        #region Calculation
         private void CalculateRoute(Vector3 targetPos)
         {
+            var groundDistance = Vector3.Distance(new Vector3(targetPos.x, 0, targetPos.z),
+                new Vector3(transform.position.x, 0, transform.position.z));
             float yDiff = targetPos.y - transform.position.y;
-            float estimatedFlightTime;
+            _ySpeed = constantGroundSpeed
+                ? CalculateStartYSpeedConstantSpeed(yDiff, gravity,groundDistance, speed)
+                : CalculateStartYSpeed(yDiff, gravity, groundDistance, speed, endSpeed, changeSpeedTime, acceleration);
 
-            if (constantGroundSpeed)
-            {
-                estimatedFlightTime = Vector3.Distance(targetPos.IgnoreY(),
-                    transform.position.IgnoreY()) / groundSpeed;
-            }
-            else
-            {
-                float d = Vector3.Distance(new Vector3(targetPos.x, 0, targetPos.z),
-                    new Vector3(transform.position.x, 0, transform.position.z));
-                float delta = d - 0.5f * (groundSpeed + endSpeed) * changeSpeedTime;
-                estimatedFlightTime = delta > 0
-                    ? delta / endSpeed + changeSpeedTime
-                    : CalculateTime(groundSpeed, acceleration, d);
-
-            }
-
-            _ySpeed = estimatedFlightTime <= 0
-                ? 0
-                : gravity > 0
-                    ? yDiff / estimatedFlightTime + 0.5f * gravity * estimatedFlightTime
-                    : yDiff / estimatedFlightTime;
             var direction = new Vector3(_groundDirection.x, _ySpeed / groundSpeed, _groundDirection.z).normalized;
-
             if (faceMoveDirection) transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
         }
+        
+        public static float CalculateStartYSpeedConstantSpeed(float yDiff, float gravity, float groundDist, float groundSpd)
+        {
+            float flightTime = groundDist / groundSpd;
+            return flightTime <= 0 
+                ? 0 
+                : gravity > 0 
+                    ? yDiff / flightTime + 0.5f * gravity * flightTime 
+                    : yDiff / flightTime;
+        }
 
-        private float CalculateTime(float startSpeed, float acceleration, float distance)
+        public static float CalculateStartYSpeed(float yDiff, float gravity, float groundDist, float startGroundSpd, 
+            float endGroundSpd, float changeSpdTime, float acceleration)
+        {
+            float delta = groundDist- 0.5f * (startGroundSpd + endGroundSpd) * changeSpdTime;
+            float estimatedFlightTime = delta > 0
+                ?  delta / endGroundSpd + changeSpdTime 
+                : CalculateTime(startGroundSpd, acceleration, groundDist);
+            return estimatedFlightTime <= 0 
+                ? 0 
+                : gravity > 0 
+                    ? yDiff / estimatedFlightTime + 0.5f * gravity * estimatedFlightTime 
+                    : yDiff / estimatedFlightTime;
+        }
+
+        private static float CalculateTime(float startSpeed, float acceleration, float distance)
         {
             // Using: d = v₀t + ½at²
             // Rearranged to: ½at² + v₀t - d = 0
@@ -208,80 +234,6 @@ namespace ModularFramework.Modules.Ability
 
             // Return the positive time value
             return t1 > 0 ? t1 : t2;
-        }
-
-
-        public bool ReachEndOfLife(float now) => lifetime <= now - _startTime;
-
-        public ProjectileStatus Export() => new ProjectileStatus
-        {
-            me = transform.position,
-            target = _target == null ? Vector3.zero : _target.position,
-            trackTargetMaxRadiansPerSecond = _trackTargetMaxRadiansPerSecond,
-            groundDirection = _groundDirection,
-            groundSpeed = groundSpeed,
-            endGroundSpeed = endSpeed,
-            acceleration = acceleration,
-            ySpeed = _ySpeed,
-            gravity = gravity,
-            faceMoveDirection = faceMoveDirection
-        };
-
-        public void Read(ProjectileMoveResult moveResult)
-        {
-            groundSpeed = moveResult.groundSpeed;
-            _ySpeed = moveResult.ySpeed;
-            _groundDirection = moveResult.groundDirection;
-        }
-
-        public Vector3[] GetTrajectory()
-        {
-            var endPosition = transform.position;
-            if (aimType is AimType.Direction)
-            {
-                return new[] {_startPosition, endPosition};
-            }
-
-            List<Vector3> trajectory = new List<Vector3>();
-            trajectory.Add(_startPosition);
-
-            const float sampleTime = 0.5f;
-            Vector3 currentPos = _startPosition;
-            float currentGroundSpeed = groundSpeed;
-            float currentYSpeed = _ySpeed;
-
-            float totalHorizontalDist = Vector3.Distance(
-                new Vector3(_startPosition.x, 0, _startPosition.z),
-                new Vector3(endPosition.x, 0, endPosition.z));
-            float traveledHorizontalDist = 0f;
-
-            while (traveledHorizontalDist < totalHorizontalDist)
-            {
-                Vector3 displacement = ChangeDirectionAndSpeed(
-                    currentGroundSpeed, endSpeed, acceleration,
-                    _groundDirection, currentYSpeed, gravity, sampleTime,
-                    out float newGroundSpeed, out float newYSpeed);
-
-                float stepHorizontalDist = new Vector3(displacement.x, 0, displacement.z).magnitude;
-                if (stepHorizontalDist <= 0) break;
-
-                float remaining = totalHorizontalDist - traveledHorizontalDist;
-                if (stepHorizontalDist > remaining)
-                {
-                    float ratio = remaining / stepHorizontalDist;
-                    displacement *= ratio;
-                    newGroundSpeed = Mathf.Lerp(currentGroundSpeed, newGroundSpeed, ratio);
-                    newYSpeed = Mathf.Lerp(currentYSpeed, newYSpeed, ratio);
-                }
-
-                traveledHorizontalDist += stepHorizontalDist;
-                currentPos += displacement;
-                currentGroundSpeed = newGroundSpeed;
-                currentYSpeed = newYSpeed;
-                trajectory.Add(currentPos);
-            }
-
-            return trajectory.ToArray();
         }
         
         public static Vector3 TrackTarget(Vector3 target, Vector3 me, Vector3 groundDirection,
@@ -325,9 +277,118 @@ namespace ModularFramework.Modules.Ability
                 newYSpeed -= gravity * deltaTime;
             }
 
-            return groundDirection * 0.5f * (newGroundSpeed + groundSpeed) * deltaTime +
-                   Vector3.up * 0.5f * (newYSpeed + ySpeed) * deltaTime;
+            return groundDirection * (0.5f * (newGroundSpeed + groundSpeed) * deltaTime) +
+                   Vector3.up * (0.5f * (newYSpeed + ySpeed) * deltaTime);
         }
+        #endregion
+        #region Read & Export
+        public ProjectileStatus Export() => new ProjectileStatus
+        {
+            me = transform.position,
+            target = _target == null ? Vector3.zero : _target.position,
+            trackTargetMaxRadiansPerSecond = _trackTargetMaxRadiansPerSecond,
+            groundDirection = _groundDirection,
+            groundSpeed = groundSpeed,
+            endGroundSpeed = endSpeed,
+            acceleration = acceleration,
+            ySpeed = _ySpeed,
+            gravity = gravity,
+            faceMoveDirection = faceMoveDirection
+        };
+
+        public void Read(ProjectileMoveResult moveResult)
+        {
+            groundSpeed = moveResult.groundSpeed;
+            _ySpeed = moveResult.ySpeed;
+            _groundDirection = moveResult.groundDirection;
+        }
+        #endregion
+        #region Trajectory
+        public void SavePosition()
+        {
+            if (!saveTrajectory) return;
+            if (aimType == AimType.Direction && _trajectory.Count > 1)
+            {
+                _trajectory[1] = transform.position;
+            }
+            else
+            {
+                _trajectory.Add(transform.position);
+            }
+        }
+        
+        public Vector3[] GetTrajectory()
+        {
+            if (saveTrajectory && _trajectory.Count > 1) return _trajectory.ToArray();
+            var endPosition = transform.position;
+            if (aimType is AimType.Direction)
+            {
+                return new[] {_startPosition, endPosition};
+            }
+            return CalculateTrajectory(_startPosition, endPosition, speed, endSpeed, acceleration, _groundDirection, _startYSpeed, gravity);
+        }
+        
+        public Vector3[] PredictTrajectory(Vector3 startPos, Vector3 endPos)
+        {
+            if (aimType is AimType.Direction)
+            {
+                return new[] {startPos, endPos};
+            }
+            var groundDirection = new Vector3(endPos.x - startPos.x, 0, endPos.z - startPos.z).normalized;
+            var groundDistance = Vector3.Distance(new Vector3(endPos.x, 0, endPos.z), new Vector3(startPos.x, 0, startPos.z));
+            var yDiff = endPos.y - startPos.y;
+            var startYSpd = constantGroundSpeed
+                ? CalculateStartYSpeedConstantSpeed(yDiff, gravity,groundDistance, speed)
+                : CalculateStartYSpeed(yDiff, gravity, groundDistance, speed, endSpeed, changeSpeedTime, acceleration);
+            return CalculateTrajectory(startPos, endPos, speed, endSpeed, acceleration, groundDirection, startYSpd, gravity);
+        }
+        
+        public static Vector3[] CalculateTrajectory(Vector3 startPos, Vector3 endPos, float startGroundSpeed, float endGroundSpeed,
+            float acceleration, Vector3 groundDirection, float startYSpeed, float gravity)
+        {
+            List<Vector3> trajectory = new ();
+            trajectory.Add(startPos);
+        
+            Vector3 currentPos = startPos;
+            float currentGroundSpeed = startGroundSpeed;
+            float currentYSpeed = startYSpeed;
+
+            float totalHorizontalDist = Vector3.Distance(
+                new Vector3(startPos.x, 0, startPos.z),
+                new Vector3(endPos.x, 0, endPos.z));
+            float traveledHorizontalDist = 0f;
+
+            while (traveledHorizontalDist < totalHorizontalDist)
+            {
+                Vector3 displacement = ChangeDirectionAndSpeed(
+                    currentGroundSpeed, endGroundSpeed, acceleration,
+                    groundDirection, currentYSpeed, gravity, SAMPLE_TIME,
+                    out float newGroundSpeed, out float newYSpeed);
+
+                float stepHorizontalDist = new Vector3(displacement.x, 0, displacement.z).magnitude;
+                if (stepHorizontalDist <= 0) break;
+
+                float remaining = totalHorizontalDist - traveledHorizontalDist;
+                if (stepHorizontalDist > remaining)
+                {
+                    // float ratio = remaining / stepHorizontalDist;
+                    // displacement *= ratio;
+                    // newGroundSpeed = Mathf.Lerp(currentGroundSpeed, newGroundSpeed, ratio);
+                    // newYSpeed = Mathf.Lerp(currentYSpeed, newYSpeed, ratio);
+                    trajectory.Add(endPos);
+                    break;
+                }
+
+                traveledHorizontalDist += stepHorizontalDist;
+                currentPos += displacement;
+                currentGroundSpeed = newGroundSpeed;
+                currentYSpeed = newYSpeed;
+                trajectory.Add(currentPos);
+            }
+
+            return trajectory.ToArray();
+        }
+        #endregion
 
 #if UNITY_EDITOR
         private void OnValidate() => this.ValidateRefs();

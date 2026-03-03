@@ -65,6 +65,8 @@ namespace ModularFramework.Modules.Ability
         {
             return true;
         }
+        
+        public DamageTarget ApplyTarget => DamageTarget.All;
     }
 
     public enum SpecialCondition

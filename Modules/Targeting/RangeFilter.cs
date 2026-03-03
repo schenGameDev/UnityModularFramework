@@ -39,6 +39,11 @@ namespace ModularFramework.Modules.Targeting
                 !WithinHeightRange(target, me, minMaxHeight)) return false;
             return true;
         }
+        
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(rangeType, minMaxRange, viewAngle, width, minMaxHeight);
+        }
 
         public static bool WithinGroundRange(Transform a, Transform b, Vector2 minMaxRange)
         {

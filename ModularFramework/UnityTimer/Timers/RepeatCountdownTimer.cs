@@ -14,13 +14,13 @@ namespace UnityTimer {
         protected override void CustomTick() {
             if (!IsRunning) return;
 
-            if (CurrentTime > 0) {
-                CurrentTime -= Time.deltaTime;
+            if (currentTime > 0) {
+                currentTime -= Time.deltaTime;
             }
 
             DeltaTime += Time.deltaTime;
 
-            if (CurrentTime <= 0) {
+            if (currentTime <= 0) {
                 if(_currentTriggeredTimes < _tickNTimes) {
                     _currentTriggeredTimes += 1;
                     OnTick.Invoke();
@@ -33,7 +33,7 @@ namespace UnityTimer {
             }
         }
 
-        protected override bool FinishCondition() => CurrentTime <= 0;
+        protected override bool FinishCondition() => currentTime <= 0;
 
         protected override void CustomReset()
         { 

@@ -1,8 +1,9 @@
 using System;
+using ModularFramework;
 using UnityEngine;
 
 [Serializable]
-public abstract class JumpProcessor
+public abstract class JumpProcessor : IResetable
 {
     public abstract float GroundAccelMidair(float groundAccel);
     public abstract float GroundDecelMidair(float groundDecel);
@@ -19,4 +20,10 @@ public abstract class JumpProcessor
     /// </summary>
     /// <returns></returns>
     public abstract bool Prepare();
+
+    public virtual void ResetState()
+    {
+        IsJumping = false;
+        YSpeed = -0.1f;
+    }
 }

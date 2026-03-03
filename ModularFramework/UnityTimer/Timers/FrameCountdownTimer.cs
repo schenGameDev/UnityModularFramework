@@ -12,7 +12,7 @@ namespace UnityTimer {
             if (!IsRunning) return;
             if (CurrentFrameCount > 0) {
                 CurrentFrameCount -= 1;
-                DeltaTime += Time.deltaTime;
+                DeltaTime = Time.deltaTime;
             }
             OnTick.Invoke();
             if (CurrentFrameCount <= 0) {
