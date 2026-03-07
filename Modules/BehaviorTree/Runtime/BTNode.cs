@@ -63,13 +63,17 @@ namespace ModularFramework.Modules.BehaviorTree
         public virtual bool IsParentTypeAllowed(BTNode parentNode)
         {
             return AllowedParentTypes.Count <= 0 ||
-                   AllowedParentTypes.Any(t => parentNode.GetType() == t || parentNode.GetType().IsSubclassOf(t));
+                   AllowedParentTypes.Any(t => parentNode.GetType() == t 
+                                               || parentNode.GetType().IsSubclassOf(t)
+                                               || t.IsAssignableFrom(parentNode.GetType()));
         }
 
         public bool IsChildTypeAllowed(BTNode childNode)
         {
             return AllowedChildTypes.Count <= 0 ||
-                   AllowedChildTypes.Any(t => childNode.GetType() == t || childNode.GetType().IsSubclassOf(t));
+                   AllowedChildTypes.Any(t => childNode.GetType() == t 
+                                              || childNode.GetType().IsSubclassOf(t)
+                                              || t.IsAssignableFrom(childNode.GetType()));
         }
 
         protected virtual List<Type> AllowedParentTypes => new();

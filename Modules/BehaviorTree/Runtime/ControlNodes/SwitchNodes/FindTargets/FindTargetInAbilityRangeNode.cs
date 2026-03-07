@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ModularFramework.Modules.BehaviorTree
 {
-    public abstract class FindTargetInAbilityRangeNode<TTarget> : SwitchNode where TTarget : Component
+    public abstract class FindTargetInAbilityRangeNode<TTarget> : SwitchNode,IAbilityRange where TTarget : Component
     {
         public string abilityName;
         public bool faceTargetBeforeCheck = true;

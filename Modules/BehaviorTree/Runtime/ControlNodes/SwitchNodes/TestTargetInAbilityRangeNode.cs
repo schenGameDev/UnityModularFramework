@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ModularFramework.Modules.BehaviorTree
 {
-    public class TestTargetInAbilityRangeNode : SwitchNode
+    public class TestTargetInAbilityRangeNode : SwitchNode,IAbilityRange
     {
         public string abilityName;
         private BTAbility _btAbility;
