@@ -227,7 +227,7 @@ namespace ModularFramework.Modules.Ability
                 return targetsInRange;
             }
         
-            return DictRegistry<DamageTarget, Transform>
+            return DictSetRegistry<DamageTarget, Transform>
                 .Filter(damageTarget, ((ITargetFilter<Transform>)rangeFilter).GetStrategy(transform))
                 .Select(x => x.GetComponent<IDamageable>());
 

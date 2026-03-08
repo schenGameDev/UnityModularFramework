@@ -24,17 +24,17 @@ namespace ModularFramework.Modules.BehaviorTree
 
         protected virtual void OnEnable()
         {
-            DictRegistry<DamageTarget, Transform>.TryAdd(TargetType, Transform);
+            DictSetRegistry<DamageTarget, Transform>.TryAdd(TargetType, Transform);
         }
 
         protected virtual void OnDisable()
         {
-            DictRegistry<DamageTarget, Transform>.Remove(TargetType, Transform);
+            DictSetRegistry<DamageTarget, Transform>.Remove(TargetType, Transform);
         }
 
         protected virtual void OnDestroy()
         {
-            DictRegistry<DamageTarget, Transform>.Remove(TargetType, Transform);
+            DictSetRegistry<DamageTarget, Transform>.Remove(TargetType, Transform);
         }
 
         private void Start()

@@ -1,57 +1,54 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace ModularFramework
 {
+    /// <summary>
+    /// A static generic registry that stores key-value pairs in a dictionary with thread-safe add operations and query methods.
+    /// </summary>
+    /// <typeparam name="TKey">The type of keys in the registry.</typeparam>
+    /// <typeparam name="TValue">The type of values in the registry (must be a reference type).</typeparam>
     public static class DictRegistry<TKey,TValue> where TValue : class
     {
-        private static readonly Dictionary<TKey,HashSet<TValue>> ITEMS = new();
-        
+        private static readonly Dictionary<TKey,TValue> ITEMS = new();
+        /// <summary>
+        /// This method will not add the item if the key already exists, and return false. Otherwise, it will add the item and return true.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="item"></param>
+        /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryAdd(TKey key, TValue item)
         {
-            if (item==null) return false;
-            if(ITEMS.TryGetValue(key, out var existingItems)) {
-                return existingItems.Add(item);
-            }
-            ITEMS.Add(key, new HashSet<TValue>() {item});
-            return true;
+            return item != null && ITEMS.TryAdd(key, item);
         }
+        
+        public static void Replace(TKey key, TValue item)
+        {
+            if (item == null) return;
+            ITEMS[key] = item;
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Remove(TKey key, TValue item)
-            => ITEMS.TryGetValue(key, out var existingItems) && existingItems.Remove(item);
+        public static bool Remove(TKey key) => ITEMS.Remove(key);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int RemoveWhere(TKey key, Predicate<TValue> predicate)
-        {
-            if (!ITEMS.TryGetValue(key, out var existingItems)) return 0;
-            return existingItems.RemoveWhere(predicate);
-        }
+        public static int RemoveWhere(Predicate<TValue> predicate) => ITEMS.Values.RemoveWhere(predicate);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Contains(TKey key, TValue item) 
-            => ITEMS.TryGetValue(key, out var existingItems) && existingItems.Contains(item);
+        public static bool Contains(TKey key) => ITEMS.ContainsKey(key);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Clear(TKey key) => ITEMS.Remove(key);
+        public static void Clear() => ITEMS.Clear();
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ClearAll() => ITEMS.Clear();
+        public static TValue Get(TKey key) => ITEMS.GetValueOrDefault(key);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static HashSet<TValue> Get(TKey key) => ITEMS.TryGetValue(key, out var existingItems) ? existingItems : new HashSet<TValue>();
+        public static bool TryGetValue(TKey key, out TValue value) => ITEMS.TryGetValue(key, out value);
         
-        public static Dictionary<TKey,HashSet<TValue>> All => ITEMS;
-        
-        public static IEnumerable<TValue> Get(TKey key, SelectionStrategy<TValue> strategy, params FilterStrategy<TValue>[] filters) 
-            => strategy(Filter(key,filters));
-        
-        public static IEnumerable<TValue> Filter(TKey key, params FilterStrategy<TValue>[] filters)
-        {
-            return filters == null || filters.Length == 0 ? Get(key) : Get(key).Where(target => filters.All(filter => filter(target)));
-        }
+        public static Dictionary<TKey,TValue> All => ITEMS;
         
     }
 }

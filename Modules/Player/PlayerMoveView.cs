@@ -45,7 +45,7 @@ public class PlayerMoveView : MonoBehaviour
     private Vector3 _velocity;
     private Vector3 _moveDirection;
     public bool isSprinting;
-    private Autowire<InputSystemSO> _inputSystem;
+    private Autowire<InputSystemSO> _inputSystem = new();
 
     private void OnEnable()
     {

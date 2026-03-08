@@ -3,6 +3,10 @@ using UnityEngine;
 
 namespace ModularFramework
 {
+    /// <summary>
+    /// A static generic singleton registry that ensures only one instance exists, with automatic duplicate destruction for MonoBehaviour types.
+    /// </summary>
+    /// <typeparam name="T">The type of singleton instance (must be a reference type).</typeparam>
     public static class SingletonRegistry<T> where T : class
     {
         private static T _instance;

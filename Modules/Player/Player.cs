@@ -29,19 +29,19 @@ public class Player : Character,IDamageable
     private void OnEnable()
     {
         SingletonRegistry<Player>.Replace(this);
-        DictRegistry<DamageTarget, Transform>.TryAdd(TargetType, Transform);
+        DictSetRegistry<DamageTarget, Transform>.TryAdd(TargetType, Transform);
     }
 
     private void OnDisable()
     {
         SingletonRegistry<Player>.Clear();
-        DictRegistry<DamageTarget, Transform>.Remove(TargetType, Transform);
+        DictSetRegistry<DamageTarget, Transform>.Remove(TargetType, Transform);
     }
     
     private void OnDestroy()
     {
         SingletonRegistry<Player>.Clear();
-        DictRegistry<DamageTarget, Transform>.Remove(TargetType, Transform);
+        DictSetRegistry<DamageTarget, Transform>.Remove(TargetType, Transform);
     }
     
     private void Start()
@@ -51,7 +51,6 @@ public class Player : Character,IDamageable
     
     private void OnHealthChanged()
     {
-        canvas.SetActive(true);
         healthBar.fillAmount = health / maxHealth;
     }
 

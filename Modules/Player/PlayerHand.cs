@@ -119,7 +119,7 @@
 //             return;
 //         }
 //         
-//         var equip = DictRegistry<DamageTarget., Transform>.Filter(((ITransformTargetFilter)PICKUP_RANGE_FILTER).GetStrategy<Equipment>(transform)).FirstOrDefault();
+//         var equip = DictSetRegistry<DamageTarget., Transform>.Filter(((ITransformTargetFilter)PICKUP_RANGE_FILTER).GetStrategy<Equipment>(transform)).FirstOrDefault();
 //         if (equip)
 //         {
 //             _pickedUpEquip = equip;

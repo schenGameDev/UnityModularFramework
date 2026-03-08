@@ -8,11 +8,11 @@ namespace ModularFramework
     /// enable and hide Canvas on demand
     /// </summary>
     [CreateAssetMenu(fileName = "UISystem_SO", menuName = "Game Module/UI System")]
-    public class UISystem : GameSystem,IRegistrySO
+    public class UISystem : GameSystem
     {
         [SerializeField] StringBoolEventChannel canvasChannel;
-        [RuntimeObject] private readonly Dictionary<string, CanvasMarker> _canvasDict = new(); 
-        [RuntimeObject,SerializeField, Rename("Active Canvas")] private List<string> activeCanvasNames = new();
+        [RuntimeObject,SerializeField, Rename("Active Canvas")] 
+        private List<string> activeCanvasNames = new();
         [RuntimeObject] private readonly List<CanvasMarker> _frontCanvas = new();
         [RuntimeObject] private readonly List<CanvasMarker> _alwaysVisibleCanvas = new();
 
@@ -40,7 +40,7 @@ namespace ModularFramework
         public void ActivateCanvas(string canvasName)
         {
             if(activeCanvasNames.Contains(canvasName)) return;
-            if (_canvasDict.TryGetValue(canvasName, out CanvasMarker canvasMarker))
+            if (DictRegistry<string, CanvasMarker>.TryGetValue(canvasName, out CanvasMarker canvasMarker))
             {
                 canvasMarker.Show();
                 if (canvasMarker.alwaysVisible)
@@ -104,15 +104,5 @@ namespace ModularFramework
             _alwaysVisibleCanvas.Clear();
         }
         
-        public void Register(Transform transform)
-        {
-            _canvasDict.Add(transform.name, transform.GetComponent<CanvasMarker>());
-            transform.gameObject.SetActive(false);
-        }
-
-        public void Unregister(Transform transform)
-        {
-            _canvasDict.Remove(transform.name);
-        }
     }
 }

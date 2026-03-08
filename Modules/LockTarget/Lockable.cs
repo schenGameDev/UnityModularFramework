@@ -7,14 +7,14 @@ namespace ModularFramework.Modules.LockTarget
     [DisallowMultipleComponent]
     public class Lockable : MonoBehaviour
     {
-        [ReadOnly,SerializeField] private bool _locked;
+        [ReadOnly,SerializeField] private bool locked;
 
-        private Autowire<LockManagerSO> _lockManager = new ();
+        private readonly Autowire<LockManagerSO> _lockManager = new ();
 
         private bool _notLockable=false;
     
         private void OnBecameInvisible() {
-            if(_locked && DisToScreenCenter()>=1) {
+            if(locked && DisToScreenCenter()>=1) {
                 _lockManager.Get().TargetLost();
             }
         }
@@ -35,15 +35,15 @@ namespace ModularFramework.Modules.LockTarget
 
         void OnDrawGizmos()
         {
-            Gizmos.color = _locked? Color.red : Color.gray;
+            Gizmos.color = locked? Color.red : Color.gray;
             Gizmos.DrawSphere(transform.position, 0.5f);
         }
 
-        public void Lock(bool isLock) => _locked = isLock;
+        public void Lock(bool isLock) => locked = isLock;
 
         public void BecomeUnLockable() { // unlockable but not destroyed yet
-            if(_locked && _lockManager.Get().lockOnTarget != null) {
-                _locked = false;
+            if(locked && _lockManager.Get().lockOnTarget != null) {
+                locked = false;
                 _lockManager.Get().lockOnTarget = null;
                 _lockManager.Get().isLock = false;
             }
