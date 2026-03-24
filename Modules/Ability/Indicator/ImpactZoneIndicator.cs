@@ -10,7 +10,7 @@ namespace ModularFramework.Modules.Ability
     public class ImpactZoneIndicator : MonoBehaviour
     {
         // in Universal Renderer Data, Add Decal, Technique: Screen Space
-
+        // decal projector is rotated 90 deg by default, be careful when instantiating
         private static readonly int COLOR = Shader.PropertyToID("_Color");
         private static readonly int IS_SQUARE = Shader.PropertyToID("_IsSquare");
         private static readonly int ANGLE_OR_WIDTH = Shader.PropertyToID("_AngleOrWidth");
@@ -237,10 +237,10 @@ namespace ModularFramework.Modules.Ability
             var maxWidth = filter.rangeType is RangeFilter.RangeType.SQUARE or RangeFilter.RangeType.BOX
                 ? filter.width
                 : filter.minMaxRange.y * 2;
-            var maxLength = (filter.minMaxRange.y - filter.minMaxRange.x) * 2;
+            var maxLength = filter.minMaxRange.y * 2;
             var maxHeight = filter.rangeType is RangeFilter.RangeType.CYLINDER or RangeFilter.RangeType.BOX
                 ? Mathf.Max(Mathf.Abs(filter.minMaxHeight.y), Mathf.Abs(filter.minMaxHeight.x)) * 2
-                : 100;
+                : 50;
             return new Vector3(maxWidth , maxHeight, maxLength);
         }
 

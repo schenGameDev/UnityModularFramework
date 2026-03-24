@@ -306,18 +306,30 @@ namespace ModularFramework.Modules.Ability
         }
 
         public Projectile SpawnProjectile(uint assetId, Vector3 startPos, Quaternion startRot,
-            Transform target, Vector3? targetPos, Vector3? direction)
+            Transform target, Vector3? targetPos, Vector3? direction, IDamageable caster)
         {
             Projectile projectile = CreateProjectile(assetId);
             projectile.Initialize(startPos, startRot, Time.time, target, targetPos, direction);
+            projectile.GetComponent<ProjectileEffect>().caster = caster;
             _activeProjectiles.Add(projectile);
             if (projectile.collisionDetection == CastType.SPHERECAST) _spherecastCount++;
             else if (projectile.collisionDetection == CastType.BOXCAST) _boxcastCount++;
             else if (projectile.collisionDetection == CastType.CAPSULECAST) _capsulecastCount++;
             return projectile;
         }
-
-
+        
+        public Projectile SpawnProjectileUnmanaged(uint assetId, Vector3 startPos, Quaternion startRot)
+        {
+            Projectile projectile = CreateProjectile(assetId);
+            projectile.Initialize(startPos, startRot, Time.time, null, null, null);
+            return projectile;
+        }
+        
+        public void ReturnProjectileUnmanaged(Projectile projectile) {
+            _projectilesToReturn.Add( projectile);
+            _activeProjectiles.Remove( projectile);
+        }
+        
         private Projectile CreateProjectile(uint assetId)
         {
             if (!PrefabPool<Projectile>.TryGet(assetId, out var projectile))

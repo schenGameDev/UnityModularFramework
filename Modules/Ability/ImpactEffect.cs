@@ -41,7 +41,13 @@ namespace ModularFramework.Modules.Ability
         private Vector3[] _beamPoints;
         private LineRenderer _beam;
         private ImpactZoneIndicator _indicator;
+        private LayerMask _layerMask;
 
+        private void Awake()
+        {
+            _layerMask = Physics.AllLayers;
+        }
+        
         //public override void OnStartServer()
         private void Start()
         {
@@ -118,7 +124,7 @@ namespace ModularFramework.Modules.Ability
             {
                 if(effectFactory is HitTimeDpdtDmgEffectFactory hitTimeFactory)
                 {
-                    hitTimeFactory.CreateAndApply(targets, tickInterval);
+                    hitTimeFactory.CreateAndApply(targets, tickInterval, transform);
                     continue;
                 }
                 
@@ -126,7 +132,7 @@ namespace ModularFramework.Modules.Ability
                 foreach (var target in targets)
                 {
                     if (effectFactory.IsTargetValid(target))
-                        target.TakeEffect(effect);
+                        target.TakeEffect(effect, transform);
                 }
             }
         }
@@ -175,7 +181,7 @@ namespace ModularFramework.Modules.Ability
                     Vector3 end = _beamPoints[i + 1];
                     Vector3 direction = (end - start).normalized;
                     float distance = Vector3.Distance(start, end);
-                    int hitCount = Physics.SphereCastNonAlloc(start, _beamRadius, direction, _hits, distance);
+                    int hitCount = Physics.SphereCastNonAlloc(start, _beamRadius, direction, _hits, distance,_layerMask);
                     for (int j = 0; j < hitCount; j++)
                     {
                         var hitCollider = _hits[j].collider;
@@ -195,7 +201,7 @@ namespace ModularFramework.Modules.Ability
                 var maxHeight = rangeFilter.rangeType == RangeFilter.RangeType.CYLINDER ? rangeFilter.minMaxHeight.y : 10;
                 
                 int count = Physics.OverlapCapsuleNonAlloc(transform.position + Vector3.up * minHeight, 
-                        transform.position + Vector3.up * maxHeight, rangeFilter.minMaxRange.y, _hitColliders);
+                        transform.position + Vector3.up * maxHeight, rangeFilter.minMaxRange.y, _hitColliders, _layerMask);
                 for (var j = 0; j < count; j++)
                 {
                     var hitCollider = _hitColliders[j];
@@ -214,7 +220,7 @@ namespace ModularFramework.Modules.Ability
                 var maxHeight = rangeFilter.rangeType == RangeFilter.RangeType.BOX ? rangeFilter.minMaxHeight.y : 10;
                 var boxCenter =  transform.position + (rangeFilter.minMaxRange.x + rangeFilter.minMaxRange.y) /2 * transform.forward 
                                                     + Vector3.up * (minHeight + maxHeight) / 2;
-                int count = Physics.OverlapBoxNonAlloc(boxCenter, new Vector3(), _hitColliders, transform.rotation);
+                int count = Physics.OverlapBoxNonAlloc(boxCenter, new Vector3(), _hitColliders, transform.rotation, _layerMask);
                 for (var j = 0; j < count; j++)
                 {
                     var hitCollider = _hitColliders[j];

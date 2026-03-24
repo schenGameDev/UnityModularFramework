@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -27,15 +28,8 @@ namespace ModularFramework.Modules.BehaviorTree
             if (Children.Count == 0) return;
 
             enterConditionState = Condition();
-            if (enterConditionState)
-            {
-                currentRunningChild = GetChildByPortName(PORT_YES)[0];
-            }
-            else
-            {
-                var foundChildren = GetChildByPortName(PORT_NO);
-                currentRunningChild = foundChildren.Count > 0 ? foundChildren[0] : null;
-            }
+            List<BTNode> foundChildren = GetChildByPortName(enterConditionState? PORT_YES : PORT_NO);
+            currentRunningChild = foundChildren.Count > 0 ? foundChildren[0] : null;
         }
 
         protected abstract bool Condition();

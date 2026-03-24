@@ -31,5 +31,29 @@ namespace ModularFramework
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float SqrMagnitudeWithoutZ(this Vector3 v) 
             => (float) ((double)v.x * v.x + (double)v.y * v.y);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 Abs(this Vector3 v)
+        {
+            return new Vector3(Mathf.Abs(v.x), Mathf.Abs(v.y), Mathf.Abs(v.z));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 AddX(this Vector3 v, float x)
+        {
+            return new Vector3(v.x + x, v.y, v.z);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 AddY(this Vector3 v, float y)
+        {
+            return new Vector3(v.x, v.y + y, v.z);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 AddZ(this Vector3 v, float z)
+        {
+            return new Vector3(v.x, v.y, v.z + z);
+        }
     }
 }

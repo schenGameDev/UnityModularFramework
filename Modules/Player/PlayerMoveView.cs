@@ -144,7 +144,7 @@ public class PlayerMoveView : MonoBehaviour
 
     private void OnControllerColliderHit(ControllerColliderHit other) // object hit during movement, not including other physics impact
     {
-        // if(other.gameObject.layer == groundLayer) return;
+        // if(other.gameObject.IsInLayer(groundLayer)) return;
         
         // Debug.Log($"{name} Hit {other.gameObject.tag}");
     }

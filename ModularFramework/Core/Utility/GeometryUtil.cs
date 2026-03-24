@@ -143,6 +143,45 @@ namespace ModularFramework.Utility {
             return true;
 
         }
+        
+        /// <summary>
+        /// Rotates a point around a pivot by a specified angle and axis.
+        /// </summary>
+        /// <param name="point">The point to rotate.</param>
+        /// <param name="pivot">The pivot point.</param>
+        /// <param name="axis">The axis of rotation (e.g., Vector3.up).</param>
+        /// <param name="angle">The angle in degrees.</param>
+        /// <returns>The new, rotated point.</returns>
+        public static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 axis, float angle)
+        {
+            // Get the direction relative to the pivot
+            Vector3 direction = point - pivot; 
+        
+            // Create a rotation quaternion
+            Quaternion rotation = Quaternion.AngleAxis(angle, axis); 
+        
+            // Rotate the direction vector
+            Vector3 rotatedDirection = rotation * direction; 
+        
+            // Calculate the final rotated point by adding the pivot back
+            Vector3 rotatedPoint = rotatedDirection + pivot; 
+        
+            return rotatedPoint;
+        }
+        
+        public static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Quaternion rotation)
+        {
+            // Get the direction (offset) from the pivot to the point
+            Vector3 direction = point - pivot; 
+
+            // Rotate the direction vector using the quaternion
+            Vector3 rotatedDirection = rotation * direction; 
+
+            // Calculate the final position by adding the rotated direction back to the pivot
+            Vector3 finalPosition = pivot + rotatedDirection; 
+
+            return finalPosition;
+        }
 
         public static Vector2Int Round(Vector2 v) => new (MathUtil.Round(v.x), MathUtil.Round(v.y));
         public static Vector2 Round(Vector2 v, uint precision) => new (RoundTo(v.x, precision), RoundTo(v.y,2));

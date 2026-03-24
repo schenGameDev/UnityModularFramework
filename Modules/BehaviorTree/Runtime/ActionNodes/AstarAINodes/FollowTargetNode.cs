@@ -5,11 +5,9 @@ namespace ModularFramework.Modules.BehaviorTree
 {
     public class FollowTargetNode : AstarAINode
     {
-        public bool isStaticTarget = false;
         public bool highlightTarget = true;
         public bool exitWhenReached = false;
         private Transform _target;
-        private CharacterController _cc;
 
         protected override void OnEnter()
         {
@@ -18,14 +16,7 @@ namespace ModularFramework.Modules.BehaviorTree
             if (targets != null && targets.Count > 0)
             {
                 _target = targets[0];
-                if (isStaticTarget)
-                {
-                    tree.AI.SetNewTarget(GetCloseToMePosition(_target), BtMove.speed, true);
-                }
-                else
-                {
-                    tree.AI.SetNewTarget(_target, BtMove.speed, true);
-                }
+                tree.AI.SetNewTarget(_target, BtMove.speed, true);
 
                 HighlightTarget(true);
                 BtMove.Move();
@@ -62,18 +53,6 @@ namespace ModularFramework.Modules.BehaviorTree
         {
             FollowTargetNode node = Instantiate(this);
             return node;
-        }
-
-        private Vector3 GetCloseToMePosition(Transform target)
-        {
-            Vector3 targetPosition = target.TryGetComponent<Collider>(out var collider)
-                ? collider.ClosestPoint(tree.Me.position)
-                : target.position;
-
-            Vector3 direction = targetPosition - tree.Me.position;
-            direction.y = 0;
-            if (!_cc) _cc = GetComponentInMe<CharacterController>();
-            return targetPosition - direction * (_cc ? _cc.radius : 0.5f);
         }
 
         FollowTargetNode()

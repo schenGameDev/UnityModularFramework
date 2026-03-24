@@ -56,6 +56,9 @@ namespace UnityTimer {
         public Action OnTimerStop = delegate { };
         
 
+        /// <summary>
+        /// Starts the timer from its initial time/frame count. Resets the timer, invokes the OnTimerStart event if it was not running previously.
+        /// </summary>
         public void Start() {
             Reset();
             delayStartScheduled = 0;
@@ -66,6 +69,28 @@ namespace UnityTimer {
             }
         }
         
+        /// <summary>
+        /// Restarts the timer. If the timer is already running, resets the timer to its initial time/frame count and invokes the OnTimerStart event.
+        /// If not running, starts the timer.
+        /// </summary>
+        public void Restart()
+        {
+            if (IsRunning)
+            {
+                Reset();
+                delayStartScheduled = 0;
+                OnTimerStart.Invoke();
+            }
+            else
+            {
+                Start();
+            }
+        }
+        
+        /// <summary>
+        /// Schedules the timer to start after the specified delay in seconds.
+        /// </summary>
+        /// <param name="delay">The delay in seconds before the timer starts.</param>
         public void DelayStart(float delay)
         {
             var schedule = new ScheduledAction(delay, Start);
@@ -73,6 +98,9 @@ namespace UnityTimer {
             delayStartScheduled = schedule.id;
         }
 
+        /// <summary>
+        /// Stops the timer. If running, and invokes OnTimerStop. If a delayed start is scheduled, cancels it.
+        /// </summary>
         public void Stop() {
             if (IsRunning) {
                 IsRunning = false;

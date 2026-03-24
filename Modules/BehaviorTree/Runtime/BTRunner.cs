@@ -84,7 +84,7 @@ namespace ModularFramework.Modules.BehaviorTree
                 ResetFace();
             }
 
-            FaceDirection(target.position - transform.position);
+            TargetFacingDirection = target.position - transform.position;
         }
 
         public void FaceTarget(Vector3 targetPosition)

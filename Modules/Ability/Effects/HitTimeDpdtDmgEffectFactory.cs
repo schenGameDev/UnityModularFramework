@@ -29,7 +29,7 @@ public class HitTimeDpdtDmgEffectFactory : IEffectFactory<IDamageable>
         };
     }
     
-    public void CreateAndApply(List<IDamageable> targets, float tickInterval, Action onComplete = null)
+    public void CreateAndApply(List<IDamageable> targets, float tickInterval, Transform source, Action onComplete = null)
     {
         List<Transform> validTargets = new();
         foreach (var target in targets)
@@ -48,7 +48,7 @@ public class HitTimeDpdtDmgEffectFactory : IEffectFactory<IDamageable>
                 onComplete = null;
             }
             validTargets.Add(target.Transform);
-            target.TakeEffect(effect);
+            target.TakeEffect(effect, source);
         }
                 
         var keys = _lastHitTargets.Keys.ToList();

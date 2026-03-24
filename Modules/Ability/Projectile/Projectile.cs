@@ -46,7 +46,7 @@ namespace ModularFramework.Modules.Ability
         [SerializeField, Min(0), Suffix("/s"), ShowField(nameof(followTarget))]
         private float trackTargetMaxAngle = 30;
 
-
+// collision
         public CastType collisionDetection = CastType.RAYCAST;
         [ShowField(nameof(NeedRadius))] public float radius;
 
@@ -58,7 +58,7 @@ namespace ModularFramework.Modules.Ability
 
         [ShowField(nameof(collisionDetection), CastType.CAPSULECAST)]
         public Vector3 pointB;
-
+// =======
         [Self(Flag.Optional), HideInInspector] public ProjectileEffect effect;
 
         private bool NeedRadius => collisionDetection is CastType.SPHERECAST or CastType.CAPSULECAST;
@@ -72,6 +72,7 @@ namespace ModularFramework.Modules.Ability
         private float _ySpeed;
         private float _startTime;
         private Transform _target;
+        public Vector3 targetPosition;
         private Vector3 _groundDirection;
         private Vector3 _startPosition;
 
@@ -98,6 +99,7 @@ namespace ModularFramework.Modules.Ability
             _trajectory.Clear();
             _trajectory.Add(_startPosition);
             _startYSpeed = _ySpeed;
+            targetPosition =  initialState.targetPosition;
         }
 
         public ProjectileInitialState Initialize(Vector3 startPos, Quaternion startRot, float now,
@@ -107,6 +109,7 @@ namespace ModularFramework.Modules.Ability
             transform.position = startPos;
             transform.rotation = startRot;
             _startPosition = startPos;
+            targetPosition = target != null ? target.position : targetPos ?? transform.position;
             _trajectory.Clear();
             _trajectory.Add(startPos);
             switch (aimType)
@@ -125,10 +128,10 @@ namespace ModularFramework.Modules.Ability
                 case AimType.Transform or AimType.Self or AimType.Position:
                     if (aimType is AimType.Transform or AimType.Self)
                     {
-                        Debug.LogError($"{nameof(target)} is null but AimType is Transform, fall back to Position");
+                        Debug.LogWarning($"{nameof(target)} is null but AimType is Transform, fall back to Position");
                     }
 
-                    InitializeByPosition(target != null ? target.position : targetPos ?? Vector3.zero);
+                    InitializeByPosition(targetPosition);
                     break;
             }
             
@@ -140,7 +143,8 @@ namespace ModularFramework.Modules.Ability
                 groundSpeed = groundSpeed,
                 ySpeed = _ySpeed,
                 target = _target,
-                trackTargetMaxRadiansPerSecond = _trackTargetMaxRadiansPerSecond
+                trackTargetMaxRadiansPerSecond = _trackTargetMaxRadiansPerSecond,
+                targetPosition = targetPosition,
             };
         }
 
@@ -282,19 +286,27 @@ namespace ModularFramework.Modules.Ability
         }
         #endregion
         #region Read & Export
-        public ProjectileStatus Export() => new ProjectileStatus
+
+        public ProjectileStatus Export()
         {
-            me = transform.position,
-            target = _target == null ? Vector3.zero : _target.position,
-            trackTargetMaxRadiansPerSecond = _trackTargetMaxRadiansPerSecond,
-            groundDirection = _groundDirection,
-            groundSpeed = groundSpeed,
-            endGroundSpeed = endSpeed,
-            acceleration = acceleration,
-            ySpeed = _ySpeed,
-            gravity = gravity,
-            faceMoveDirection = faceMoveDirection
-        };
+            if (_target != null)
+            {
+                targetPosition = _target.position;
+            }
+            return new ProjectileStatus
+            {
+                me = transform.position,
+                target = targetPosition,
+                trackTargetMaxRadiansPerSecond = _trackTargetMaxRadiansPerSecond,
+                groundDirection = _groundDirection,
+                groundSpeed = groundSpeed,
+                endGroundSpeed = endSpeed,
+                acceleration = acceleration,
+                ySpeed = _ySpeed,
+                gravity = gravity,
+                faceMoveDirection = faceMoveDirection
+            };
+        } 
 
         public void Read(ProjectileMoveResult moveResult)
         {
@@ -395,7 +407,7 @@ namespace ModularFramework.Modules.Ability
         
         public void CalculateLifetime(float maxRange)
         {
-            if (aimType == AimType.Direction)
+            if (maxRange > 0  && aimType == AimType.Direction)
             {
                 lifetime = constantGroundSpeed? maxRange / speed : CalculateTime(speed, acceleration, maxRange);
             }
@@ -448,7 +460,7 @@ namespace ModularFramework.Modules.Ability
     [Serializable]
     public struct ProjectileInitialState
     {
-        // public Vector3 targetPos;
+        public Vector3 targetPosition;
         // public uint targetNetId;
         public Transform target;
         public float trackTargetMaxRadiansPerSecond;

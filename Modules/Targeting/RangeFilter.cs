@@ -54,6 +54,26 @@ namespace ModularFramework.Modules.Targeting
             return sqrDist <= minMaxRange.y * minMaxRange.y &&
                    sqrDist >= minMaxRange.x * minMaxRange.x;
         }
+        
+        public static Vector3 GetClosestPointInGroundPosition(Transform me, Transform target, Vector2 minMaxRange)
+        {
+            if (!me) return target.position;
+            if (!target) return me.position;
+            if (!me && !target) return Vector3.zero;
+        
+            // Clamp targetPos to maxRange
+            Vector3 toTarget = target.position - me.position;
+            if (minMaxRange.y > 0 && toTarget.magnitude > minMaxRange.y )
+            {
+                return me.position + toTarget.normalized *  minMaxRange.y;
+            }
+            // Clamp targetPos to minRange
+            if (minMaxRange.x > 0 && toTarget.magnitude < minMaxRange.x)
+            {
+                return me.position + toTarget.normalized * minMaxRange.x;
+            }
+            return target.position;
+        }
 
         public static bool WithinHeightRange(Transform target, Transform me, Vector2 minMaxHeight)
         {

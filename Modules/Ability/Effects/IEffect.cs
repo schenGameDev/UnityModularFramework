@@ -1,10 +1,11 @@
 using System;
+using UnityEngine;
 
 namespace ModularFramework.Modules.Ability
 {
     public interface IEffect<TTarget>
     {
-        void Apply(TTarget target);
+        void Apply(TTarget target, Transform source);
         void Cancel();
         DamageTarget ApplyTarget { get; }
         event Action<IEffect<TTarget>> OnCompleted;

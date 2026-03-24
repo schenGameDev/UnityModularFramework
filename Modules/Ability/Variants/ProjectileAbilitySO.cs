@@ -19,7 +19,8 @@ namespace ModularFramework.Modules.Ability
         }
 
         [Required,PropertyDropdown] public Projectile projectilePrefab;
-        [SerializeField] private float maxRange;
+        [SerializeField,Tooltip("use max range instead of lifetime to limit projectile life")] 
+        private float maxRange = -1;
         
         [SerializeReference, SubclassSelector]
         [Tooltip("Used when spawn position is not the targets, but a different position calculated from the targets (e.g. predict player movement)")]
@@ -44,20 +45,20 @@ namespace ModularFramework.Modules.Ability
             Quaternion rotatedRotation = matchCasterRotation ? me.rotation : Quaternion.identity;
             if (AimMethod() == AimType.Self)
             {
-                var projectile = projectileManager.SpawnProjectile(_projectileId,
+                var projectile = GetProjectile(projectileManager,
                     me.position + rotatedOffset,
                     rotatedRotation,
-                    me.transform, null, null);
+                    me.transform, null, null, me);
                 if (projectile.effect != null) projectile.effect.onComplete = onComplete;
             }
             else if (positionCalculator != null)
             {
                 Vector3 spawnPosition = positionCalculator.GetPosition(me.position,
                     targets == null ? null : targets.Select(t => t.Transform.position));
-                var projectile = projectileManager.SpawnProjectile(_projectileId,
+                var projectile = GetProjectile(projectileManager,
                     me.position + rotatedOffset,
                     rotatedRotation,
-                    null, spawnPosition, null);
+                    null, spawnPosition, null, me);
                 if (projectile.effect != null) projectile.effect.onComplete = onComplete;
             }
             else
@@ -67,7 +68,7 @@ namespace ModularFramework.Modules.Ability
                     var projectile = projectileManager.SpawnProjectile(_projectileId,
                         me.position + rotatedOffset,
                         rotatedRotation,
-                        target.Transform, null, null);
+                        target.Transform, null, null, me.GetComponent<IDamageable>());
                     if (projectile.effect != null) projectile.effect.onComplete = onComplete;
                 }
             }
@@ -94,17 +95,17 @@ namespace ModularFramework.Modules.Ability
             Projectile projectile;
             if (AimMethod() == AimType.Self)
             {
-                projectile = projectileManager.SpawnProjectile(_projectileId, 
+                projectile = GetProjectile(projectileManager,
                     me.position + rotatedOffset, 
                     rotatedRotation,
-                    me.transform, null, null);
+                    me.transform, null, null, me);
             }
             else
             {
-                projectile = projectileManager.SpawnProjectile(_projectileId, 
+                projectile = GetProjectile(projectileManager,
                     me.position + rotatedOffset, 
                     rotatedRotation, 
-                    null, null, direction);
+                    null, null, direction, me);
             }
             projectile.effect.onComplete = () => onComplete?.Invoke(this);
         }
@@ -130,26 +131,23 @@ namespace ModularFramework.Modules.Ability
             Projectile projectile;
             if (AimMethod() == AimType.Self)
             {
-                projectile = projectileManager.SpawnProjectile(_projectileId,
+                projectile = GetProjectile(projectileManager,
                     me.position + rotatedOffset,
-                    rotatedRotation,
-                    me.transform, null, null);
+                    rotatedRotation, me.transform, null, null, me);
             }
             else if (positionCalculator != null)
             {
                 Vector3 spawnPosition =
                     positionCalculator.GetPosition(me.position, new List<Vector3>() { targetPos });
-                projectile = projectileManager.SpawnProjectile(_projectileId,
+                projectile = GetProjectile(projectileManager,
                     me.position + rotatedOffset,
-                    rotatedRotation,
-                    null, spawnPosition, null);
+                    rotatedRotation, null, spawnPosition, null, me);
             }
             else
             {
-                projectile = projectileManager.SpawnProjectile(_projectileId,
+                projectile = GetProjectile(projectileManager,
                     me.position + rotatedOffset,
-                    rotatedRotation,
-                    null, targetPos, null);
+                    rotatedRotation, null, targetPos, null, me);
             }
             if (projectile.effect != null) projectile.effect.onComplete = () => onComplete?.Invoke(this);
         }
@@ -158,6 +156,13 @@ namespace ModularFramework.Modules.Ability
         {
             if (!SingletonRegistry<ProjectileManagerSO>.TryGet(out var projectileManager)) return;
             _projectileId = projectileManager.RegisterProjectile(projectilePrefab);
+        }
+        
+        protected virtual Projectile GetProjectile(ProjectileManagerSO projectileManager, Vector3 startPos, 
+            Quaternion rotatedRotation, Transform targetTf, Vector3? targetPos, Vector3? direction, Transform me)
+        {
+            return projectileManager.SpawnProjectile(_projectileId, startPos, 
+                rotatedRotation, targetTf, targetPos, direction,me.GetComponent<IDamageable>());
         }
         
 #if UNITY_EDITOR

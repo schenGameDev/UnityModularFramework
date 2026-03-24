@@ -22,4 +22,9 @@ public static class GameObjectExtension {
             Object.Destroy(child.gameObject);
         }
     }
+
+    public static bool IsInLayer(this GameObject gameObject, int layerMask) // not layer index
+     {
+         return (layerMask & (1 << gameObject.layer)) != 0;
+     }
 }

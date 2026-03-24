@@ -10,33 +10,20 @@ namespace ModularFramework.Modules.Ink
     [CreateAssetMenu(fileName = "Pan_SO", menuName = "Game Module/Ink/Slide Transition/Pan")]
     public class PanTransitionSO : SlideTransitionBase
     {
-        enum Direction
-        {
-            LEFT_TO_RIGHT,
-            RIGHT_TO_LEFT,
-            TOP_TO_BOTTOM,
-            BOTTOM_TO_TOP
-        }
-
-        [SerializeField] private float duration;
+        [SerializeField, Min(0)] private float duration;
         [SerializeField] private Direction direction;
 
         public override CancellationTokenSource Enter(SlideShowProfile profile, Image frontImage, Image backImage,
             Action onFinish)
         {
-            CancellationTokenSource cts = null;
-            if (duration > 0)
-            {
-                cts = new CancellationTokenSource();
-                frontImage.rectTransform.anchoredPosition = GetEnterPosition();
-                PhysicsUtil.MoveUI(backImage.rectTransform, GetExitPosition(), duration, cts.Token)
-                    .ContinueWith(() => backImage.rectTransform.anchoredPosition = Vector2.zero)
-                    .Forget();
-                PhysicsUtil.MoveUI(backImage.rectTransform, Vector2.zero, duration, cts.Token)
-                    .ContinueWith(() => frontImage.rectTransform.anchoredPosition = Vector2.zero)
-                    .Forget();
-
-            }
+            CancellationTokenSource cts = new CancellationTokenSource();
+            frontImage.rectTransform.anchoredPosition = GetEnterPosition();
+            UniTaskUtil.MoveUI(backImage.rectTransform, GetExitPosition(), duration, cts.Token)
+                .ContinueWith(() => backImage.rectTransform.anchoredPosition = Vector2.zero)
+                .Forget();
+            UniTaskUtil.MoveUI(frontImage.rectTransform, Vector2.zero, duration, cts.Token)
+                .ContinueWith(() => onFinish?.Invoke())
+                .Forget();
 
             return cts;
         }

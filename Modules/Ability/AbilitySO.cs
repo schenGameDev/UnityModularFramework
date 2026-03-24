@@ -51,5 +51,19 @@ namespace ModularFramework.Modules.Ability
             List<Vector3> tarPositions, List<Vector3> directions)
         {
         }
+        
+        public bool IsWithinAimRange(Transform me, Vector3 targetPos, out Vector3 clampedPos)
+        {
+            // Clamp targetPos to maxRange
+            Vector3 toTarget = targetPos - me.position;
+            if (AimRange() > 0 && toTarget.magnitude > AimRange())
+            {
+                clampedPos = me.position + toTarget.normalized * AimRange();
+                return false;
+            }
+
+            clampedPos = targetPos;
+            return true;
+        }
     }
 }

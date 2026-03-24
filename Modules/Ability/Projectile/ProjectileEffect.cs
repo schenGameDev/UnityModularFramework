@@ -15,9 +15,13 @@ namespace ModularFramework.Modules.Ability
         [SerializeReference, SubclassSelector, HideField(nameof(impactEffectPrefab))]
         public List<IEffectFactory<IDamageable>> effects = new();
         [SerializeField] private DamageTarget penetrate;
-        [SerializeField] private bool isBeam;
+        public bool isBeam;
         [ShowField(nameof(isBeam)),HelpBox("must have assetIdentity")] 
         public LineRenderer beamPrefab;
+        
+        public bool ignoreCaster;
+        public IDamageable caster; 
+        
         [SerializeField, Self] private Projectile projectile;
         
         public Action onComplete;
@@ -34,6 +38,12 @@ namespace ModularFramework.Modules.Ability
         #region Projectile
         public bool Arrive(Transform target, Vector3 hitPoint)
         {
+            if (target != null 
+                && ignoreCaster 
+                && target.GetComponentInParent<IDamageable>() == caster)
+            {
+                return false;
+            }
             // target like ground can be too big,
             // so we use hitPoint to spawn effect, and use target to get IDamageable
             bool isPenetrate = IsPenetrate(target);
@@ -74,7 +84,7 @@ namespace ModularFramework.Modules.Ability
             foreach (var effectFactory in effects)
             {
                 if (!effectFactory.IsTargetValid(target)) continue;
-                target.TakeEffect(effectFactory.Create());
+                target.TakeEffect(effectFactory.Create(), transform);
             }
         }
         #endregion
@@ -129,14 +139,19 @@ namespace ModularFramework.Modules.Ability
                 _beam = null;
             }
         }
-    
-        private void Update()
+
+        private void UpdateBeam()
         {
             if (!isBeam || _beam == null) return;
             var points = projectile.GetTrajectory();
             if (points.Length < 2) return;
             _beam.positionCount = points.Length;
             _beam.SetPositions(points);
+        }
+    
+        private void Update()
+        {
+            UpdateBeam();
         }
 
         private void OnDisable()

@@ -16,6 +16,7 @@ namespace ModularFramework.Modules.Ability
 
         private RepeatCountdownTimer _timer;
         private IDamageable _target;
+        private Transform _source;
 
         public DamageOverTimeEffect(DamageType damageType, DamageTarget damageTarget, int ticks, float tickInterval,
             int damagePerTick)
@@ -26,9 +27,10 @@ namespace ModularFramework.Modules.Ability
             this.damageTarget = damageTarget;
             _target = null;
             OnCompleted = null;
+            _source = null;
         }
 
-        public void Apply(IDamageable target)
+        public void Apply(IDamageable target, Transform source)
         {
             _target = target;
             _timer.OnTick += OnTick;
@@ -38,7 +40,7 @@ namespace ModularFramework.Modules.Ability
 
         private void OnTick()
         {
-            _target.TakeDamage(damagePerTick, damageType);
+            _target.TakeDamage(damagePerTick, damageType, _source);
         }
 
         public void Cancel()

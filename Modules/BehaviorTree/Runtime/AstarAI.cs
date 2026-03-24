@@ -13,7 +13,6 @@ namespace ModularFramework.Modules.BehaviorTree
         private const float REPATH_RATE = 0.5f;
 
         // [SerializeField] private float stoppingDistance = 1f;
-        [SerializeField] private float heightOffset = 1f;
         [SerializeField] private EventChannel<float> npcSpeedChangeEvent;
 
         [Tooltip("the customized tags in seeker")]
@@ -42,10 +41,18 @@ namespace ModularFramework.Modules.BehaviorTree
         private Path _path;
         private float _lastRepath = float.NegativeInfinity;
         private float _speedModifier = 1;
+        private float _centerHeight;
+        private LayerMask _groundLayer;
 
 #if UNITY_EDITOR
         private void OnValidate() => this.ValidateRefs();
 #endif
+
+        private void Awake()
+        {
+            _centerHeight = controller.bounds.extents.y;
+            _groundLayer = LayerMask.GetMask(EnvironmentConstants.LAYER_GROUND);
+        }
 
         private void OnEnable()
         {
@@ -68,7 +75,7 @@ namespace ModularFramework.Modules.BehaviorTree
         public void Teleport(Vector3 target)
         {
             controller.enabled = false;
-            transform.position = PhysicsUtil.FindGroundPosition(target);
+            transform.position = PhysicsUtil.FindGroundPosition(target).AddY(_centerHeight);
             controller.enabled = true;
         }
 
@@ -100,7 +107,7 @@ namespace ModularFramework.Modules.BehaviorTree
             _slowDownAtEnd = slowDownAtEnd;
             TargetReached = false;
             PathNotFound = false;
-            seeker.StartPath(transform.position, _target.position, OnPathComplete);
+            seeker.StartPath(transform.position, GetCloseToMePosition(_target), OnPathComplete);
         }
 
         public void SetNewTarget(Vector3 point, float speed, bool slowDownAtEnd)
@@ -125,6 +132,17 @@ namespace ModularFramework.Modules.BehaviorTree
             _target = null;
             _slowDownAtEnd = slowDownAtEnd;
             seeker.StartPath(GetTransformGroundPos(), _targetPos, OnPathComplete);
+        }
+        
+        private Vector3 GetCloseToMePosition(Transform target)
+        {
+            Vector3 targetPosition = target.TryGetComponent<Collider>(out var collider)
+                ? collider.ClosestPoint(transform.position)
+                : target.position;
+
+            Vector3 direction = targetPosition - transform.position;
+            direction.y = 0;
+            return targetPosition - direction.normalized * (controller!= null ? controller.radius * controller.transform.lossyScale.x : 0.5f);
         }
 
         public void UpdateTarget(Vector3 point)
@@ -251,10 +269,24 @@ namespace ModularFramework.Modules.BehaviorTree
             }
 
         }
+        
+        private void OnControllerColliderHit(ControllerColliderHit other) // object hit during movement, not including other physics impact
+        {
+            if(other.gameObject.IsInLayer(_groundLayer)) return;
+            if(other.transform == _target)
+            {
+                if(_path!=null) {
+                    _path.Release(this);
+                    _path = null;
+                }
+                TargetReached = true;
+                return;
+            }
+        }
 
         private Vector3 GetTransformGroundPos()
         {
-            return transform.position - new Vector3(0, heightOffset, 0);
+            return transform.position.AddY(-_centerHeight);
         }
     }
 }

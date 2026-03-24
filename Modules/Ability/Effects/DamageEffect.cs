@@ -12,9 +12,9 @@ namespace ModularFramework.Modules.Ability
         public DamageTarget ApplyTarget => damageTarget;
         public event Action<IEffect<IDamageable>> OnCompleted;
 
-        public void Apply(IDamageable target)
+        public void Apply(IDamageable target, Transform source)
         {
-            target.TakeDamage(damageAmount, damageType);
+            target.TakeDamage(damageAmount, damageType, source);
             OnCompleted?.Invoke(this);
         }
 

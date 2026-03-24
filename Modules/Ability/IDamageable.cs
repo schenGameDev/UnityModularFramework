@@ -4,11 +4,11 @@ namespace ModularFramework.Modules.Ability
 {
     public interface IDamageable
     {
-        public void TakeDamage(float damageAmount, DamageType damageType);
+        public void TakeDamage(float damageAmount, DamageType damageType, Transform source);
 
-        public void TakeEffect(IEffect<IDamageable> effect);
+        public void TakeEffect(IEffect<IDamageable> effect, Transform source);
 
-        public void TakeSpecialCondition(SpecialCondition specialCondition);
+        public void TakeSpecialCondition(SpecialCondition specialCondition, Transform source);
 
         public void RemoveSpecialCondition(SpecialCondition specialCondition);
 

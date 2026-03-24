@@ -20,20 +20,20 @@ namespace ModularFramework.Modules.Ability
             _parent = parentDamageable.GetComponent<IDamageable>();
         }
 
-        public void TakeDamage(float damageAmount, DamageType damageType)
+        public void TakeDamage(float damageAmount, DamageType damageType, Transform source)
         {
-            _parent.TakeDamage(damageAmount * damageMultiplier, damageType);
+            _parent.TakeDamage(damageAmount * damageMultiplier, damageType, source);
         }
 
-        public void TakeEffect(IEffect<IDamageable> effect)
+        public void TakeEffect(IEffect<IDamageable> effect, Transform source)
         {
-            _parent.TakeEffect(effect); 
+            _parent.TakeEffect(effect,source); 
             // effect is not multiplied, as it can be heal or buff, and it's hard to determine how to multiply them
         }
 
-        public void TakeSpecialCondition(SpecialCondition specialCondition)
+        public void TakeSpecialCondition(SpecialCondition specialCondition, Transform source)
         {
-            _parent.TakeSpecialCondition(specialCondition);
+            _parent.TakeSpecialCondition(specialCondition, source);
         }
 
         public void RemoveSpecialCondition(SpecialCondition specialCondition)

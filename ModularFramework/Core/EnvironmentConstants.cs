@@ -9,6 +9,6 @@ namespace ModularFramework {
         public const int DEFAULT_AUTO_SAVE_SLOT = 0;
         public const string DATE_FORMAT = "yyyy-MM-dd hh:mm";
         
-        public const string LAYER_GROUND = "ground";
+        public const string LAYER_GROUND = "Ground";
     }
 }

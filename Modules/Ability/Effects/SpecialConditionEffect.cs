@@ -22,11 +22,11 @@ namespace ModularFramework.Modules.Ability
             OnCompleted = null;
         }
 
-        public void Apply(IDamageable target)
+        public void Apply(IDamageable target, Transform source)
         {
             _target = target;
             var sc = this;
-            _timer.OnTimerStart += () => target.TakeSpecialCondition(sc.specialCondition);
+            _timer.OnTimerStart += () => target.TakeSpecialCondition(sc.specialCondition, source);
             _timer.OnTimerStop += () =>
             {
                 target.RemoveSpecialCondition(sc.specialCondition);

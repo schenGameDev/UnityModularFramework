@@ -60,7 +60,7 @@ public class Player : Character,IDamageable
     }
     
     
-    public void TakeDamage(float amount, DamageType damageType)
+    public void TakeDamage(float amount, DamageType damageType, Transform source)
     {
         if(damageType == DamageType.Physical) TakePhysicalDamage(amount);
     }
@@ -84,11 +84,11 @@ public class Player : Character,IDamageable
         Destroy(gameObject);
     }
 
-    public void TakeEffect(IEffect<IDamageable> effect)
+    public void TakeEffect(IEffect<IDamageable> effect, Transform source)
     {
         effect.OnCompleted += RemoveEffect;
         _activeEffects.Add(effect);
-        effect.Apply(this);
+        effect.Apply(this, source);
     }
     
     void RemoveEffect(IEffect<IDamageable> effect)
@@ -96,7 +96,7 @@ public class Player : Character,IDamageable
         effect.OnCompleted -= RemoveEffect;
     }
 
-    public void TakeSpecialCondition(SpecialCondition specialCondition)
+    public void TakeSpecialCondition(SpecialCondition specialCondition, Transform source)
     {
         Debug.Log("Taking special condition: " + specialCondition);
     }

@@ -25,7 +25,7 @@ namespace ModularFramework.Modules.BehaviorTree
         public bool verifyRangeAtDamageTime = true;
 
         [Header("Casting")] 
-        [Required, SerializeField, PropertyDropdown, OnValueChanged(nameof(RenameComponent))]
+        [Required, SerializeField, OnValueChanged(nameof(RenameComponent)),Validate(nameof(ValidateAbility))]
         private AbilitySO ability;
 
         [SerializeField, ShowField(nameof(HasOffset)), DrawHandle]
@@ -112,9 +112,14 @@ namespace ModularFramework.Modules.BehaviorTree
 
             _isCastingAbility = true;
             _abilityReleaseCallback = callback;
-            runner.PlayAnim(animFlag, Release);
+            WindUp();
             AimAtTargets();
             ShowAbilityImpactArea();
+        }
+
+        private void WindUp()
+        {
+            runner.PlayAnim(animFlag, Release);
         }
 
         private void Release()
@@ -164,7 +169,7 @@ namespace ModularFramework.Modules.BehaviorTree
             AimAtTargets(false);
             _isCastingAbility = false;
             _abilityReleaseCallback = null;
-            _cooldownTimer?.Start();
+            _cooldownTimer?.Restart();
         }
 
         private void AimAtTargets(bool on = true)
@@ -199,6 +204,16 @@ namespace ModularFramework.Modules.BehaviorTree
                 PrefabPool<ImpactZoneIndicator>.Release(_impactZoneIndicator);
                 _impactZoneIndicator = null;
             }
+        }
+
+        private ValidationCheck ValidateAbility()
+        {
+            if (ability == null)
+            {
+                return ValidationCheck.Fail("Ability is missing");
+            }
+
+            return ValidationCheck.Pass();
         }
 
         private void OnDisable()

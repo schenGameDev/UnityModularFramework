@@ -25,7 +25,7 @@ namespace ModularFramework.Modules.Ability
 
         [SerializeField] bool matchCasterRotation = true;
         [SerializeField] private bool targetSelf;
-        [SerializeField,HideField(nameof(targetSelf))] private float maxRange;
+        [SerializeField,HideField(nameof(targetSelf))] private float maxRange = -1;
         
         public override AimType AimMethod() => targetSelf ? AimType.Self : AimType.Position;
         public override float AimRange() => targetSelf? 0 : maxRange;

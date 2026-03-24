@@ -18,7 +18,7 @@ namespace ModularFramework.Modules.BehaviorTree
         {
             base.Prepare();
             Dictionary<string, List<string>> typeIds = new();
-            List<string> names = new();
+            List<string> unfoundComponents = new(componentIds);
             foreach (var componentId in componentIds)
             {
                 var parts = componentId.Split('_', 2);
@@ -35,10 +35,11 @@ namespace ModularFramework.Modules.BehaviorTree
             {
                 var typeName = component.GetType().Name;
                 if (!typeIds.TryGetValue(typeName, out var ids)) continue;
+                // found
                 if (ids.IsEmpty())
                 {
                     _readyComponents.Add(component);
-                    names.Add(typeName);
+                    unfoundComponents.Remove(typeName);
                 }
                 else
                 {
@@ -46,12 +47,15 @@ namespace ModularFramework.Modules.BehaviorTree
                     if (uniqueId != null && ids.Contains(uniqueId))
                     {
                         _readyComponents.Add(component);
-                        names.Add(typeName + "_" + uniqueId);
+                        unfoundComponents.Remove(typeName + "_" + uniqueId);
                     }
                 }
             }
 
-            Debug.Log("Ready Node Monitors: " + string.Join(",", names));
+            if (unfoundComponents.Count > 0)
+            {
+                Debug.LogError("Ready Node Missing components: " + string.Join(",",unfoundComponents));
+            }
         }
 
         public bool Ready => matchAny ? _readyComponents.Any(c => c.Ready) : _readyComponents.All(c => c.Ready);

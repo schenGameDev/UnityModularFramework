@@ -53,19 +53,20 @@ namespace ModularFramework.Modules.BehaviorTree
 
         List<IEffect<IDamageable>> _activeEffects = new();
 
-        public void TakeEffect(IEffect<IDamageable> effect)
+        public void TakeEffect(IEffect<IDamageable> effect, Transform source)
         {
             effect.OnCompleted += RemoveEffect;
             _activeEffects.Add(effect);
-            effect.Apply(this);
+            effect.Apply(this,source);
         }
 
         void RemoveEffect(IEffect<IDamageable> effect)
         {
             effect.OnCompleted -= RemoveEffect;
+            _activeEffects.Remove(effect);
         }
 
-        public void TakeSpecialCondition(SpecialCondition specialCondition)
+        public void TakeSpecialCondition(SpecialCondition specialCondition, Transform source)
         {
             Debug.Log("Taking special condition: " + specialCondition);
         }
@@ -75,7 +76,7 @@ namespace ModularFramework.Modules.BehaviorTree
             Debug.Log("Removing special condition: " + specialCondition);
         }
 
-        public void TakeDamage(float damageAmount, DamageType damageType)
+        public void TakeDamage(float damageAmount, DamageType damageType, Transform source)
         {
             if (damageType == DamageType.Physical)
             {
@@ -97,7 +98,7 @@ namespace ModularFramework.Modules.BehaviorTree
                 effect.OnCompleted -= RemoveEffect;
                 effect.Cancel();
             }
-
+            _activeEffects.Clear();
             Destroy(gameObject);
         }
     }
