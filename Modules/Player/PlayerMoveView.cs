@@ -23,29 +23,34 @@ public class PlayerMoveView : MonoBehaviour
     [SerializeReference, SubclassSelector] 
     private JumpProcessor jumpProcessor;
     
-    [SerializeField,Tooltip("Distinguish landing of a jump and an uncontrollable fall"), Rename("Fall calculated separately")] 
+    [ToggleGroup("Fall calculated separately", nameof(fallProcessor))]
+    [SerializeField,Tooltip("Distinguish landing of a jump and an uncontrollable fall")] 
     private bool useFallProcessor;
-    [SerializeReference, ShowField(nameof(useFallProcessor))] 
-    private Fall fallProcessor;
-
-    [ReadOnly] public JumpState jumpState = JumpState.GROUNDED; // may be changed by game events
+    [SerializeReference, HideInInspector] private Fall fallProcessor;
     
-    public enum JumpState
-    {
-        GROUNDED, JUMPING, FALLING
-    }
+    [SerializeField] private bool isFallDamage;
+
+    [SerializeField, ShowField(nameof(isFallDamage)), Min(0)]
+    private float fallDamageHeightThreshold = 1;
+    [SerializeField, ShowField(nameof(isFallDamage))] 
+    private float fallDamageModifier = 0.1f;
+    
+    [ReadOnly] public JumpState jumpState = JumpState.GROUNDED; // may be changed by game events
     
     [Header("Event Channel")]
     [SerializeField] private EventChannel<bool> jumpChannel;
     [SerializeField] private EventChannel<Vector2> moveChannel, viewChannel;
     
     [SerializeField,Self] private CharacterController characterController;
+    [SerializeField,Self] private Player player;
     
     private Vector3 _viewDirection;
     private Vector3 _velocity;
     private Vector3 _moveDirection;
+    private float _fallHeight;
     public bool isSprinting;
     private Autowire<InputSystemSO> _inputSystem = new();
+    private FallHeightProcessor _fallHeightProcessor;
 
     private void OnEnable()
     {
@@ -58,6 +63,17 @@ public class PlayerMoveView : MonoBehaviour
     private void OnDisable()
     {
         CleanUp();
+    }
+
+    private void Awake()
+    {
+        if (isFallDamage)
+        {
+            _fallHeightProcessor = useFallProcessor
+                    ? new FallHeightProcessor(JumpState.FALLING, true)
+                    : new FallHeightProcessor(JumpState.GROUNDED, false);
+            _fallHeightProcessor.OnFallHeight += OnFall;
+        }
     }
 
     private void Update()
@@ -139,6 +155,7 @@ public class PlayerMoveView : MonoBehaviour
             }
             
         }
+        _fallHeightProcessor?.Update(jumpState, transform.position.y);
         return actualDisplacement;
     }
 
@@ -247,6 +264,12 @@ public class PlayerMoveView : MonoBehaviour
         fallProcessor?.ResetState();
     }
 
+    private void OnFall(float height)
+    {
+        if (height < fallDamageHeightThreshold) return; 
+        player.TakeDamage(fallDamageModifier * height, DamageType.Physical, transform);  
+    }
+
     private void OnJump(bool isJumping) // button down or up
     {
         jumpProcessor?.StartJump(isJumping);
@@ -264,4 +287,9 @@ public class PlayerMoveView : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate() => this.ValidateRefs();
 #endif
+    
+    public enum JumpState
+    {
+        GROUNDED, JUMPING, FALLING
+    }
 }

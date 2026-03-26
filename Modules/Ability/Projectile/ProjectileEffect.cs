@@ -20,7 +20,7 @@ namespace ModularFramework.Modules.Ability
         public LineRenderer beamPrefab;
         
         public bool ignoreCaster;
-        public IDamageable caster; 
+        [HideInInspector] public Transform caster; 
         
         [SerializeField, Self] private Projectile projectile;
         
@@ -40,7 +40,7 @@ namespace ModularFramework.Modules.Ability
         {
             if (target != null 
                 && ignoreCaster 
-                && target.GetComponentInParent<IDamageable>() == caster)
+                && target.GetComponent<IDamageable>().Transform == caster)
             {
                 return false;
             }
@@ -56,6 +56,7 @@ namespace ModularFramework.Modules.Ability
                     impactEffect.SetBeam(_beam, _beamId);
                     _beam = null;
                 }
+                impactEffect.caster = caster;
                 impactEffect.onComplete = onComplete;
             }
             else

@@ -38,9 +38,11 @@ namespace UnityTimer {
         public static Action<float> Tick;
         
         static List<ScheduledAction> actionQueue = new();
-        public static void Schedule(float delay, Action action)
+        public static uint Schedule(float delay, Action action)
         {
-            Schedule(new ScheduledAction(delay, action));
+            var scheduledAction = new ScheduledAction(delay, action);
+            Schedule(scheduledAction);
+            return scheduledAction.id;
         }
         
         public static void Schedule(ScheduledAction scheduledAction)
@@ -66,7 +68,7 @@ namespace UnityTimer {
                 var scheduledAction = actionQueue[0];
                 if (scheduledAction.executeTime <= Time.time)
                 {
-                    scheduledAction.action.Invoke();
+                    scheduledAction.action?.Invoke();
                     actionQueue.RemoveAt(0);
                 }
                 else

@@ -93,9 +93,7 @@ namespace UnityTimer {
         /// <param name="delay">The delay in seconds before the timer starts.</param>
         public void DelayStart(float delay)
         {
-            var schedule = new ScheduledAction(delay, Start);
-            TimerManager.Schedule(schedule);
-            delayStartScheduled = schedule.id;
+            delayStartScheduled = TimerManager.Schedule(delay, Start);
         }
 
         /// <summary>

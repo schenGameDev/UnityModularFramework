@@ -68,7 +68,7 @@ namespace ModularFramework.Modules.Ability
                     var projectile = projectileManager.SpawnProjectile(_projectileId,
                         me.position + rotatedOffset,
                         rotatedRotation,
-                        target.Transform, null, null, me.GetComponent<IDamageable>());
+                        target.Transform, null, null, me);
                     if (projectile.effect != null) projectile.effect.onComplete = onComplete;
                 }
             }
@@ -162,7 +162,7 @@ namespace ModularFramework.Modules.Ability
             Quaternion rotatedRotation, Transform targetTf, Vector3? targetPos, Vector3? direction, Transform me)
         {
             return projectileManager.SpawnProjectile(_projectileId, startPos, 
-                rotatedRotation, targetTf, targetPos, direction,me.GetComponent<IDamageable>());
+                rotatedRotation, targetTf, targetPos, direction,me);
         }
         
 #if UNITY_EDITOR

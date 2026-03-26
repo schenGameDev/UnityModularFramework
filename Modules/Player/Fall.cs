@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace UnityModularFramework.Modules.Player
@@ -5,9 +6,10 @@ namespace UnityModularFramework.Modules.Player
     /// <summary>
     /// This is used when fall has different gravity/drop speed from jump landing
     /// </summary>
+    [Serializable]
     public class Fall : JumpProcessor
     {
-        [SerializeField, Min(0)] private float maxDropSpd = 10;
+        [SerializeField, Min(0)] private float maxDropSpd = 20;
         [SerializeField, Min(0)] private float gravity = 10;
         [SerializeField, Range(0, 1)] private float accelerationModifier = 0; // move slower midair
         [SerializeField, Range(0, 1)] private float maxSpdModifier = 0;

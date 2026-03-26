@@ -125,6 +125,12 @@ namespace ModularFramework.Modules.Input
                 case EventChannel<Vector2> ch5:
                     ch5.Raise(context.canceled ? Vector2.zero : context.ReadValue<Vector2>());
                     break;
+                case EventChannel<(ActionTiming, Vector3)> ch6:
+                    ch6.Raise((GetActionTiming(context), context.ReadValue<Vector2>()));
+                    break;
+                case EventChannel<(ActionTiming, Vector2)> ch7:
+                    ch7.Raise((GetActionTiming(context), context.ReadValue<Vector2>()));
+                    break;
             }
         }
 

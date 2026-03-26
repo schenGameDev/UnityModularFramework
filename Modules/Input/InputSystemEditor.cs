@@ -15,15 +15,6 @@ namespace ModularFramework.Modules.Input
             GAMEPAD
         }
 
-        [Flags]
-        private enum ActionTiming : byte
-        {
-            NONE = 0,
-            STARTED = 1 << 1,
-            PERFORMED = 1 << 2,
-            CANCELED = 1 << 3
-        }
-
         public const string NONE_ACTION = "None";
 
         [Serializable]
@@ -33,7 +24,8 @@ namespace ModularFramework.Modules.Input
             public ActionTiming timing;
 
             [EditorAttributes.TypeFilter(typeof(EventChannel<ActionTiming>), typeof(EventChannel<bool>),
-                typeof(EventChannel), typeof(EventChannel<Vector3>), typeof(EventChannel<Vector2>))]
+                typeof(EventChannel), typeof(EventChannel<Vector3>), typeof(EventChannel<Vector2>),
+                typeof(EventChannel<(ActionTiming,Vector3)>),typeof(EventChannel<(ActionTiming,Vector2)>))]
             public ScriptableObject channel;
 
             public string label;
@@ -66,7 +58,10 @@ namespace ModularFramework.Modules.Input
 
             if (inputAction.type == InputActionType.Button)
             {
-                if (channelType == typeof(EventChannel<Vector3>) || channelType == typeof(EventChannel<Vector2>))
+                if (channelType == typeof(EventChannel<Vector3>) || 
+                    channelType == typeof(EventChannel<Vector2>) ||
+                    channelType == typeof(EventChannel<(ActionTiming,Vector3)>) ||
+                    channelType == typeof(EventChannel<(ActionTiming,Vector2)>))
                 {
                     Debug.LogError($"Input {actionChannel.input} does not have Vector output");
                     return false;
@@ -91,5 +86,14 @@ namespace ModularFramework.Modules.Input
 
             return true;
         }
+    }
+    
+    [Flags]
+    public enum ActionTiming : byte
+    {
+        NONE = 0,
+        STARTED = 1 << 1,
+        PERFORMED = 1 << 2,
+        CANCELED = 1 << 3
     }
 }

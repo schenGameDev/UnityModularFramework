@@ -25,6 +25,9 @@ namespace ModularFramework.Modules.Ability
 
         [ShowField(nameof(impactOverTime)), SerializeField, Min(0)]
         private int ticks;
+        
+        public bool ignoreCaster;
+        public Transform caster; 
 
         [HelpBox("Filter ignored in beam")] 
         public RangeFilter rangeFilter;
@@ -186,7 +189,8 @@ namespace ModularFramework.Modules.Ability
                     {
                         var hitCollider = _hits[j].collider;
                         var damageable = hitCollider.GetComponent<IDamageable>();
-                        if (damageable.TargetType == damageTarget)
+                        if (damageable.TargetType == damageTarget
+                            && (!ignoreCaster || damageable.Transform != caster))
                         {
                             targetsInRange.Add(damageable);
                         }
@@ -206,7 +210,8 @@ namespace ModularFramework.Modules.Ability
                 {
                     var hitCollider = _hitColliders[j];
                     var damageable = hitCollider.GetComponent<IDamageable>();
-                    if (damageable.TargetType == damageTarget)
+                    if (damageable.TargetType == damageTarget
+                        && (!ignoreCaster || damageable.Transform != caster))
                     {
                         targetsInRange.Add(damageable);
                     }
@@ -225,17 +230,19 @@ namespace ModularFramework.Modules.Ability
                 {
                     var hitCollider = _hitColliders[j];
                     var damageable = hitCollider.GetComponent<IDamageable>();
-                    if (damageable.TargetType == damageTarget)
+                    if (damageable.TargetType == damageTarget
+                        && (!ignoreCaster || damageable.Transform != caster))
                     {
                         targetsInRange.Add(damageable);
                     }
                 }
                 return targetsInRange;
             }
-        
+
             return DictSetRegistry<DamageTarget, Transform>
                 .Filter(damageTarget, ((ITargetFilter<Transform>)rangeFilter).GetStrategy(transform))
-                .Select(x => x.GetComponent<IDamageable>());
+                .Select(x => x.GetComponent<IDamageable>())
+                .Where(damageable => !ignoreCaster || damageable.Transform != caster);
 
         }
 

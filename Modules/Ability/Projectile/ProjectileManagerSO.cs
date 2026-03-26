@@ -306,7 +306,7 @@ namespace ModularFramework.Modules.Ability
         }
 
         public Projectile SpawnProjectile(uint assetId, Vector3 startPos, Quaternion startRot,
-            Transform target, Vector3? targetPos, Vector3? direction, IDamageable caster)
+            Transform target, Vector3? targetPos, Vector3? direction, Transform caster)
         {
             Projectile projectile = CreateProjectile(assetId);
             projectile.Initialize(startPos, startRot, Time.time, target, targetPos, direction);

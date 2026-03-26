@@ -38,6 +38,7 @@ namespace ModularFramework.Modules.Ability
             if (targetSelf)
             {
                 var groundEffect = Instantiate(impactEffectPrefab, me.position + rotatedOffset, rotatedRotation);
+                groundEffect.caster = me;
                 groundEffect.onComplete = onComplete;
             }
             else if (positionCalculator != null)
@@ -45,6 +46,7 @@ namespace ModularFramework.Modules.Ability
                 Vector3 spawnPosition =
                     positionCalculator.GetPosition(me.position, targets?.Select(t => t.Transform.position));
                 var groundEffect = Instantiate(impactEffectPrefab, spawnPosition + rotatedOffset, rotatedRotation);
+                groundEffect.caster = me;
                 groundEffect.onComplete = onComplete;
             }
             else
@@ -53,6 +55,7 @@ namespace ModularFramework.Modules.Ability
                 {
                     var groundEffect = Instantiate(impactEffectPrefab, target.Transform.position + rotatedOffset,
                         rotatedRotation);
+                    groundEffect.caster = me;
                     groundEffect.onComplete = onComplete;
                 }
             }
@@ -73,17 +76,20 @@ namespace ModularFramework.Modules.Ability
             if (targetSelf)
             {
                 var groundEffect = Instantiate(impactEffectPrefab, me.position + rotatedOffset, rotatedRotation);
+                groundEffect.caster = me;
                 groundEffect.onComplete = () => onComplete?.Invoke(this);
             }
             else if (positionCalculator != null)
             {
                 Vector3 spawnPosition = positionCalculator.GetPosition(me.position, new List<Vector3>() { targetPos });
                 var groundEffect = Instantiate(impactEffectPrefab, spawnPosition + rotatedOffset, rotatedRotation);
+                groundEffect.caster = me;
                 groundEffect.onComplete = () => onComplete?.Invoke(this);
             }
             else
             {
                 var groundEffect = Instantiate(impactEffectPrefab, targetPos + rotatedOffset, rotatedRotation);
+                groundEffect.caster = me;
                 groundEffect.onComplete = () => onComplete?.Invoke(this);
             }
         }
