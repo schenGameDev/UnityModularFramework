@@ -44,15 +44,20 @@ namespace ModularFramework.Modules.BehaviorTree
         public void PlayAnim(string flag, Action onKeyEvent = null)
         {
             _onAnimKeyEvent = onKeyEvent;
-            Invoke(nameof(AnimKeyEvent), 0.5f);
+        
             if (string.IsNullOrEmpty(flag))
             {
+                Invoke(nameof(AnimKeyEvent), 0.5f);
                 return;
             }
-
-            if (animator != null) animator.SetBool(flag, true);
-
+            animator?.SetBool(flag, true);
             Debug.Log($"Playing animation with flags: {flag}");
+        }
+        
+        public void Wait(float seconds, Action onKeyEvent)
+        {
+            _onAnimKeyEvent = onKeyEvent;
+            Invoke(nameof(AnimKeyEvent), seconds);
         }
 
         public void AnimKeyEvent() => _onAnimKeyEvent?.Invoke();
@@ -60,7 +65,7 @@ namespace ModularFramework.Modules.BehaviorTree
         public void StopAnim(string flag)
         {
             if (string.IsNullOrEmpty(flag)) return;
-            if (animator != null) animator.SetBool(flag, false);
+            animator?.SetBool(flag, false);
             Debug.Log($"Stopping animation with flags: {flag}");
             _onAnimKeyEvent = null;
         }

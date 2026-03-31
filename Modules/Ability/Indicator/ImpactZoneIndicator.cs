@@ -56,6 +56,17 @@ namespace ModularFramework.Modules.Ability
             Show(center, forward,GetSize(filter), filter, color, false, true);
         }
         
+        public void UpdateFaceDirection()
+        {
+            decalProjector.material.SetVector(FACE_DIRECTION, new Vector2(transform.up.x, transform.up.z));
+        }
+
+        public void UpdatePosition(Vector3 center)
+        {
+            if (_isLocalCoordinate) decalProjector.transform.localPosition = center;
+            else decalProjector.transform.position = center;
+        }
+        
         public void ShowInLocalCoordinate(Transform parent, Vector3 center, Vector3 forward, RangeFilter filter, Color color,
             float acceleration, float maxSpeed)
         {

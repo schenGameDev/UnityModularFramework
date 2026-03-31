@@ -16,7 +16,7 @@ namespace ModularFramework.Modules.Ability
                 "Can be used for poison pool, aoe attack etc.";
         }
 
-        [SerializeField] private ImpactEffect impactEffectPrefab;
+        public ImpactEffect impactEffectPrefab;
 
         [SerializeReference, SubclassSelector]
         [Tooltip(
