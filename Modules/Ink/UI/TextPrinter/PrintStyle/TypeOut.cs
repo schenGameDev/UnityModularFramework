@@ -11,14 +11,26 @@ namespace ModularFramework.Modules.Ink
     [CreateAssetMenu(fileName = "TypeOut_SO", menuName = "Game Module/Ink/Print Style/TypeOut")]
     public class TypeOut : PrintStyleBase
     {
-
-        [Header("Config")] [SerializeField] private float timeGapBetweenLetters = 0.05f;
-        [SerializeField] private bool cursor;
-
-        [SerializeField, ShowField(nameof(cursor))]
+        
+        [Header("Config")] 
+        [SerializeField,Suffix("s")] 
+        private float timeGapBetweenLetters = 0.05f;
+        
+        [SerializeField,ToggleGroup("Wait At Punctuation", nameof(timeGapBetweenPunctuation), nameof(customizedPunctuations), nameof(punctuations))]
+        private bool waitAtPunctuation;
+        
+        [SerializeField,Suffix("s"),HideInInspector]
+        private float timeGapBetweenPunctuation = 0.25f;
+        [SerializeField, HideInInspector] private bool customizedPunctuations;
+        [SerializeField,HideInInspector,ShowField(nameof(customizedPunctuations))]
+        [HelpBox("Be aware of language specific punctuations.", MessageMode.Warning)] 
+        private string punctuations = ":;,.";
+        
+        [SerializeField,ToggleGroup("Cursor", nameof(cursorSymbol), nameof(blinkTime))]
+        private bool cursor;
+        [SerializeField, HideInInspector]
         private string cursorSymbol = "|";
-
-        [SerializeField, ShowField(nameof(cursor))]
+        [SerializeField, HideInInspector]
         private float blinkTime = 0.1f;
 
         private CancellationTokenSource _cts;
@@ -75,13 +87,13 @@ namespace ModularFramework.Modules.Ink
                     continue;
                 }
 
-                bool punctuation = char.IsPunctuation(ch);
+                bool punctuation = IsPunctuation(ch);
                 bool wait = !lastCharIsPunctuation && punctuation;
                 float t;
                 if (wait)
                 {
                     if (soundPlayer) soundPlayer.SetVolume(0);
-                    t = timeGapBetweenLetters * 5;
+                    t = timeGapBetweenPunctuation;
                 }
                 else
                 {
@@ -114,6 +126,11 @@ namespace ModularFramework.Modules.Ink
             if (Printer.endIndicator) Printer.endIndicator.SetActive(true);
         }
 
+        private bool IsPunctuation(char ch)
+        {
+            return waitAtPunctuation && (customizedPunctuations ? punctuations.Contains(ch) : char.IsPunctuation(ch));
+        }
+
         private async UniTaskVoid PrintTaskCursor(string text, Action callback, CancellationToken token)
         {
             Printer.gameObject.SetActive(true);
@@ -133,14 +150,14 @@ namespace ModularFramework.Modules.Ink
                     continue;
                 }
 
-                bool punctuation = char.IsPunctuation(ch);
+                bool punctuation = IsPunctuation(ch);
                 bool wait = !lastCharIsPunctuation && punctuation;
                 lastCharIsPunctuation = punctuation;
                 float gap;
                 if (wait)
                 {
                     if (soundPlayer) soundPlayer.SetVolume(0);
-                    gap = timeGapBetweenLetters * 5;
+                    gap = timeGapBetweenPunctuation;
                 }
                 else
                 {

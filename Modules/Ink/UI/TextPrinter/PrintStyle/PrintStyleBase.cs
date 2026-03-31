@@ -7,8 +7,10 @@ namespace ModularFramework.Modules.Ink
     public abstract class PrintStyleBase : ScriptableObject
     {
 
-        [Rename("Don't Clear Text")] public bool noClearText;
-        protected string CachedText;
+        [Rename("Don't Clear Text")] 
+        public bool noClearText;
+
+        protected string cachedText;
         public TextPrinter Printer { get; set; }
 
         public bool ReturnEarly { get; set; }
@@ -32,7 +34,7 @@ namespace ModularFramework.Modules.Ink
                 Printer.textbox.text = string.Empty;
             }
 
-            CachedText = Printer.textbox.text;
+            cachedText = Printer.textbox.text;
             Printer.Done = false;
             ReturnedEarly = false;
         }
@@ -54,7 +56,7 @@ namespace ModularFramework.Modules.Ink
 
 
 
-        protected string GetFinalText(string text) => noClearText ? CachedText + text : text;
+        protected string GetFinalText(string text) => noClearText ? cachedText + text : text;
 
     }
 }
