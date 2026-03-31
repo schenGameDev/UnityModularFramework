@@ -43,7 +43,7 @@ namespace ModularFramework.Modules.Ink
             }
 
             _cts = new CancellationTokenSource();
-            Prepare();
+            text = Prepare(text);
             Printer.textbox.text = GetFinalText(text);
             Printer.Done = false;
             FadeIn(callback, _cts.Token).Forget();

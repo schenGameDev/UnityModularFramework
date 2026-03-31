@@ -66,7 +66,7 @@ namespace ModularFramework.Modules.Ink
 
             _cts = new CancellationTokenSource();
 
-            Prepare();
+            text = Prepare(text);
             if (cursor) PrintTaskCursor(text, callback, _cts.Token).Forget();
             else PrintTask(text, callback, _cts.Token).Forget();
         }

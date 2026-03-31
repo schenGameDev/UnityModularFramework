@@ -7,7 +7,7 @@ namespace ModularFramework.Modules.Ink
     public abstract class PrintStyleBase : ScriptableObject
     {
 
-        [Rename("Don't Clear Text")] 
+        [Rename("Don't Clear Text"),Tooltip("Append new text as new lines")] 
         public bool noClearText;
 
         protected string cachedText;
@@ -23,8 +23,12 @@ namespace ModularFramework.Modules.Ink
 
         public abstract void OnDestroy();
 
-        protected void Prepare()
+        protected string Prepare(string text)
         {
+            if (text != null && text.StartsWith(InkConstants.VAR_APPEND))
+            {
+                return text[InkConstants.VAR_APPEND.Length..];
+            }
             if (noClearText)
             {
                 Printer.textbox.text += "\n";
@@ -37,6 +41,7 @@ namespace ModularFramework.Modules.Ink
             cachedText = Printer.textbox.text;
             Printer.Done = false;
             ReturnedEarly = false;
+            return text;
         }
 
         protected void Finish(string text = null)

@@ -26,6 +26,7 @@ namespace ModularFramework.Modules.Ink
         public const string VAR_SCENE = "LastScene";
         public const string VAR_PAUSE = "$P$";
         public const string VAR_WAIT = "$W$";
+        public const string VAR_APPEND = "$A$";
         public const string VAR_SAVE = "$SAVEGAME$";
 
         public const string DEFAULT_STORY_NAME = "main";

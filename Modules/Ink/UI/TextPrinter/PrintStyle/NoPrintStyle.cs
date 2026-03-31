@@ -6,7 +6,7 @@ namespace ModularFramework.Modules.Ink
     {
         public override void OnPrint(string text, Action callback)
         {
-            Prepare();
+            text = Prepare(text);
             if (Printer.endIndicator) Printer.endIndicator.SetActive(false);
             Finish(text);
             callback?.Invoke();

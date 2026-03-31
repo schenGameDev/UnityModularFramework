@@ -46,7 +46,7 @@ namespace ModularFramework.Modules.Ink
 
             _cts = new CancellationTokenSource();
 
-            Prepare();
+            text = Prepare(text);
             PrintTaskNoise(text, callback, _cts.Token).Forget();
         }
 
