@@ -24,7 +24,7 @@ namespace ModularFramework.Modules.Ink
         [SerializeField, HideInInspector] private bool customizedPunctuations;
         [SerializeField,HideInInspector,ShowField(nameof(customizedPunctuations))]
         [HelpBox("Be aware of language specific punctuations.", MessageMode.Warning)] 
-        private string punctuations = ":;,.";
+        private string punctuations = ":;,.!?";
         
         [SerializeField,ToggleGroup("Cursor", nameof(cursorSymbol), nameof(blinkTime))]
         private bool cursor;

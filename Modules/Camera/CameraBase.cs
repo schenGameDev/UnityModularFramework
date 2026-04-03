@@ -161,8 +161,8 @@ namespace ModularFramework.Modules.Camera
         {
             float elapsed = 0f;
             float currentMagnitude = 1f;
-            bool isCancelled = false;
-            while (elapsed < duration && !isCancelled)
+
+            while (elapsed < duration)
             {
                 token.ThrowIfCancellationRequested();
                 float x = (Random.value - 0.5f) * currentMagnitude * positionOffsetStrength.x;

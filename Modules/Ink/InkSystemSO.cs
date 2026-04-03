@@ -33,7 +33,7 @@ namespace ModularFramework.Modules.Ink
         [SerializeField] private InkTagDefBucket[] tagDefBuckets;
         [SerializeField] private Bucket varNameBucket;
         [SerializeField] private Bucket codeReplaceBucket;
-        [SerializeField] private bool saveLog;
+        [SerializeField] private bool saveLog = true;
 
         [FoldoutGroup("Event Channels", nameof(varChangeChannel), nameof(inkTaskChannel))] [SerializeField]
         private Void eventChannelGroup;
@@ -217,7 +217,7 @@ namespace ModularFramework.Modules.Ink
                     _currentLine = new InkLine(text, tags);
                     UpdateDialogueBox(_currentLine);
 
-                    SaveLog(text);
+                    AppendLog(text);
                     InkTextAction.Invoke(Either<InkLine, InkChoice>.FromLeft(_currentLine));
                     stage = InkStage.READY;
                 }
@@ -316,6 +316,7 @@ namespace ModularFramework.Modules.Ink
             story.BindExternalFunction(InkConstants.INK_FUNCTION_DO_TASK,
                 (string task, string parameter, bool isBlocking) => DoTask(task, parameter, isBlocking),
                 false);
+            LoadLog();
         }
 
         public void SaveStory(string storyName, Story story)
@@ -324,6 +325,7 @@ namespace ModularFramework.Modules.Ink
             SaveUtil.SaveState(storyName, saveJson);
             SaveUtil.SaveState(InkConstants.KEY_CURRENT_STORY, storyName);
             SaveUtil.SaveState(InkConstants.KEY_AUTO_PLAY_SPEED, InkUIIntegrationSO.PlaySpeed.GetName());
+            SaveLog();
             SaveHistory();
             SaveVariables();
         }
@@ -609,14 +611,34 @@ namespace ModularFramework.Modules.Ink
         #endregion
 
         #region Log
+        
+        private const int MAX_LOG_LENGTH = 200;
 
         [RuntimeObject] public readonly List<string> log = new();
 
-        private void SaveLog(string line)
+        private void AppendLog(string line)
         {
-            if (saveLog) log.Add(line);
+            if (!saveLog) return;
+            if (log.Count >= MAX_LOG_LENGTH)
+            {
+                log.RemoveAt(0);
+            }
+            log.Add(line);
         }
 
+        private void SaveLog()
+        {
+            if (!saveLog) return;
+            SaveUtil.SaveState(InkConstants.KEY_LOG, JsonUtility.ToJson(log));
+        }
+
+        private void LoadLog()
+        {
+            if (!saveLog) return;
+            log.Clear();
+            SaveUtil.GetState(InkConstants.KEY_LOG)
+                .Do(l => log.AddRange(JsonUtility.FromJson<List<String>>(l)));
+        }
         #endregion
 
         #region History
