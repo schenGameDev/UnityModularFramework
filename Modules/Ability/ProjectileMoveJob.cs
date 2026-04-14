@@ -15,6 +15,16 @@ namespace ModularFramework.Modules.Ability
         public void Execute(int index, TransformAccess transform)
         {
             ProjectileStatus status = statuses[index];
+            if (status.holdAtPosition)
+            {
+                results[index] = new ProjectileMoveResult
+                {
+                    groundSpeed = status.groundSpeed,
+                    ySpeed = status.ySpeed,
+                    groundDirection = status.groundDirection
+                };
+                return;
+            }
             Vector3 groundDirection = status.IsTrackingTarget()
                 ? Projectile.TrackTarget(status.target, status.me, status.groundDirection,
                     status.trackTargetMaxRadiansPerSecond, deltaTime)
@@ -49,6 +59,7 @@ namespace ModularFramework.Modules.Ability
         public float ySpeed;
         public float gravity;
         public bool faceMoveDirection;
+        public bool holdAtPosition;
 
         public bool IsTrackingTarget() => trackTargetMaxRadiansPerSecond > 0;
     }

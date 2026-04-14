@@ -26,8 +26,9 @@ namespace ModularFramework.Modules.Ability
         [ShowField(nameof(impactOverTime)), SerializeField, Min(0)]
         private int ticks;
         
+        [SerializeField,Tooltip("the impact area is relative to caster")] 
+        private bool moveWithCaster;
         public bool ignoreCaster;
-        public Transform caster; 
 
         [HelpBox("Filter ignored in beam")] 
         public RangeFilter rangeFilter;
@@ -45,6 +46,10 @@ namespace ModularFramework.Modules.Ability
         private LineRenderer _beam;
         private ImpactZoneIndicator _indicator;
         private LayerMask _layerMask;
+        
+        private IDamageable _caster; 
+        private Quaternion _rotationRelatedToCaster;
+        private Vector3 _positionRelatedToCaster;
 
         private void Awake()
         {
@@ -58,17 +63,25 @@ namespace ModularFramework.Modules.Ability
             if (impactOverTime)
             {
                 _timer = new LimitedRepeatTimer(tickInterval, ticks);
-                _timer.OnTick = ApplyEffects;
+                if (moveWithCaster)
+                {
+                    _timer.OnTick += MatchCasterPositionAndRotation;
+                }
+                _timer.OnTick += ApplyEffects;
                 _timer.OnTimerStop = OnStop;
                 if(delayBeforeStart) _timer.DelayStart(delay);
                 else _timer.Start();
             }
             else
             {
-                ApplyEffects();
                 if (waitBeforeDestroy > 0)
                 {
                     _timer = new CountdownTimer(waitBeforeDestroy);
+                    _timer.OnTimerStart = ApplyEffects;
+                    if (moveWithCaster)
+                    {
+                        _timer.OnTick = MatchCasterPositionAndRotation;
+                    }
                     _timer.OnTimerStop = OnStop;
                     if(delayBeforeStart) _timer.DelayStart(delay);
                     else _timer.Start();
@@ -135,7 +148,7 @@ namespace ModularFramework.Modules.Ability
                 foreach (var target in targets)
                 {
                     if (effectFactory.IsTargetValid(target))
-                        target.TakeEffect(effect, transform);
+                        target.EffectResolver.TakeEffect(effect, transform);
                 }
             }
         }
@@ -190,7 +203,7 @@ namespace ModularFramework.Modules.Ability
                         var hitCollider = _hits[j].collider;
                         var damageable = hitCollider.GetComponent<IDamageable>();
                         if (damageable.TargetType == damageTarget
-                            && (!ignoreCaster || damageable.Transform != caster))
+                            && (!ignoreCaster || damageable != _caster))
                         {
                             targetsInRange.Add(damageable);
                         }
@@ -211,7 +224,7 @@ namespace ModularFramework.Modules.Ability
                     var hitCollider = _hitColliders[j];
                     var damageable = hitCollider.GetComponent<IDamageable>();
                     if (damageable.TargetType == damageTarget
-                        && (!ignoreCaster || damageable.Transform != caster))
+                        && (!ignoreCaster || damageable != _caster))
                     {
                         targetsInRange.Add(damageable);
                     }
@@ -231,7 +244,7 @@ namespace ModularFramework.Modules.Ability
                     var hitCollider = _hitColliders[j];
                     var damageable = hitCollider.GetComponent<IDamageable>();
                     if (damageable.TargetType == damageTarget
-                        && (!ignoreCaster || damageable.Transform != caster))
+                        && (!ignoreCaster || damageable != _caster))
                     {
                         targetsInRange.Add(damageable);
                     }
@@ -242,8 +255,31 @@ namespace ModularFramework.Modules.Ability
             return DictSetRegistry<DamageTarget, Transform>
                 .Filter(damageTarget, ((ITargetFilter<Transform>)rangeFilter).GetStrategy(transform))
                 .Select(x => x.GetComponent<IDamageable>())
-                .Where(damageable => !ignoreCaster || damageable.Transform != caster);
+                .Where(damageable => !ignoreCaster || damageable != _caster);
 
+        }
+        
+        public void SetCaster(Transform caster)
+        {
+            if (caster == null)
+            {
+                _caster = null;
+                return;
+            }
+            
+            _caster = caster.GetComponent<IDamageable>();
+            if (moveWithCaster)
+            {
+                _rotationRelatedToCaster = Quaternion.Inverse(caster.rotation) * transform.rotation;
+                _positionRelatedToCaster = transform.position -  caster.position;
+            }
+        }
+
+        private void MatchCasterPositionAndRotation()
+        {
+            if (_caster == null) return;
+            transform.rotation = _caster.Transform.rotation * _rotationRelatedToCaster;
+            transform.position = _caster.Transform.position + _positionRelatedToCaster;
         }
 
         private void CleanUp()

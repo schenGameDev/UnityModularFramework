@@ -1,7 +1,6 @@
 using System;
 using EditorAttributes;
 using UnityEngine;
-using UnityTimer;
 
 namespace ModularFramework.Modules.Ability
 {
@@ -10,43 +9,29 @@ namespace ModularFramework.Modules.Ability
     {
         public SpecialCondition specialCondition;
         public event Action<IEffect<IDamageable>> OnCompleted;
-        public DamageTarget ApplyTarget => DamageTarget.All;
-        private CountdownTimer _timer;
-        private IDamageable _target;
+        public DamageTarget damageTarget;
+        public DamageTarget ApplyTarget => damageTarget;
+        private float _duration;
 
-        public SpecialConditionEffect(SpecialCondition specialCondition, float duration)
+        public SpecialConditionEffect(SpecialCondition specialCondition, float duration, DamageTarget target)
         {
             this.specialCondition = specialCondition;
-            _timer = new CountdownTimer(duration);
-            _target = null;
+            _duration = duration;
+            damageTarget = target;
             OnCompleted = null;
         }
 
         public void Apply(IDamageable target, Transform source)
         {
-            _target = target;
             var sc = this;
-            _timer.OnTimerStart += () => target.TakeSpecialCondition(sc.specialCondition, source);
-            _timer.OnTimerStop += () =>
-            {
-                target.RemoveSpecialCondition(sc.specialCondition);
-                sc.CleanUp();
-            };
-            _timer.Start();
+            target.EffectResolver.TakeSpecialCondition(sc.specialCondition, _duration, source);
+            OnCompleted?.Invoke(this); // immediately invoked
         }
 
 
         public void Cancel()
         {
-            _timer.Stop();
-            _target.RemoveSpecialCondition(specialCondition);
-            CleanUp();
-        }
-
-        public void CleanUp()
-        {
-            _target = null;
-            OnCompleted?.Invoke(this);
+            OnCompleted?.Invoke(this); // instant, can't cancel
         }
     }
 
@@ -55,10 +40,11 @@ namespace ModularFramework.Modules.Ability
     {
         [Min(0), Suffix("s")] public float duration;
         public SpecialCondition specialCondition;
+        public DamageTarget damageTarget;
 
         public IEffect<IDamageable> Create()
         {
-            return new SpecialConditionEffect(specialCondition, duration);
+            return new SpecialConditionEffect(specialCondition, duration, damageTarget);
         }
         
         public bool IsTargetValid(IDamageable target)
@@ -66,11 +52,12 @@ namespace ModularFramework.Modules.Ability
             return true;
         }
         
-        public DamageTarget ApplyTarget => DamageTarget.All;
+        public DamageTarget ApplyTarget => damageTarget;
     }
 
     public enum SpecialCondition
     {
+        Bleed,
         Stunned,
         Chaosed,
         Silenced

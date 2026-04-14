@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using ModularFramework.Commons;
 using UnityEngine;
 
 namespace ModularFramework
@@ -10,7 +6,7 @@ namespace ModularFramework
     /// Backend system independent of unity lifecycle. <br/>
     /// If not added to GameBuilder, Start(), Destroy() will not invoke.<br/>
     /// Start() called on GameBuilder<br/>
-    /// Awake() called on GameRunner<br/>
+    /// SceneAwake() called on GameRunner<br/>
     /// Destroy() called when game exits
     /// </summary>
     public abstract class GameSystem<T> : GameSystem where T : GameSystem<T>
@@ -20,6 +16,7 @@ namespace ModularFramework
             base.SceneAwake();
             ((T)this).OnAwake();
         }
+        
         public override void Start()
         {
             base.Start();
@@ -41,17 +38,24 @@ namespace ModularFramework
 
     public abstract class GameSystem : ScriptableObject
     {
+        /// <summary>
+        /// Called on GameRunner at scene start
+        /// </summary>
         public virtual void SceneAwake()
         {
             SceneRef.InjectSceneReferences(this);
             SceneFlag.InjectSceneFlags(this);
         }
-
+        /// <summary>
+        /// Called on GameBuilder once at game start
+        /// </summary>
         public virtual void Start()
         {
             RuntimeObject.InitializeRuntimeVars(this);
         }
-
+        /// <summary>
+        /// Called when game exits
+        /// </summary>
         public virtual void Destroy()
         {
             RuntimeObject.CleanRuntimeVars(this);

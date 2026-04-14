@@ -51,6 +51,10 @@ public class PlayerMoveView : MonoBehaviour
     public bool isSprinting;
     private Autowire<InputSystemSO> _inputSystem = new();
     private FallHeightProcessor _fallHeightProcessor;
+    private float _knockBackTimer;
+    private Vector3 _knockBackVelocity;
+    private bool IsKnockBacking => _knockBackTimer > 0;
+    private bool IsStuck => characterController.velocity is { x: 0, z: 0 };
 
     private void OnEnable()
     {
@@ -153,10 +157,27 @@ public class PlayerMoveView : MonoBehaviour
                     jumpProcessor.YSpeed = 0;
                 }
             }
+
+            if (IsKnockBacking)
+            {
+                CancelKnockBack();
+            }
             
         }
         _fallHeightProcessor?.Update(jumpState, transform.position.y);
         return actualDisplacement;
+    }
+    
+    public void ApplyExternalVelocity(Vector3 externalVelocity, float duration)
+    {
+        _knockBackTimer = duration;
+        _knockBackVelocity = externalVelocity;
+    }
+    
+    private void CancelKnockBack()
+    {
+        _knockBackVelocity = Vector3.zero;
+        player.KnockBackComplete();
     }
 
     private void OnControllerColliderHit(ControllerColliderHit other) // object hit during movement, not including other physics impact
@@ -165,11 +186,15 @@ public class PlayerMoveView : MonoBehaviour
         
         // Debug.Log($"{name} Hit {other.gameObject.tag}");
     }
-
-    private bool IsStuck => characterController.velocity is { x: 0, z: 0 };
+    
     
     private Vector3 GetGroundVelocity()
     {
+        if (IsKnockBacking)
+        {
+            return _knockBackVelocity * Time.fixedDeltaTime;
+        }
+        
         bool isIdle = _moveDirection == Vector3.zero;
         bool isTurnBack = !isIdle && _velocity != Vector3.zero && Vector3.Angle(_moveDirection, _velocity) > 90;
         Vector3 oldVelocity = _velocity;

@@ -1,3 +1,4 @@
+using System;
 using EditorAttributes;
 using UnityEngine;
 
@@ -25,21 +26,12 @@ namespace ModularFramework.Modules.Ability
             _parent.TakeDamage(damageAmount * damageMultiplier, damageType, source);
         }
 
-        public void TakeEffect(IEffect<IDamageable> effect, Transform source)
+        public void KnockBack(Vector3 knockBackDirection, float duration, float knockbackDistance, Action onComplete)
         {
-            _parent.TakeEffect(effect,source); 
-            // effect is not multiplied, as it can be heal or buff, and it's hard to determine how to multiply them
+            _parent.KnockBack(knockBackDirection, duration, knockbackDistance, onComplete);
         }
 
-        public void TakeSpecialCondition(SpecialCondition specialCondition, Transform source)
-        {
-            _parent.TakeSpecialCondition(specialCondition, source);
-        }
-
-        public void RemoveSpecialCondition(SpecialCondition specialCondition)
-        {
-            _parent.RemoveSpecialCondition(specialCondition);
-        }
+        public EffectResolver EffectResolver => _parent.EffectResolver;
 
         public void AimedAtBy(bool isAiming, Transform attacker, string details = null)
         {

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace ModularFramework.Modules.Ability
@@ -5,12 +6,10 @@ namespace ModularFramework.Modules.Ability
     public interface IDamageable
     {
         public void TakeDamage(float damageAmount, DamageType damageType, Transform source);
+        
+        public void KnockBack(Vector3 knockBackDirection, float duration, float knockbackDistance, Action onComplete);
 
-        public void TakeEffect(IEffect<IDamageable> effect, Transform source);
-
-        public void TakeSpecialCondition(SpecialCondition specialCondition, Transform source);
-
-        public void RemoveSpecialCondition(SpecialCondition specialCondition);
+        public EffectResolver EffectResolver { get; }
 
         public void AimedAtBy(bool isAiming, Transform attacker, string details = null);
 

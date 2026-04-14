@@ -22,6 +22,9 @@ namespace ModularFramework.Modules.Ability
         private float lifetime = 1;
 
         [SerializeField] private bool faceMoveDirection = true;
+        
+        [Min(0),Suffix("s"),SerializeField] private float delayReleaseTime;
+        [ReadOnly] public bool overrideDelay = false;
 
 
         [SerializeField] private bool constantGroundSpeed = true;
@@ -78,6 +81,7 @@ namespace ModularFramework.Modules.Ability
 
         private float _trackTargetMaxRadiansPerSecond;
         private readonly List<Vector3> _trajectory = new();
+        public bool Started {get; private set;}
         
         [HideInInspector] public uint assetId;
 
@@ -100,12 +104,14 @@ namespace ModularFramework.Modules.Ability
             _trajectory.Add(_startPosition);
             _startYSpeed = _ySpeed;
             targetPosition =  initialState.targetPosition;
+            _startTime = Time.time + delayReleaseTime;
+            Started = delayReleaseTime == 0;
         }
 
         public ProjectileInitialState Initialize(Vector3 startPos, Quaternion startRot, float now,
             Transform target, Vector3? targetPos, Vector3? direction)
         {
-            _startTime = now;
+            _startTime = now + delayReleaseTime;
             transform.position = startPos;
             transform.rotation = startRot;
             _startPosition = startPos;
@@ -136,7 +142,7 @@ namespace ModularFramework.Modules.Ability
             }
             
             _startYSpeed = _ySpeed;
-            
+            Started = delayReleaseTime == 0;
             return new ProjectileInitialState()
             {
                 groundDirection = _groundDirection,
@@ -284,6 +290,14 @@ namespace ModularFramework.Modules.Ability
             return groundDirection * (0.5f * (newGroundSpeed + groundSpeed) * deltaTime) +
                    Vector3.up * (0.5f * (newYSpeed + ySpeed) * deltaTime);
         }
+        
+        private bool WaitToStart()
+        {
+            if (Started) return false;
+            if (Time.time < _startTime && !overrideDelay) return true;
+            Started = true;
+            return false;
+        }
         #endregion
         #region Read & Export
 
@@ -293,6 +307,7 @@ namespace ModularFramework.Modules.Ability
             {
                 targetPosition = _target.position;
             }
+            bool holdAtPosition = WaitToStart();
             return new ProjectileStatus
             {
                 me = transform.position,
@@ -304,7 +319,8 @@ namespace ModularFramework.Modules.Ability
                 acceleration = acceleration,
                 ySpeed = _ySpeed,
                 gravity = gravity,
-                faceMoveDirection = faceMoveDirection
+                faceMoveDirection = faceMoveDirection,
+                holdAtPosition = holdAtPosition
             };
         } 
 

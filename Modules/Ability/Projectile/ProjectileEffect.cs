@@ -38,6 +38,7 @@ namespace ModularFramework.Modules.Ability
         #region Projectile
         public bool Arrive(Transform target, Vector3 hitPoint)
         {
+            if (!projectile.Started) return false;
             if (target != null 
                 && ignoreCaster 
                 && target.GetComponent<IDamageable>().Transform == caster)
@@ -56,7 +57,7 @@ namespace ModularFramework.Modules.Ability
                     impactEffect.SetBeam(_beam, _beamId);
                     _beam = null;
                 }
-                impactEffect.caster = caster;
+                impactEffect.SetCaster(caster);
                 impactEffect.onComplete = onComplete;
             }
             else
@@ -85,7 +86,7 @@ namespace ModularFramework.Modules.Ability
             foreach (var effectFactory in effects)
             {
                 if (!effectFactory.IsTargetValid(target)) continue;
-                target.TakeEffect(effectFactory.Create(), transform);
+                target.EffectResolver.TakeEffect(effectFactory.Create(), transform);
             }
         }
         #endregion

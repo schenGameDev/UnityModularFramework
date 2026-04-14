@@ -149,6 +149,10 @@ namespace ModularFramework.Modules.BehaviorTree
         {
             _targetPos = point;
         }
+        
+        public void AddExternalVelocity(Vector3 velocity) {
+            _externalVelocity = velocity;
+        }
 
         private void OnPathComplete(Path p)
         {
@@ -191,7 +195,6 @@ namespace ModularFramework.Modules.BehaviorTree
 
             if (_path == null)
             {
-                if (!controller.isGrounded) controller.SimpleMove(Vector3.down);
                 return;
             }
 
@@ -243,17 +246,30 @@ namespace ModularFramework.Modules.BehaviorTree
         }
 
         private Vector3 _velocity;
+        private Vector3 _externalVelocity;
         private float _stuckTimer = 0f;
 
         private void FixedUpdate()
         {
+            Vector3 v;
             if (_path == null)
             {
-                return;
+                v = controller.isGrounded? Vector3.zero : Vector3.down;
+                if (_externalVelocity == Vector3.zero)
+                {
+                    controller.SimpleMove(v);
+                    return;
+                }
             }
+            else
+            {
+                v = _velocity;
+            }
+            
+            v += _externalVelocity;
 
-            if (!controller.SimpleMove(_velocity) ||
-                (_velocity.sqrMagnitude > 0.01f && controller.velocity is { x: 0, z: 0 }))
+            if (!controller.SimpleMove(v) ||
+                (v.sqrMagnitude > 0.01f && controller.velocity is { x: 0, z: 0 }))
             {
                 _stuckTimer += Time.fixedDeltaTime;
                 if (!PathNotFound && _stuckTimer > 1f)

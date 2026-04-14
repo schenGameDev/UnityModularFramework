@@ -35,7 +35,7 @@ namespace ModularFramework.Modules.Ability
                 foreach (var target in targets)
                 {
                     if (!effectFactory.IsTargetValid(target)) continue;
-                    target.TakeEffect(effect, me);
+                    target.EffectResolver.TakeEffect(effect, me);
                 }
 
             }
@@ -49,7 +49,7 @@ namespace ModularFramework.Modules.Ability
                 if (!effectFactory.IsTargetValid(target)) continue;
                 var effect = effectFactory.Create();
                 if (onComplete != null) effect.OnCompleted += (e) => onComplete();
-                target.TakeEffect(effect, me);
+                target.EffectResolver.TakeEffect(effect, me);
             }
         }
     }

@@ -47,7 +47,16 @@ namespace UnityTimer {
         
         public static void Schedule(ScheduledAction scheduledAction)
         {
-            actionQueue.Add(scheduledAction);
+            // Insert in sorted order by executeTime
+            int index = actionQueue.FindIndex(a => a.executeTime > scheduledAction.executeTime);
+            if (index == -1)
+            {
+                actionQueue.Add(scheduledAction);
+            }
+            else
+            {
+                actionQueue.Insert(index, scheduledAction);
+            }
         }
         
         public static void RemoveSchedule(uint id)

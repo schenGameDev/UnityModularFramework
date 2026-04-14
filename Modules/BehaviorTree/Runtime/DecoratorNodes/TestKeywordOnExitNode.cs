@@ -9,7 +9,7 @@ namespace ModularFramework.Modules.BehaviorTree
         public BoolExpressionEvaluator.ValueType dataType;
         public string successCondition;
         public string failCondition;
-        public bool removeParameterOnRead = true;
+        public bool removeParameterOnExit = true;
         private IBoolExprCondition _successEvaluator;
         private IBoolExprCondition _failEvaluator;
 
@@ -28,7 +28,6 @@ namespace ModularFramework.Modules.BehaviorTree
             var value = tree.blackboard.Get(keyword);
             if (!string.IsNullOrEmpty(value))
             {
-                if (removeParameterOnRead) tree.blackboard.RemoveParameter(keyword);
                 if (_successEvaluator.Evaluate(value, dataType))
                 {
                     return State.Success;
@@ -43,6 +42,12 @@ namespace ModularFramework.Modules.BehaviorTree
             return res;
         }
 
+        protected override void OnExit()
+        {
+            base.OnExit();
+            if (removeParameterOnExit) tree.blackboard.RemoveParameter(keyword);
+        }
+
         public override BTNode Clone()
         {
             var clone = base.Clone() as TestKeywordOnExitNode;
@@ -50,7 +55,7 @@ namespace ModularFramework.Modules.BehaviorTree
             clone.successCondition = successCondition;
             clone.failCondition = failCondition;
             clone.dataType = dataType;
-            clone.removeParameterOnRead = removeParameterOnRead;
+            clone.removeParameterOnExit = removeParameterOnExit;
             return clone;
         }
 

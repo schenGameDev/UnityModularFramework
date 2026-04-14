@@ -1,4 +1,5 @@
-using System.Collections.Generic;
+using System;
+using KBCore.Refs;
 using ModularFramework;
 using ModularFramework.Modules.Ability;
 using UnityEngine;
@@ -20,12 +21,23 @@ public class Player : Character,IDamageable
     
     [Header("Runtime")]
     public float health;
-    
-    private List<IEffect<IDamageable>> _activeEffects = new();
+    private EffectResolver _effectResolver;
 
     public DamageTarget TargetType { get; }
     public Transform Transform => transform;
+    [Self,SerializeField] private PlayerMoveView playerMoveView;
+
+#if UNITY_EDITOR
+    private void OnValidate()=> this.ValidateRefs();
     
+#endif
+
+    private void Awake()
+    {
+        _effectResolver = new EffectResolver(this, 1);
+        _effectResolver.onSpecialConditionChanged += ShowSpecialCondition;
+    }
+
     private void OnEnable()
     {
         SingletonRegistry<Player>.Replace(this);
@@ -65,6 +77,28 @@ public class Player : Character,IDamageable
         if(damageType == DamageType.Physical) TakePhysicalDamage(amount);
     }
 
+    #region Knock Back
+    Action _knockBackCompleteCallback;
+    public void KnockBack(Vector3 direction, float duration, float distance, Action onComplete)
+    {
+        direction.Normalize();
+        Vector3 knockBackVelocity = direction * (distance / duration);
+        // keep moving until duration is up or hit obstacle
+        _knockBackCompleteCallback = onComplete;
+        playerMoveView.ApplyExternalVelocity(knockBackVelocity, duration);
+    }
+    
+    public void KnockBackComplete()
+    {
+        _knockBackCompleteCallback?.Invoke();
+        _knockBackCompleteCallback = null;
+    }
+    
+
+    #endregion
+
+    public EffectResolver EffectResolver => _effectResolver;
+
     private void TakePhysicalDamage(float amount)
     {
         health -= amount;
@@ -75,34 +109,18 @@ public class Player : Character,IDamageable
             Die();
         }
     }
+    
+    private void ShowSpecialCondition(SpecialCondition specialCondition, bool isAdded)
+    {
+            
+    }
 
     private void Die()
     {
         // Handle death logic here
         Debug.Log("player has died.");
-        _activeEffects.ForEach(e => e.Cancel());
+        _effectResolver.ResetState();
+        _effectResolver.onSpecialConditionChanged -= ShowSpecialCondition;
         Destroy(gameObject);
-    }
-
-    public void TakeEffect(IEffect<IDamageable> effect, Transform source)
-    {
-        effect.OnCompleted += RemoveEffect;
-        _activeEffects.Add(effect);
-        effect.Apply(this, source);
-    }
-    
-    void RemoveEffect(IEffect<IDamageable> effect)
-    {
-        effect.OnCompleted -= RemoveEffect;
-    }
-
-    public void TakeSpecialCondition(SpecialCondition specialCondition, Transform source)
-    {
-        Debug.Log("Taking special condition: " + specialCondition);
-    }
-
-    public void RemoveSpecialCondition(SpecialCondition specialCondition)
-    {
-        Debug.Log("Removing special condition: " + specialCondition);
     }
 }

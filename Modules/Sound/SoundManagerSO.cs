@@ -15,7 +15,8 @@ namespace ModularFramework.Modules.Sound
     [CreateAssetMenu(fileName = "SoundManager_SO", menuName = "Game Module/Sound/Sound Manager")]
     public class SoundManagerSO : GameModule<SoundManagerSO>
     {
-        [Header("Config")] [SerializeField] SoundPlayer soundPlayerPrefab;
+        [Header("Config")] 
+        [SerializeField] SoundPlayer soundPlayerPrefab;
         public SoundProfileBucket soundFxs;
         [SerializeField] bool collectionCheck = true;
         [SerializeField] int defaultCapacity = 5;
@@ -23,7 +24,7 @@ namespace ModularFramework.Modules.Sound
         [SerializeField] int maxSoundInstances = 15;
 
 
-        [FoldoutGroup("Event Channels", nameof(sfxChannel))] [SerializeField]
+        [FoldoutGroup("Event Channels", nameof(sfxChannel)),SerializeField]
         private Void eventChannelGroup;
 
         [HideInInspector, SerializeField] StringEventChannelSO sfxChannel;

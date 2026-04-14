@@ -48,7 +48,7 @@ public class HitTimeDpdtDmgEffectFactory : IEffectFactory<IDamageable>
                 onComplete = null;
             }
             validTargets.Add(target.Transform);
-            target.TakeEffect(effect, source);
+            target.EffectResolver.TakeEffect(effect, source);
         }
                 
         var keys = _lastHitTargets.Keys.ToList();

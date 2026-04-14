@@ -29,7 +29,6 @@ namespace ModularFramework.Modules.Ability
 
         protected override void OnAwake()
         {
-            SingletonRegistry<ProjectileManagerSO>.TryRegister(this);
         }
 
         protected override void OnStart()

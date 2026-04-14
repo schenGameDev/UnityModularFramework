@@ -46,11 +46,14 @@ namespace ModularFramework
             GameStartFromBuilder = true;
             if (systems == null) return;
             
+            systems = GameRunner.ValidateSystems(systems);
+            
             Registry<GameSystem>.Clear();
             
             foreach (var sys in systems)
             {
-                GameRunner.InjectSystem(sys, true);
+                GameRunner.InjectSystem(sys);
+                sys.Start();
             }
         }
 
@@ -67,7 +70,9 @@ namespace ModularFramework
             
             foreach(var sys in systems) {
                 sys.Destroy();
+                GameRunner.ClearSystem(sys);
             }
+            Registry<GameSystem>.Clear();
         }
 
         #region Scene

@@ -1,5 +1,4 @@
 using EditorAttributes;
-using ModularFramework.Utility;
 using UnityEngine;
 using UnityTimer;
 
@@ -79,9 +78,9 @@ namespace ModularFramework {
         [SerializeField,ShowField(nameof(updateMode), UpdateMode.EVERY_N_FRAME)] protected int everyNFrame = 1;
         [SerializeField,ShowField(nameof(updateMode), UpdateMode.EVERY_N_SECOND)] protected float everyNSecond = 0;
         /// <summary>
-        /// only one of centerally managed modules will be executed at one frame
+        /// only one of centrally managed modules will be executed at one frame
         /// </summary>
-        [SerializeField,HideField(nameof(updateMode), UpdateMode.NONE)] public bool CentrallyManaged;
+        [SerializeField,HideField(nameof(updateMode), UpdateMode.NONE)] public bool centrallyManaged;
         public bool OperateEveryFrame {get; private set;}
         // Handled in GameRunner
         public Timer Timer {get; private set;}
@@ -89,13 +88,20 @@ namespace ModularFramework {
         protected enum UpdateMode {
             NONE,EVERY_N_FRAME,EVERY_N_SECOND
         }
-
+        /// <summary>
+        /// Called on GameRunner at scene start
+        /// </summary>
         public override void SceneAwake()
         {
             base.SceneAwake();
-            OperateEveryFrame = (updateMode == UpdateMode.EVERY_N_FRAME && everyNFrame == 1) || (updateMode == UpdateMode.EVERY_N_SECOND && everyNSecond == 0);
+            OperateEveryFrame = (updateMode == UpdateMode.EVERY_N_FRAME && everyNFrame == 1) || 
+                                (updateMode == UpdateMode.EVERY_N_SECOND && everyNSecond == 0);
         }
         
+        public virtual bool AllowMultipleModules => false;
+        /// <summary>
+        /// Called on GameRunner at scene start
+        /// </summary>
         public override void Start()
         {
             base.Start();
@@ -104,14 +110,14 @@ namespace ModularFramework {
             {
                 var timer = new RepeatFrameCountdownTimer(everyNFrame, 1);
                 timer.OnTick += () =>  {
-                    if(CentrallyManaged) SingletonRegistry<GameRunner>.Get().Do(builder=>builder.AddToExecQueue(this, timer.DeltaTime));
+                    if(centrallyManaged) SingletonRegistry<GameRunner>.Get().Do(builder=>builder.AddToExecQueue(this, timer.DeltaTime));
                     else Tick(timer.DeltaTime);
                 };
                 Timer = timer;
             } else {
                 var timer = new RepeatCountdownTimer(everyNSecond, 1);
                 timer.OnTick += () =>  {
-                    if(CentrallyManaged) SingletonRegistry<GameRunner>.Get().Do(builder=>builder.AddToExecQueue(this, timer.DeltaTime));
+                    if(centrallyManaged) SingletonRegistry<GameRunner>.Get().Do(builder=>builder.AddToExecQueue(this, timer.DeltaTime));
                     else
                     {
                         Tick(timer.DeltaTime);
@@ -127,5 +133,13 @@ namespace ModularFramework {
         public abstract void Tick(float deltaTime);
         public abstract void LateTick();
         public abstract void Draw();
+        
+        /// <summary>
+        /// Called when scene gets destroyed
+        /// </summary>
+        public override void Destroy()
+        {
+            base.Destroy();
+        }
     }
 }

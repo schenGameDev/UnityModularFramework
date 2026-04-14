@@ -6,6 +6,7 @@ namespace ModularFramework.Modules.BehaviorTree
     {
         public string keyword;
         public string value;
+        public bool removeParameterOnExit;
 
         protected override void OnEnter()
         {
@@ -19,12 +20,19 @@ namespace ModularFramework.Modules.BehaviorTree
         {
             return child.Run();
         }
+        
+        protected override void OnExit()
+        {
+            base.OnExit();
+            if (removeParameterOnExit) tree.blackboard.RemoveParameter(keyword);
+        }
 
         public override BTNode Clone()
         {
             var clone = base.Clone() as InsertKeywordNode;
             clone.keyword = keyword;
             clone.value = value;
+            clone.removeParameterOnExit = removeParameterOnExit;
             return clone;
         }
 

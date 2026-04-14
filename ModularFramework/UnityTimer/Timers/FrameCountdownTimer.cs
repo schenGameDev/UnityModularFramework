@@ -26,5 +26,11 @@ namespace UnityTimer {
         {
             DeltaTime = 0;
         }
+        
+        public void Extend(int frames)
+        {
+            CurrentFrameCount += frames;
+            initialFrameCount += frames;
+        }
     }
 }

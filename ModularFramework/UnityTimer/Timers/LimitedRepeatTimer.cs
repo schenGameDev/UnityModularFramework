@@ -38,5 +38,11 @@ namespace UnityTimer
         { 
             DeltaTime = 0;
         }
+        
+        public void Extend(float seconds)
+        {
+            currentTime += seconds;
+            initialTime += seconds;
+        }
     }
 }
