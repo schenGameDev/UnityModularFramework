@@ -2,6 +2,8 @@
 
 A Client-server framework for unity. 
 
+(Minimum requirement: Unity 6000.4)
+
 Each scene is treated as a frontend, which contains simple in-scene gameObject-to-gameObject logic.
 
 All complex logics are handled in backend, by GameModules and GameSystems (ScriptableObject). 
