@@ -296,6 +296,10 @@ namespace ModularFramework.Modules.Ability
             if (Started) return false;
             if (Time.time < _startTime && !overrideDelay) return true;
             Started = true;
+            if (aimType == AimType.Transform && _target != null)
+            {
+                InitializeByTransform(_target);
+            }
             return false;
         }
         #endregion

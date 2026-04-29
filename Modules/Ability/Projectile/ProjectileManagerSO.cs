@@ -231,8 +231,11 @@ namespace ModularFramework.Modules.Ability
                 }
                 else if (projectile.collisionDetection == CastType.CAPSULECAST)
                 {
-                    capsulePointA[c] = projectile.pointA;
-                    capsulePointB[c] = projectile.pointB;
+                    Vector3 p1 = projectile.transform.position + projectile.transform.rotation * projectile.pointA;
+                    Vector3 p2 = projectile.transform.position + projectile.transform.rotation * projectile.pointB;
+                    
+                    capsulePointA[c] = p1;
+                    capsulePointB[c] = p2;
                     capsuleDirections[c] = projectile.Direction;
                     capsuleRadii[c] = projectile.radius;
                     capsuleIndices[c] = i;
