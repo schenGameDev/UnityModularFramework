@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
-/// <summary>
-/// A Container for UI Items
-/// </summary>
+
 namespace ModularFramework
 {
+    /// <summary>
+    /// A Container for UI Items
+    /// </summary>
     public abstract class UIItemCarrier<TData, TUIItem> : MonoBehaviour
     {
         [SerializeField] protected TUIItem entryPrefab;

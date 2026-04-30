@@ -6,6 +6,7 @@ using EditorAttributes;
 using ModularFramework.Utility;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityTimer;
 
 namespace ModularFramework {
@@ -317,12 +318,18 @@ namespace ModularFramework {
 #endif
     #region Dev
     [Header("Game Systems (Dev Only)")]
-    [SerializeField,HideLabel]
-    private GameSystem[] systems;
+    [SerializeField] private EventSystem localEventSystem;
+    [SerializeField] private Camera localCamera;
+    [SerializeField] private Canvas[] canvases;
+    [SerializeField,HideLabel] private GameSystem[] systems;
 
     private void LoadSystemsForDev()
     {
-        if(GameBuilder.GameStartFromBuilder) return;
+        if (GameBuilder.GameStartFromBuilder)
+        {
+            DisableDevComponents();
+            return;
+        }
         if (systems == null) return;
             
         Registry<GameSystem>.Clear();
@@ -331,6 +338,24 @@ namespace ModularFramework {
         {
             InjectSystem(sys);
             sys.Start();
+        }
+    }
+    
+    private void DisableDevComponents()
+    {
+        var builder = _builder.Get();
+        if (builder == null) return;
+        
+        localCamera.gameObject.SetActive(false);
+        localEventSystem.gameObject.SetActive(false);
+
+        if (canvases != null)
+        {
+            foreach (var canvas in canvases)
+            {
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                canvas.worldCamera = builder.MainCamera;
+            }
         }
     }
 

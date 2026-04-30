@@ -39,7 +39,7 @@ namespace ModularFramework.Modules.Ink
             ULTRAFAST
         }
 
-        public static AutoPlaySpeed PlaySpeed = AutoPlaySpeed.NORMAL;
+        public static AutoPlaySpeed PlaySpeed = AutoPlaySpeed.NONE;
 
         private float AutoPlayDelay => PlaySpeed switch
         {
@@ -441,6 +441,20 @@ namespace ModularFramework.Modules.Ink
             if (PlaySpeed != AutoPlaySpeed.NONE) _autoPlayTimer?.Resume();
         }
 
+        public void ChangeAutoPlaySpeed(AutoPlaySpeed speed)
+        {
+            if (PlaySpeed == speed) return;
+
+            if (PlaySpeed == AutoPlaySpeed.NONE)
+            {
+                _autoPlayTimer?.Dispose();
+                _autoPlayTimer = null;
+            }
+            else if (_autoPlayTimer is { IsRunning: true })
+            {
+                _autoPlayTimer.Reset(AutoPlayDelay);
+            }
+        }
         #endregion
     }
 }

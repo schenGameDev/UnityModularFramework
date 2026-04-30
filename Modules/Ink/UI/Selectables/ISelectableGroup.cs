@@ -2,7 +2,7 @@ using System;
 
 namespace ModularFramework.Modules.Ink
 {
-    public interface ISelectableGroup : IResetable, IMark
+    public interface ISelectableGroup : IResetable
     {
         public string ChoiceGroupName { get; }
         public bool EnableOnAwake { get; }

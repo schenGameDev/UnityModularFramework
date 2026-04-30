@@ -34,14 +34,14 @@ namespace ModularFramework.Modules.Ink
             if (inkUI.CanSkipOrNext) inkUI.SkipOrNext();
         }
 
-        public void Pause()
+        public void Pause() // pause game
         {
             InkUIIntegrationSO inkUI = _inkUI.Get();
             inkUI.PauseAutoPlay();
             Time.timeScale = 0;
         }
 
-        public void Resume()
+        public void Resume() // resume game
         {
             InkUIIntegrationSO inkUI = _inkUI.Get();
             inkUI.ResumeAutoPlay();
@@ -52,6 +52,12 @@ namespace ModularFramework.Modules.Ink
         {
             var inkSys = SingletonRegistry<InkSystemSO>.Get();
             return inkSys.HasValue && inkSys.Get().CanSave;
+        }
+        
+        public void AutoPlay(InkUIIntegrationSO.AutoPlaySpeed speed)
+        {
+            InkUIIntegrationSO inkUI = _inkUI.Get();
+            inkUI.ChangeAutoPlaySpeed(speed);
         }
     }
 }

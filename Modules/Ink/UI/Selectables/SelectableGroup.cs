@@ -8,7 +8,7 @@ using UnityEngine;
 namespace ModularFramework.Modules.Ink
 {
     [RequireComponent(typeof(Marker), typeof(CanvasGroup))]
-    public class SelectableGroup : MonoBehaviour, ISelectableGroup
+    public class SelectableGroup : MonoBehaviour, ISelectableGroup, IMark
     {
         [field: SerializeField] public string ChoiceGroupName { get; private set; }
         [field: SerializeField] public bool EnableOnAwake { get; private set; }

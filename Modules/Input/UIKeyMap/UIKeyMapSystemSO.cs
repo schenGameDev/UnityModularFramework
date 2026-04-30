@@ -8,7 +8,8 @@ using static ModularFramework.Modules.Input.InputSystemSO;
 namespace ModularFramework.Modules.Input
 {
     /// <summary>
-    /// Listen to keyboard, mouse and controller, then dispatch input to matching UI buttons
+    /// Listen to keyboard, mouse and controller, then dispatch input to matching UI buttons. <br/>
+    /// Can run without InputSystemSO.
     /// </summary>
     [CreateAssetMenu(fileName = "UIKeyMapSystem_SO", menuName = "Game Module/Input/UI Key Map")]
     public class UIKeyMapSystemSO : GameSystem<UIKeyMapSystemSO>, IRegistrySO, ILive

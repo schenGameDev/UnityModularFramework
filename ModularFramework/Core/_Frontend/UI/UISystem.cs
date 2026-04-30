@@ -11,7 +11,7 @@ namespace ModularFramework
     public class UISystem : GameSystem
     {
         [SerializeField] StringBoolEventChannel canvasChannel;
-        [RuntimeObject,SerializeField, Rename("Active Canvas")] 
+        [RuntimeObject,SerializeField, Rename("Active Canvas"), ReadOnly] 
         private List<string> activeCanvasNames = new();
         [RuntimeObject] private readonly List<CanvasMarker> _frontCanvas = new();
         [RuntimeObject] private readonly List<CanvasMarker> _alwaysVisibleCanvas = new();
