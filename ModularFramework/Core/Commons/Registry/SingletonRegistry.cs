@@ -27,6 +27,17 @@ namespace ModularFramework
             return false;
         }
         
+        public static void Unregister(T instance)
+        {
+            if (_instance is null || _instance != instance)
+            {
+                Debug.LogWarning("Cannot unregister a different instance of Singleton class " + typeof(T) + " in scene");
+                return;
+            }
+            
+            Clear();
+        }
+        
         public static void Clear()
         {
             if (_instance is MonoBehaviour mono)

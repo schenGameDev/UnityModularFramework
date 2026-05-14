@@ -46,7 +46,7 @@ public class Player : Character,IDamageable
 
     private void OnDisable()
     {
-        SingletonRegistry<Player>.Clear();
+        SingletonRegistry<Player>.Unregister(this);
         DictSetRegistry<DamageTarget, Transform>.Remove(TargetType, Transform);
     }
     

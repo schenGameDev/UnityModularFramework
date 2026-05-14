@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using EditorAttributes;
 using KBCore.Refs;
 using UnityEngine;
 
@@ -15,7 +16,7 @@ namespace ModularFramework {
         /// </summary>
         [SerializeField] private bool buffered;
         
-        [SerializeField,Self(Flag.Optional)] private InterfaceRef<IMark>[] marks;
+        [SerializeField,Self(Flag.Optional),ReadOnly] private InterfaceRef<IMark>[] marks;
         
 #if UNITY_EDITOR
         private void OnValidate() => this.ValidateRefs();

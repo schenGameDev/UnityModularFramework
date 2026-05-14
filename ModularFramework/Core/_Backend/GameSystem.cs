@@ -32,6 +32,9 @@ namespace ModularFramework
         /// Called in GameRunner when a new scene loads
         /// </summary>
         protected abstract void OnAwake();
+        /// <summary>
+        /// Called in GameBuilder once game starts
+        /// </summary>
         protected abstract void OnStart();
         protected abstract void OnSceneDestroy();
     }

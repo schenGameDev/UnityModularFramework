@@ -13,7 +13,7 @@ namespace ModularFramework.Modules.Ink
         [field: SerializeField] public string ChoiceGroupName { get; private set; }
         [field: SerializeField] public bool EnableOnAwake { get; private set; }
 
-        [SerializeField, Child] private Selectable[] selectables;
+        [SerializeField, Child, ReadOnly] private Selectable[] selectables;
         [ReadOnly] public bool hasSelected;
         protected int lastIndex;
         private Dictionary<int, int> _choiceIndexMap = new();
@@ -104,11 +104,11 @@ namespace ModularFramework.Modules.Ink
             cg.blocksRaycasts = !hide;
         }
 
-        #region IRegistrySO
+        #region IMark
 
         public List<Type> RegisterSelf(HashSet<Type> alreadyRegisteredTypes)
         {
-            if (alreadyRegisteredTypes.Contains(typeof(InkUIIntegrationSO))) return new();
+            if (!alreadyRegisteredTypes.Contains(typeof(InkUIIntegrationSO))) return new();
             SingletonRegistry<InkUIIntegrationSO>.Instance?.Register(transform);
             return new() { typeof(InkUIIntegrationSO) };
         }

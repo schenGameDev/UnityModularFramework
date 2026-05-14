@@ -7,12 +7,12 @@ namespace ModularFramework.Modules.Ink
     [RequireComponent(typeof(Marker))]
     public class InkPrinter : TextPrinter, IMark
     {
-        #region IRegistrySO
+        #region IMark
 
         public virtual List<Type> RegisterSelf(HashSet<Type> alreadyRegisteredTypes)
         {
 
-            if (alreadyRegisteredTypes.Contains(typeof(InkUIIntegrationSO))) return new();
+            if (!alreadyRegisteredTypes.Contains(typeof(InkUIIntegrationSO))) return new();
             SingletonRegistry<InkUIIntegrationSO>.Instance?.Register(transform);
             return new() { typeof(InkUIIntegrationSO) };
         }

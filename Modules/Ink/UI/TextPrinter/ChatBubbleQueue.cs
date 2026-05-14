@@ -99,11 +99,11 @@ namespace ModularFramework.Modules.Ink
 
         #endregion
 
-        #region IRegistrySO
+        #region IMark
 
         public List<Type> RegisterSelf(HashSet<Type> alreadyRegisteredTypes)
         {
-            if (alreadyRegisteredTypes.Contains(typeof(InkUIIntegrationSO))) return new();
+            if (!alreadyRegisteredTypes.Contains(typeof(InkUIIntegrationSO))) return new();
             SingletonRegistry<InkUIIntegrationSO>.Instance?.Register(transform);
             return new() { typeof(InkUIIntegrationSO) };
         }

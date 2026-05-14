@@ -14,6 +14,32 @@ namespace ModularFramework.Modules.Ink
     {
         private const string ACTIVE_SELF = "activeSelf";
 
+        /// <summary>
+        /// the function name to generate the savable string
+        /// </summary>
+        private readonly string _saveFunc;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="saveFunc">saveFunc must take no parameter and return the same type as the field</param>
+        public SavableState(string saveFunc = "")
+        {
+            _saveFunc = saveFunc;
+        }
+
+        private AnyValue GetSavableValue(FieldInfo field, object instance)
+        {
+            if(_saveFunc.NonEmpty())
+            {
+                var savableValue = instance.GetType()
+                    .GetMethod(_saveFunc, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?
+                    .Invoke(instance, null);
+                return ConvertToAnyValue(field.GetType(), savableValue);
+            } 
+            
+            return ConvertToAnyValue(field, instance);
+        }
+        
         #region Static Public
 
         public static Dictionary<string, AnyValue> GetSavableStates(object instance)
@@ -24,8 +50,10 @@ namespace ModularFramework.Modules.Ink
             foreach (FieldInfo field in instance.GetType()
                          .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                if (GetCustomAttribute(field, typeof(SavableState)) is not SavableState) continue;
-                states.Add(field.Name, ConvertToAnyValue(field, instance));
+                if (GetCustomAttribute(field, typeof(SavableState)) is SavableState ss)
+                {
+                    states.Add(field.Name, ss.GetSavableValue(field, instance));
+                }
             }
 
             return states;
@@ -43,38 +71,43 @@ namespace ModularFramework.Modules.Ink
             }
 
         }
+        
+        private static AnyValue ConvertToAnyValue(Type fieldType, object fieldValue)
+        {
+            if (fieldType == typeof(int))
+            {
+                return AnyValue.Of((int)fieldValue);
+            }
+
+            if (fieldType == typeof(float))
+            {
+                return AnyValue.Of((float)fieldValue);
+            }
+
+            if (fieldType == typeof(bool))
+            {
+                return AnyValue.Of((bool)fieldValue);
+            }
+
+            if (fieldType == typeof(Vector3))
+            {
+                return AnyValue.Of((Vector3)fieldValue);
+            }
+
+            if (fieldType == typeof(string))
+            {
+                return AnyValue.Of((string)fieldValue);
+            }
+
+            throw new InvalidCastException("Can't convert " + fieldType.Name + " to AnyValue");
+        }
 
         private static AnyValue ConvertToAnyValue(FieldInfo field, object instance)
         {
             var type = field.GetType();
             var value = field.GetValue(instance);
 
-            if (type == typeof(int))
-            {
-                return AnyValue.Of((int)value);
-            }
-
-            if (type == typeof(float))
-            {
-                return AnyValue.Of((float)value);
-            }
-
-            if (type == typeof(bool))
-            {
-                return AnyValue.Of((bool)value);
-            }
-
-            if (type == typeof(Vector3))
-            {
-                return AnyValue.Of((Vector3)value);
-            }
-
-            if (type == typeof(string))
-            {
-                return AnyValue.Of((string)value);
-            }
-
-            throw new InvalidCastException("Can't convert " + field.FieldType.Name + " to AnyValue");
+            return ConvertToAnyValue(type, value);
         }
 
         private static AnyValue SetField(FieldInfo field, object instance, AnyValue value)

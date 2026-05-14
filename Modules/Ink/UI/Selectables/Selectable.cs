@@ -22,14 +22,14 @@ namespace ModularFramework.Modules.Ink
         protected TextMeshProUGUI tmp;
 
         [SerializeField, Parent(Flag.Optional | Flag.IncludeInactive)]
-        private SelectableGroup selectableGroup;
+        private InterfaceRef<ISelectableGroup> selectableGroup;
 
 #if UNITY_EDITOR
         private void OnValidate() => this.ValidateRefs();
 #endif
         protected virtual void Awake()
         {
-            if (!selectableGroup)
+            if (selectableGroup != null)
             {
                 DebugUtil.Error("SelectableGroup not found in parent", this.name);
             }
@@ -56,7 +56,7 @@ namespace ModularFramework.Modules.Ink
             if (confirmed)
             {
                 hasSelected = true;
-                selectableGroup?.Select(index);
+                if (selectableGroup.HasSerializedObject) selectableGroup.Value.Select(index);
             }
         }
 
@@ -73,7 +73,10 @@ namespace ModularFramework.Modules.Ink
 
         protected virtual void Hide(bool hide)
         {
-            selectableGroup?.Hide(hide);
+            if (selectableGroup.HasSerializedObject && selectableGroup.Value is SelectableGroup sg)
+            {
+                sg.Hide(hide);
+            }
         }
     }
 }
