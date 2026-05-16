@@ -8,7 +8,7 @@ namespace ModularFramework
     /// enable and hide Canvas on demand
     /// </summary>
     [CreateAssetMenu(fileName = "UISystem_SO", menuName = "Game Module/UI System")]
-    public class UISystem : GameSystem
+    public class UISystem : GameSystem<UISystem>
     {
         [SerializeField] StringBoolEventChannel canvasChannel;
         [RuntimeObject,SerializeField, Rename("Active Canvas"), ReadOnly] 
@@ -25,6 +25,18 @@ namespace ModularFramework
         private void OnDisable()
         {
             canvasChannel?.RemoveListener(CanvasChange);
+        }
+        
+        protected override void OnAwake()
+        {
+        }
+
+        protected override void OnStart()
+        {
+        }
+
+        protected override void OnSceneDestroy()
+        {
         }
         
         public void CanvasChange((string, bool) channelMsg)

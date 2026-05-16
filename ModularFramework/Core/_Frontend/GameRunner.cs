@@ -33,7 +33,7 @@ namespace ModularFramework {
 
     #region Runtime
         protected void Awake() {
-            SingletonRegistry<GameRunner>.TryRegister(this);
+            SingletonRegistry<GameRunner>.Replace(this);
             LoadSystemsForDev();
             modules = ValidateModules(modules);
             TranslationUtil.Load(gameObject.scene.name);
@@ -42,7 +42,7 @@ namespace ModularFramework {
                 if(!module.centrallyManaged && module.OperateEveryFrame) {
                     _framelyUpdatedModules.Add(module);
                 }
-                InjectModule(module);
+                module.InjectRegistry();
             }
 
             foreach (var sys in Registry<GameSystem>.All)
@@ -109,7 +109,7 @@ namespace ModularFramework {
                 foreach (var module in modules)
                 {
                     module.Destroy();
-                    ClearSystem(module);
+                    module.ClearRegistry();
                 }
             }
 
@@ -146,22 +146,6 @@ namespace ModularFramework {
     #endregion
     
     #region System
-        public static void InjectSystem<T>(T sys) where T : GameSystem
-        {
-            SingletonRegistry<T>.Replace(sys);
-            Registry<GameSystem>.TryAdd(sys);
-        }
-
-        private static void InjectModule<T>(T module) where T : GameSystem // System can be used as a module too
-        {
-            SingletonRegistry<T>.Replace(module);
-        }
-
-        public static void ClearSystem<T>(T module) where T : GameSystem
-        {
-            SingletonRegistry<T>.Clear();
-        }
-        
         public static GameSystem[] ValidateSystems(GameSystem[] systems)
         {
             if (systems == null || systems.Length == 0) return systems;
@@ -336,7 +320,7 @@ namespace ModularFramework {
         systems = ValidateSystems(systems);
         foreach (var sys in systems)
         {
-            InjectSystem(sys);
+            sys.InjectRegistry();
             sys.Start();
         }
     }
@@ -367,7 +351,7 @@ namespace ModularFramework {
         Registry<GameSystem>.Clear();
         foreach(var sys in systems) {
             sys.Destroy();
-            ClearSystem(sys);
+            sys.ClearRegistry();
         }
     }
     

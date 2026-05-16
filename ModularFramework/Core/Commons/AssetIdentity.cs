@@ -18,10 +18,10 @@ namespace ModularFramework
         {
             get
             {
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
                 if (_assetId == 0)
                     SetupIDs();
-    #endif
+#endif
                 return _assetId;
             }
             // assetId is set internally when creating or duplicating a prefab
@@ -45,13 +45,13 @@ namespace ModularFramework
         void OnValidate()
         {
             // OnValidate is not called when using Instantiate
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
             DisallowChildNetworkIdentities();
             SetupIDs();
-    #endif
+#endif
         }
         
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
         void SetupIDs()
             {
                 // is this a prefab?
@@ -104,7 +104,7 @@ namespace ModularFramework
                     }
                 }
             }
-    #endif
+#endif
         
         private void DisallowChildNetworkIdentities()
         {
@@ -116,7 +116,7 @@ namespace ModularFramework
                 Debug.LogError($"'{name}' has another AssetIdentity component on '{identities[1].name}'. There should only be one AssetIdentity, and it must be on the root object. Please remove the other one.", this);
             }
         }
-        
+#if UNITY_EDITOR    
          private void AssignAssetID(string path)
         {
             // only set if not empty. 
@@ -139,16 +139,16 @@ namespace ModularFramework
                 // if (_assetId != before) Debug.Log($"Assigned assetId={assetId} to {name}");
             }
         }
-         
+#endif        
         private static uint AssetGuidToUint(Guid guid) => (uint)guid.GetHashCode(); // deterministic
         
         private static bool IsPrefab(GameObject obj)
         {
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
             return PrefabUtility.IsPartOfPrefabAsset(obj);
-    #else
+#else
                 return false;
-    #endif
+#endif
         }
         /// <summary>
         /// Should only be called in editor when we know for sure that this is a scene object with prefab parent. otherwise it would log an error.
@@ -160,13 +160,13 @@ namespace ModularFramework
         {
             prefab = null;
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
             if (!PrefabUtility.IsPartOfPrefabInstance(gameObject))
             {
                 return false;
             }
             prefab = PrefabUtility.GetCorrespondingObjectFromSource(gameObject);
-    #endif
+#endif
 
             if (prefab == null)
             {
@@ -175,7 +175,8 @@ namespace ModularFramework
             }
             return true;
         }
-        
+#if UNITY_EDITOR    
         private void AssignAssetID(GameObject prefab) => AssignAssetID(AssetDatabase.GetAssetPath(prefab));
+#endif
     }
 }

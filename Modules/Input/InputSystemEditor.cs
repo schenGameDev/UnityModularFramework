@@ -40,11 +40,14 @@ namespace ModularFramework.Modules.Input
             {
                 return string.IsNullOrEmpty(label) ? input : label;
             }
+            
+            [HideInInspector] public InputActionAsset inputAsset; 
+            
+            private string[] InputKeys => GetInputActions(inputAsset);
         }
 
         private bool IsInputAsset => inputAsset != null;
-        private string[] InputKeys => GetInputActions(inputAsset);
-
+        
         public static string[] GetInputActions(InputActionAsset inputAsset)
         {
             var actions = new List<string> { NONE_ACTION };
@@ -86,6 +89,19 @@ namespace ModularFramework.Modules.Input
 
             return true;
         }
+        
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (inputs != null)
+            {
+                foreach (var i in inputs)
+                {
+                    i.inputAsset = inputAsset;
+                }
+            }
+        }
+#endif
     }
     
     [Flags]

@@ -28,12 +28,16 @@ namespace ModularFramework.Modules.Input
         }
 
         [Serializable]
-        private struct ActionKeyPair
+        private class ActionKeyPair
         {
             [Dropdown(nameof(InputKeys)), Rename("input")]
             public string inputAction;
 
             public UIInputKey key;
+            
+            [HideInInspector] public InputActionAsset inputAsset; 
+            
+            private string[] InputKeys => GetInputActions(inputAsset);
         }
 
         [Serializable]
@@ -58,8 +62,19 @@ namespace ModularFramework.Modules.Input
         [RuntimeObject] private List<(InputAction, Action<InputAction.CallbackContext>)> _actionCache = new();
         [RuntimeObject] private Dictionary<UIInputKey, Dictionary<InputDeviceType, Sprite>> _iconMap = new();
         private bool IsInputAsset => inputAsset != null;
-        private string[] InputKeys => GetInputActions(inputAsset);
-
+        
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (inputs != null)
+            {
+                foreach (var i in inputs)
+                {
+                    i.inputAsset = inputAsset;
+                }
+            }
+        }
+#endif
         protected override void OnAwake()
         {
             inputAsset.Enable();

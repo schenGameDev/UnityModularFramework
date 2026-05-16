@@ -28,6 +28,18 @@ namespace ModularFramework
             ((T)this).OnSceneDestroy();
             base.Destroy();
         }
+        
+        public override void InjectRegistry()
+        {
+            SingletonRegistry<T>.Replace((T)this);
+            Registry<GameSystem>.TryAdd(this);
+        }
+
+        public override void ClearRegistry()
+        {
+            SingletonRegistry<T>.Clear();
+        }
+        
         /// <summary>
         /// Called in GameRunner when a new scene loads
         /// </summary>
@@ -63,5 +75,9 @@ namespace ModularFramework
         {
             RuntimeObject.CleanRuntimeVars(this);
         }
+        
+        public abstract void InjectRegistry();
+
+        public abstract void ClearRegistry();
     }
 }

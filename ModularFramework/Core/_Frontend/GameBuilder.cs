@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using AYellowpaper.SerializedCollections;
 using EditorAttributes;
@@ -52,7 +53,7 @@ namespace ModularFramework
             
             foreach (var sys in systems)
             {
-                GameRunner.InjectSystem(sys);
+                sys.InjectRegistry();
                 sys.Start();
             }
         }
@@ -70,7 +71,7 @@ namespace ModularFramework
             
             foreach(var sys in systems) {
                 sys.Destroy();
-                GameRunner.ClearSystem(sys);
+                sys.ClearRegistry();
             }
             Registry<GameSystem>.Clear();
         }
@@ -106,7 +107,7 @@ namespace ModularFramework
             }
             
             var transitionProfile = currentSceneExists? 
-                customTransitions[new Vector<string>(CurrentScene, sceneName)] ?? defaultTransition 
+                customTransitions.GetValueOrDefault(new Vector<string>(CurrentScene, sceneName), defaultTransition) 
                 : defaultTransition;
             _sceneLoadingTimer.OnTimerStop += () => UnloadLoadScene(currentSceneExists, currentScene,transitionProfile, callback);
             _sceneLoadingTimer.Start();

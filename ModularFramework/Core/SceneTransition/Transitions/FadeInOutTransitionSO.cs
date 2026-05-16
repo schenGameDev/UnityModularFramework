@@ -18,7 +18,7 @@ public class FadeInOutTransitionSO : SceneTransitionSO<FadeInOutTransitionSO>
     
     async UniTaskVoid Fade(CancellationToken token, RawImage lastSceneSnapshot) {
         Canvas parentCanvas = lastSceneSnapshot.canvas;
-        
+        lastSceneSnapshot.color = lastSceneSnapshot.color.SetAlpha(1);
         var mask = Instantiate(maskPrefab, parentCanvas.transform);
         // old scene out
         if (mode != FadeMode.FADE_IN) 

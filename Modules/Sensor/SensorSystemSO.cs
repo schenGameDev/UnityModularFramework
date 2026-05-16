@@ -2,17 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EditorAttributes;
+using ModularFramework;
 using Unity.Mathematics;
 using UnityEngine;
-using ModularFramework;
-using UnityEngine.Serialization;
 using static ModularFramework.Utility.MathUtil;
 
 /// <summary>
 /// Class <c>SensorSystem</c> monitors all <c>Sensible</c> in scene, calculate distance and handle vision between them
 /// </summary>
 [CreateAssetMenu(fileName = "SensorSystem_SO", menuName = "Game Module/Sensor")]
-public class SensorSystemSO : GameSystem, IRegistrySO {
+public class SensorSystemSO : GameSystem<SensorSystemSO>, IRegistrySO {
     
 #if UNITY_EDITOR
     [Header("Runtime")]
@@ -21,6 +20,18 @@ public class SensorSystemSO : GameSystem, IRegistrySO {
 
     [RuntimeObject] private readonly Dictionary<string,Sensible> _sensibleDict = new();
 
+    protected override void OnAwake()
+    {
+    }
+
+    protected override void OnStart()
+    {
+    }
+
+    protected override void OnSceneDestroy()
+    {
+    }
+    
     public void Register(Transform sensible) {
         if(_sensibleDict.ContainsKey(sensible.name)) {
             Debug.LogError("Fail to register Sensible gameObject because another Senisble already uses name: " + sensible.name);

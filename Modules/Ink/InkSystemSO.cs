@@ -772,9 +772,16 @@ namespace ModularFramework.Modules.Ink
             savableIds.Clear();
         }
 
-        public void LoadScene()
+        public void LoadScene(Action callback = null)
         {
-            _builder.Get().LoadScene(GetLastSceneName(), LoadHistory);
+            _builder.Get().LoadScene(GetLastSceneName(), 
+                callback == null 
+                    ? LoadHistory
+                    : () =>
+                    {
+                        LoadHistory();
+                        callback();
+                    });
         }
 
         // [Button]

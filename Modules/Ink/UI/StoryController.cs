@@ -22,8 +22,7 @@ namespace ModularFramework.Modules.Ink
                 .Do(so =>
                 {
                     so.StartStory(storyName);
-                    so.LoadScene();
-                    so.Next();
+                    so.LoadScene( () => so.Next());
                 });
             SingletonRegistry<NoteSystemSO>.Get().Do(sys => sys.LoadNotes());
         }

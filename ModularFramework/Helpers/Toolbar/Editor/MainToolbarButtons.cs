@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Toolbars;
 using UnityEngine;
@@ -16,7 +17,7 @@ namespace ModularFramework
                 MainToolbar.Refresh("Timescale/Slider");
             });
         
-            MainToolbarElementStyler.StyleElement<UnityEditor.Toolbars.EditorToolbarButton>("Timescale/Reset", element => {
+            MainToolbarElementStyler.StyleElement<EditorToolbarButton>("Timescale/Reset", element => {
                 element.style.paddingLeft = 0f;
                 element.style.paddingRight = 0f;
                 element.style.marginLeft = 0f;
@@ -35,3 +36,4 @@ namespace ModularFramework
         }
     }
 }
+#endif

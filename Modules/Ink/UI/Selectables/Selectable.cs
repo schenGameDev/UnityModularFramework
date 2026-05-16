@@ -29,7 +29,7 @@ namespace ModularFramework.Modules.Ink
 #endif
         protected virtual void Awake()
         {
-            if (selectableGroup != null)
+            if (selectableGroup == null)
             {
                 DebugUtil.Error("SelectableGroup not found in parent", this.name);
             }

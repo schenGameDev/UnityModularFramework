@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditor.Toolbars;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -33,3 +34,4 @@ namespace ModularFramework
         }
     }
 }
+#endif

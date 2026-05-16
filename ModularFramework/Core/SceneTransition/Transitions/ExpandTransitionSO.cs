@@ -17,7 +17,7 @@ public class ExpandTransitionSO : SceneTransitionSO<ExpandTransitionSO>
     
     async UniTaskVoid Expand(CancellationToken token, RawImage lastSceneSnapshot) {
         Canvas parentCanvas = lastSceneSnapshot.canvas;
-        
+        lastSceneSnapshot.color = lastSceneSnapshot.color.SetAlpha(1);
         var mask = Instantiate(maskPrefab, parentCanvas.transform);
         mask.color = mask.color.SetAlpha(1);
         var rect = mask.rectTransform;

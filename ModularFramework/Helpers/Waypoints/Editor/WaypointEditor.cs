@@ -1,5 +1,6 @@
-using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+using UnityEngine;
 
 [CustomEditor(typeof(Waypoint))]
 public class WaypointEditor : Editor {
@@ -29,3 +30,4 @@ public class WaypointEditor : Editor {
         }
     }
 }
+#endif

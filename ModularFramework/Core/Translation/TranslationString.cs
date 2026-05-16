@@ -11,7 +11,9 @@ namespace ModularFramework.Utility
     public class TranslationString
     {
         [ReadOnly] public uint id;
+#if UNITY_EDITOR
         [HideLabel,OnValueChanged(nameof(Save))]
+#endif
         public string text;
         
         public static implicit operator string(TranslationString translationString) 

@@ -5,7 +5,7 @@ using UnityEngine.Audio;
 namespace UnityModularFramework
 {
     [CreateAssetMenu(menuName = "Game Module/Volume System", fileName = "VolumeSystem_SO")]
-    public class VolumeSystemSO : GameSystem
+    public class VolumeSystemSO : GameSystem<VolumeSystemSO>
     {
         public enum VolumeType
         {
@@ -42,5 +42,17 @@ namespace UnityModularFramework
         public float GetMusicVolume() => GetVolume(musicGroup);
         public float GetSoundFxVolume() => GetVolume(soundFxGroup);
         #endregion
+        
+        protected override void OnAwake()
+        {
+        }
+
+        protected override void OnStart()
+        {
+        }
+
+        protected override void OnSceneDestroy()
+        {
+        }
     }
 }

@@ -19,7 +19,7 @@ public class FillTransitionSO : SceneTransitionSO<FillTransitionSO>
     
     async UniTaskVoid Fill(CancellationToken token, RawImage lastSceneSnapshot) {
         Canvas parentCanvas = lastSceneSnapshot.canvas;
-        
+        lastSceneSnapshot.color = lastSceneSnapshot.color.SetAlpha(1);
         var mask = Instantiate(maskPrefab, parentCanvas.transform);
         mask.type = Image.Type.Filled;
         mask.fillMethod = fillMethod;

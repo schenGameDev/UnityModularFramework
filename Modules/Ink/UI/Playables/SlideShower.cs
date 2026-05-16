@@ -65,6 +65,7 @@ namespace ModularFramework.Modules.Ink
             else if (profile.sprite)
             {
                 image.sprite = profile.sprite;
+                image.color = profile.color;
                 image.enabled = true;
             }
             else if (profile.color.a != 0)

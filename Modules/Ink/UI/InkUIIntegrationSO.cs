@@ -444,7 +444,7 @@ namespace ModularFramework.Modules.Ink
         public void ChangeAutoPlaySpeed(AutoPlaySpeed speed)
         {
             if (PlaySpeed == speed) return;
-
+            PlaySpeed = speed;
             if (PlaySpeed == AutoPlaySpeed.NONE)
             {
                 _autoPlayTimer?.Dispose();

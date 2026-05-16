@@ -1,3 +1,5 @@
+#if UNITY_EDITOR
+using System;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -5,7 +7,7 @@ using UnityEngine.UIElements;
 namespace ModularFramework
 {
     public static class MainToolbarElementStyler {
-        public static void StyleElement<T>(string elementName, System.Action<T> styleAction) where T : VisualElement {
+        public static void StyleElement<T>(string elementName, Action<T> styleAction) where T : VisualElement {
             EditorApplication.delayCall += () => {
                 ApplyStyle(elementName, (element) => {
                     T targetElement = null;
@@ -23,7 +25,7 @@ namespace ModularFramework
             };
         }
 
-        static void ApplyStyle(string elementName, System.Action<VisualElement> styleCallback) {
+        static void ApplyStyle(string elementName, Action<VisualElement> styleCallback) {
             var element = FindElementByName(elementName);
             if (element != null) {
                 styleCallback(element);
@@ -44,3 +46,4 @@ namespace ModularFramework
         }
     }
 }
+#endif

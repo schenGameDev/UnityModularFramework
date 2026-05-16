@@ -41,6 +41,15 @@ namespace ModularFramework {
             ((T)this).OnDraw();
         }
         
+        public override void InjectRegistry()
+        {
+            SingletonRegistry<T>.Replace((T)this);
+        }
+        
+        public override void ClearRegistry()
+        {
+            SingletonRegistry<T>.Clear();
+        }
         
         protected float DeltaTime;
         
@@ -93,6 +102,7 @@ namespace ModularFramework {
         /// </summary>
         public override void SceneAwake()
         {
+            RuntimeObject.InitializeRuntimeVars(this);
             base.SceneAwake();
             OperateEveryFrame = (updateMode == UpdateMode.EVERY_N_FRAME && everyNFrame == 1) || 
                                 (updateMode == UpdateMode.EVERY_N_SECOND && everyNSecond == 0);
@@ -104,7 +114,6 @@ namespace ModularFramework {
         /// </summary>
         public override void Start()
         {
-            base.Start();
             if(updateMode == UpdateMode.NONE || OperateEveryFrame) return;
             if(updateMode == UpdateMode.EVERY_N_FRAME)
             {
