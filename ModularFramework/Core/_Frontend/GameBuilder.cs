@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using AYellowpaper.SerializedCollections;
-using EditorAttributes;
 using ModularFramework.Commons;
 using ModularFramework.Utility;
 using UnityEngine;
@@ -32,10 +31,8 @@ namespace ModularFramework
         [SerializeField] private SceneTransitionSO defaultTransition;
         [SerializeField,SerializedDictionary("from-to scenes","transition")] 
         private SerializedDictionary<Vector<string>, SceneTransitionSO> customTransitions = new();
-
-        [Header("Game Systems")]
-        [SerializeField,HideLabel]
-        private GameSystem[] systems;
+        
+        [SerializeField] private GameSystemBucket gameSystems;
         
         private CancellationTokenSource _cts;
         
@@ -45,16 +42,9 @@ namespace ModularFramework
         {
             SingletonRegistry<GameBuilder>.TryRegister(this);
             GameStartFromBuilder = true;
-            if (systems == null) return;
-            
-            systems = GameRunner.ValidateSystems(systems);
-            
-            Registry<GameSystem>.Clear();
-            
-            foreach (var sys in systems)
+            if (gameSystems != null)
             {
-                sys.InjectRegistry();
-                sys.Start();
+                gameSystems.RegisterAll();
             }
         }
 
@@ -68,12 +58,10 @@ namespace ModularFramework
         {
             _cts?.Cancel();
             _cts?.Dispose();
-            
-            foreach(var sys in systems) {
-                sys.Destroy();
-                sys.ClearRegistry();
+            if (gameSystems != null)
+            {
+                gameSystems.UnregisterAll();
             }
-            Registry<GameSystem>.Clear();
         }
 
         #region Scene

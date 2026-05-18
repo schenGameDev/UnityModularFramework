@@ -146,26 +146,6 @@ namespace ModularFramework {
     #endregion
     
     #region System
-        public static GameSystem[] ValidateSystems(GameSystem[] systems)
-        {
-            if (systems == null || systems.Length == 0) return systems;
-            
-            var systemTypes = new HashSet<Type>();
-            var newSystems = new List<GameSystem>();
-            foreach (var sys in systems)
-            {
-                if (sys == null) continue;
-                Type systemType = sys.GetType();
-                if (!systemTypes.Add(systemType))
-                {
-                    Debug.LogError($"Remove duplicate system: {systemType.Name}.");
-                    continue;
-                }
-                newSystems.Add(sys);
-            }
-            return newSystems.ToArray();
-        }
-
         private static GameModule[] ValidateModules(GameModule[] modules)
         {
             if (modules == null || modules.Length == 0) return modules;
@@ -305,7 +285,7 @@ namespace ModularFramework {
     [SerializeField] private EventSystem localEventSystem;
     [SerializeField] private Camera localCamera;
     [SerializeField] private Canvas[] canvases;
-    [SerializeField,HideLabel] private GameSystem[] systems;
+    [SerializeField] private GameSystemBucket testSystems;
 
     private void LoadSystemsForDev()
     {
@@ -314,14 +294,10 @@ namespace ModularFramework {
             DisableDevComponents();
             return;
         }
-        if (systems == null) return;
-            
-        Registry<GameSystem>.Clear();
-        systems = ValidateSystems(systems);
-        foreach (var sys in systems)
+
+        if (testSystems != null)
         {
-            sys.InjectRegistry();
-            sys.Start();
+            testSystems.RegisterAll();
         }
     }
     
@@ -346,21 +322,17 @@ namespace ModularFramework {
     private void DestroySystemsForDev()
     {
         if(GameBuilder.GameStartFromBuilder) return;
-        if (systems == null) return;
-        
-        Registry<GameSystem>.Clear();
-        foreach(var sys in systems) {
-            sys.Destroy();
-            sys.ClearRegistry();
+        if (testSystems != null)
+        {
+            testSystems.UnregisterAll();
         }
     }
     
     private void AddDevSystemBootUpParameter(HashSet<string> kw, HashSet<string> kw2)
     {
-        if (systems == null) return;
-        foreach(var sys in systems) {
-            if(sys==null) continue;
-                
+        if (testSystems == null) return;
+        testSystems.ForEach(sys =>
+        {
             foreach (var k in SceneFlag.GetAllSceneFlagKeywords(sys)) {
                 kw.Add(k);
                 flags.AddIfAbsent(k,"");
@@ -370,7 +342,7 @@ namespace ModularFramework {
                 kw2.Add(k);
                 references.AddIfAbsent(k,null);
             }
-        }
+        });
     }
     #endregion
     }
