@@ -38,11 +38,16 @@ namespace ModularFramework.Modules.Ability
         #region Projectile
         public bool Arrive(Transform target, Vector3 hitPoint)
         {
-            if (!projectile.Started) return false;
+            if (!projectile.Started)
+            {
+                onComplete?.Invoke();
+                return false;
+            }
             if (target != null 
                 && ignoreCaster 
                 && target.GetComponent<IDamageable>().Transform == caster)
             {
+                onComplete?.Invoke();
                 return false;
             }
             // target like ground can be too big,
@@ -54,6 +59,7 @@ namespace ModularFramework.Modules.Ability
                     SingletonRegistry<ProjectileManagerSO>.Instance.effectParent);
                 if (isBeam)
                 {
+                    UpdateBeam(true);
                     impactEffect.SetBeam(_beam, _beamId);
                     _beam = null;
                 }
@@ -142,18 +148,22 @@ namespace ModularFramework.Modules.Ability
             }
         }
 
-        private void UpdateBeam()
+        private void UpdateBeam(bool arrived)
         {
             if (!isBeam || _beam == null) return;
             var points = projectile.GetTrajectory();
             if (points.Length < 2) return;
+            if (arrived)
+            {
+                points[^1] += transform.forward * 0.1f; // prevent z-fighting
+            }
             _beam.positionCount = points.Length;
             _beam.SetPositions(points);
         }
     
         private void Update()
         {
-            UpdateBeam();
+            UpdateBeam(false);
         }
 
         private void OnDisable()

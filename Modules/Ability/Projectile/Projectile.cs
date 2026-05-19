@@ -351,7 +351,14 @@ namespace ModularFramework.Modules.Ability
         
         public Vector3[] GetTrajectory()
         {
-            if (saveTrajectory && _trajectory.Count > 1) return _trajectory.ToArray();
+            if (saveTrajectory && _trajectory.Count > 1)
+            {
+                if (_trajectory[^1] != transform.position)
+                {
+                    _trajectory.Add(transform.position);
+                }
+                return _trajectory.ToArray();
+            }
             var endPosition = transform.position;
             if (aimType is AimType.Direction)
             {
