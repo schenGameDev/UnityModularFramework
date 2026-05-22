@@ -15,7 +15,7 @@ namespace ModularFramework.Modules.Ink
 
         private CancellationTokenSource _cts;
 
-        public override void OnDestroy()
+        public override void Destroy()
         {
             try
             {
@@ -28,12 +28,12 @@ namespace ModularFramework.Modules.Ink
             }
         }
 
-        public override void OnSkip()
+        public override void Skip()
         {
             _cts.Cancel();
         }
 
-        public override void OnPrint(string text, Action callback = null)
+        public override void Print(string text)
         {
             if (_cts != null)
             {
@@ -46,10 +46,10 @@ namespace ModularFramework.Modules.Ink
             text = Prepare(text);
             Printer.textbox.text = GetFinalText(text);
             Printer.Done = false;
-            FadeIn(callback, _cts.Token).Forget();
+            FadeIn(_cts.Token).Forget();
         }
 
-        private async UniTaskVoid FadeIn(Action callback, CancellationToken token)
+        private async UniTaskVoid FadeIn(CancellationToken token)
         {
             float t = 0;
             bool isCancelled = false;
@@ -75,7 +75,7 @@ namespace ModularFramework.Modules.Ink
             }
 
             Printer.textbox.color = Printer.textbox.color.SetAlpha(0);
-            callback?.Invoke();
+            OnPrintComplete?.Invoke();
             Finish();
         }
     }

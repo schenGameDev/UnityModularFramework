@@ -3,7 +3,6 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using EditorAttributes;
 using ModularFramework.Commons;
-using ModularFramework.Modules.Sound;
 using UnityEngine;
 
 namespace ModularFramework.Modules.Ink
@@ -35,7 +34,7 @@ namespace ModularFramework.Modules.Ink
 
         private CancellationTokenSource _cts;
 
-        public override void OnDestroy()
+        public override void Destroy()
         {
             try
             {
@@ -49,12 +48,12 @@ namespace ModularFramework.Modules.Ink
             }
         }
 
-        public override void OnSkip()
+        public override void Skip()
         {
             _cts.Cancel();
         }
 
-        public override void OnPrint(string text, Action callback = null)
+        public override void Print(string text)
         {
             if (Printer.endIndicator) Printer.endIndicator.SetActive(false);
             if (_cts != null)
@@ -67,15 +66,14 @@ namespace ModularFramework.Modules.Ink
             _cts = new CancellationTokenSource();
 
             text = Prepare(text);
-            if (cursor) PrintTaskCursor(text, callback, _cts.Token).Forget();
-            else PrintTask(text, callback, _cts.Token).Forget();
+            if (cursor) PrintTaskCursor(text, OnPrintComplete, _cts.Token).Forget();
+            else PrintTask(text, OnPrintComplete, _cts.Token).Forget();
         }
 
         private async UniTaskVoid PrintTask(string text, Action callback, CancellationToken token)
         {
             Printer.gameObject.SetActive(true);
             bool lastCharIsPunctuation = false;
-            SoundPlayer soundPlayer = Printer.GetSoundPlayer();
             bool isTextTag = false;
             foreach (var ch in text)
             {
@@ -83,6 +81,7 @@ namespace ModularFramework.Modules.Ink
                 if (isTextTag)
                 {
                     Printer.textbox.text += ch;
+                    OnTextChanged?.Invoke();
                     if (ch == '>') isTextTag = false;
                     continue;
                 }
@@ -92,13 +91,11 @@ namespace ModularFramework.Modules.Ink
                 float t;
                 if (wait)
                 {
-                    if (soundPlayer) soundPlayer.SetVolume(0);
                     t = timeGapBetweenPunctuation;
                 }
                 else
                 {
                     t = timeGapBetweenLetters;
-                    soundPlayer?.ResetVolume();
                 }
 
                 lastCharIsPunctuation = punctuation;
@@ -106,7 +103,6 @@ namespace ModularFramework.Modules.Ink
                 if (isCanceled)
                 {
                     Finish(text); // canceled and no new print task
-                    soundPlayer?.Stop();
                     callback?.Invoke();
                     if (Printer.endIndicator) Printer.endIndicator.SetActive(true);
                     return;
@@ -119,8 +115,7 @@ namespace ModularFramework.Modules.Ink
                     callback?.Invoke();
                 }
             }
-
-            soundPlayer?.Stop();
+            
             Finish();
             if (!ReturnedEarly) callback?.Invoke();
             if (Printer.endIndicator) Printer.endIndicator.SetActive(true);
@@ -135,7 +130,7 @@ namespace ModularFramework.Modules.Ink
         {
             Printer.gameObject.SetActive(true);
             bool lastCharIsPunctuation = false;
-            SoundPlayer soundPlayer = Printer.GetSoundPlayer();
+            
             Flip flip = new Flip();
             bool printCursor = false;
             float b = blinkTime;
@@ -146,6 +141,7 @@ namespace ModularFramework.Modules.Ink
                 if (isTextTag)
                 {
                     Printer.textbox.text += ch;
+                    OnTextChanged?.Invoke();
                     if (ch == '>') isTextTag = false;
                     continue;
                 }
@@ -156,13 +152,11 @@ namespace ModularFramework.Modules.Ink
                 float gap;
                 if (wait)
                 {
-                    if (soundPlayer) soundPlayer.SetVolume(0);
                     gap = timeGapBetweenPunctuation;
                 }
                 else
                 {
                     gap = timeGapBetweenLetters;
-                    soundPlayer?.ResetVolume();
                 }
 
                 float t = gap;
@@ -188,7 +182,6 @@ namespace ModularFramework.Modules.Ink
                         Finish(text); // canceled and no new print task
                         callback?.Invoke();
                         if (Printer.endIndicator) Printer.endIndicator.SetActive(true);
-                        soundPlayer?.Stop();
                         return;
                     }
                 }
@@ -200,8 +193,7 @@ namespace ModularFramework.Modules.Ink
                     callback?.Invoke();
                 }
             }
-
-            soundPlayer?.Stop();
+            
             Finish();
             if (!ReturnedEarly) callback?.Invoke();
             if (Printer.endIndicator) Printer.endIndicator.SetActive(true);

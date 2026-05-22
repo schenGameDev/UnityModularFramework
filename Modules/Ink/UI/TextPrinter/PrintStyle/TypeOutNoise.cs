@@ -2,7 +2,6 @@ using System;
 using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using ModularFramework.Modules.Sound;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -16,7 +15,7 @@ namespace ModularFramework.Modules.Ink
 
         private CancellationTokenSource _cts;
 
-        public override void OnDestroy()
+        public override void Destroy()
         {
             try
             {
@@ -29,12 +28,12 @@ namespace ModularFramework.Modules.Ink
             }
         }
 
-        public override void OnSkip()
+        public override void Skip()
         {
             _cts.Cancel();
         }
 
-        public override void OnPrint(string text, Action callback = null)
+        public override void Print(string text)
         {
             if (Printer.endIndicator) Printer.endIndicator.SetActive(false);
             if (_cts != null)
@@ -47,13 +46,12 @@ namespace ModularFramework.Modules.Ink
             _cts = new CancellationTokenSource();
 
             text = Prepare(text);
-            PrintTaskNoise(text, callback, _cts.Token).Forget();
+            PrintTaskNoise(text, _cts.Token).Forget();
         }
 
-        private async UniTaskVoid PrintTaskNoise(string text, Action callback, CancellationToken token)
+        private async UniTaskVoid PrintTaskNoise(string text, CancellationToken token)
         {
             Printer.gameObject.SetActive(true);
-            SoundPlayer soundPlayer = Printer.GetSoundPlayer();
             bool isTextTag = false;
             foreach (var ch in text)
             {
@@ -61,6 +59,7 @@ namespace ModularFramework.Modules.Ink
                 if (isTextTag)
                 {
                     Printer.textbox.text += ch;
+                    OnTextChanged?.Invoke();
                     if (ch == '>') isTextTag = false;
                     continue;
                 }
@@ -75,9 +74,8 @@ namespace ModularFramework.Modules.Ink
                     if (isCanceled)
                     {
                         Finish(text); // canceled and no new print task
-                        callback?.Invoke();
+                        OnPrintComplete?.Invoke();
                         if (Printer.endIndicator) Printer.endIndicator.SetActive(true);
-                        soundPlayer?.Stop();
                         return;
                     }
                 }
@@ -85,15 +83,14 @@ namespace ModularFramework.Modules.Ink
                 Printer.textbox.text = txt + ch;
                 if (ReturnEarly && text.Length - Printer.textbox.text.Length == 2)
                 {
-                    callback?.Invoke();
+                    OnPrintComplete?.Invoke();
                     ReturnedEarly = true;
                 }
             }
 
             Finish();
-            if (!ReturnedEarly) callback?.Invoke();
+            if (!ReturnedEarly) OnPrintComplete?.Invoke();
             if (Printer.endIndicator) Printer.endIndicator.SetActive(true);
-            soundPlayer?.Stop();
         }
 
         private string RandomChar()

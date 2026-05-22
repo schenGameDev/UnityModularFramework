@@ -30,6 +30,48 @@ public static class ListExtension {
         list.RemoveAt(n);
         return ele;
     }
+
+    public static bool RemoveRange<T>(this IList<T> list, int index, int count)
+    {
+        if (index < 0 || index >= list.Count)
+            return false;
+    
+        if (count < 0 || index + count > list.Count)
+            return false;
+    
+        // Remove in reverse order to avoid index shifting issues
+        for (int i = index + count - 1; i >= index; i--)
+        {
+            list.RemoveAt(i);
+        }
+    
+        return true;
+    }
+    public static List<T> RemoveRangeAndReturn<T>(this IList<T> list, int index, int length)
+    {
+        if (index < 0 || index >= list.Count)
+            throw new ArgumentOutOfRangeException(nameof(index));
+    
+        if (length < 0 || index + length > list.Count)
+            throw new ArgumentOutOfRangeException(nameof(length));
+    
+        List<T> removed = new List<T>(length);
+    
+        // Collect elements first
+        for (int i = 0; i < length; i++)
+        {
+            removed.Add(list[index + i]);
+        }
+    
+        // Remove in reverse order to avoid index shifting issues
+        for (int i = index + length - 1; i >= index; i--)
+        {
+            list.RemoveAt(i);
+        }
+    
+        return removed;
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Pop<T>(this IList<T> list) {
         var ele = list[^1];

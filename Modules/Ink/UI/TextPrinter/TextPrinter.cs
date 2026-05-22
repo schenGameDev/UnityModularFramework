@@ -14,12 +14,12 @@ namespace ModularFramework.Modules.Ink
         [SerializeField] private bool staticPrinter;
         [SerializeField] public GameObject endIndicator;
 
-        [SerializeField] protected string soundName;
+        [SerializeField, Tooltip("sound effect for one key strike")] 
+        protected string soundName;
 
         [SerializeField] private PrintStyleBase printStyle;
 
-        private PrintStyleBase _printStyleInstance;
-
+        protected PrintStyleBase printStyleInstance;
         protected Autowire<SoundManagerSO> SoundManager = new();
 
         [SerializeField, Child(Flag.IncludeInactive)]
@@ -29,9 +29,9 @@ namespace ModularFramework.Modules.Ink
 
         protected void Awake()
         {
-            _printStyleInstance =
+            printStyleInstance =
                 printStyle ? Instantiate(printStyle) : ScriptableObject.CreateInstance<NoPrintStyle>();
-            _printStyleInstance.Printer = this;
+            printStyleInstance.Printer = this;
             if (endIndicator) endIndicator.SetActive(false);
 
             if (staticPrinter)
@@ -49,13 +49,13 @@ namespace ModularFramework.Modules.Ink
                 return;
             }
 
-            _printStyleInstance.OnSkip();
+            printStyleInstance.Skip();
         }
 
         public override void Clean() // click again to hide
         {
             if (hideWhenNotUsed) gameObject.SetActive(false);
-            else if (!_printStyleInstance.noClearText) textbox.text = "";
+            else if (!printStyleInstance.noClearText) textbox.text = "";
             ReturnEarly = false;
             Done = false;
             _callback = null;
@@ -65,20 +65,31 @@ namespace ModularFramework.Modules.Ink
         {
             gameObject.SetActive(true);
             _callback = callback;
-            _printStyleInstance.ReturnEarly = ReturnEarly;
-            _printStyleInstance.OnPrint(text, callback);
+            printStyleInstance.ReturnEarly = ReturnEarly;
+            printStyleInstance.Print(text);
+            if (callback != null)
+            {
+                printStyleInstance.OnPrintComplete = callback;
+            }
+            if (!string.IsNullOrEmpty(soundName))
+            {
+                printStyleInstance.OnTextChanged = PlaySoundEffect;
+            }
         }
 
         private void OnDestroy()
         {
-            _printStyleInstance.OnDestroy();
+            printStyleInstance.Destroy();
             INSTANCES.Remove(printerName);
+        }
+        
+        private void PlaySoundEffect()
+        {
+            SoundManager.Get()?.PlaySound(soundName);
         }
 
 #if UNITY_EDITOR
         private void OnValidate() => this.ValidateRefs();
 #endif
-
-        public SoundPlayer GetSoundPlayer() => SoundManager.Get()?.PlayLoopSound(soundName);
     }
 }

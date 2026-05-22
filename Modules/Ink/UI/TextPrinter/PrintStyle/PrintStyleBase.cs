@@ -6,7 +6,11 @@ namespace ModularFramework.Modules.Ink
 {
     public abstract class PrintStyleBase : ScriptableObject
     {
-
+        #region Events
+        public Action OnTextChanged;
+        public Action OnPrintComplete;
+        #endregion
+        
         [Rename("Don't Clear Text"),Tooltip("Append new text as new lines")] 
         public bool noClearText;
 
@@ -17,11 +21,11 @@ namespace ModularFramework.Modules.Ink
 
         protected bool ReturnedEarly { get; set; }
 
-        public abstract void OnPrint(string text, Action callback = null);
+        public abstract void Print(string text);
 
-        public abstract void OnSkip();
+        public abstract void Skip();
 
-        public abstract void OnDestroy();
+        public abstract void Destroy();
 
         protected string Prepare(string text)
         {

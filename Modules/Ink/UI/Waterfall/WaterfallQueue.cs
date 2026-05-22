@@ -23,6 +23,7 @@ namespace ModularFramework.Modules.Ink
         private readonly List<Transform> _cards = new();
         private LineCard _latestLineCard;
         private Action _callback;
+        private RectTransform _rectTransform;
         [SavableState(nameof(SaveHistory))] private string _historyStr = "";
 
 
@@ -37,12 +38,14 @@ namespace ModularFramework.Modules.Ink
 
             _historyStr = "";
             _cards.Clear();
+            _rectTransform = GetComponent<RectTransform>();
         }
 
         private LineCard CreateLineCard(CharacterDatum datum)
         {
             var card = Instantiate(datum.lineCard, transform);
             card.PrefabKey = datum.id;
+            card.ParentQueue = _rectTransform;
             return card;
         }
 
@@ -56,7 +59,7 @@ namespace ModularFramework.Modules.Ink
             _cards.Add(card.transform);
             _latestLineCard = card;
             CheckCardLength();
-            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)transform);
+            // LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)transform);
         }
         
         private void AddNewCard(ChoiceCard card)
