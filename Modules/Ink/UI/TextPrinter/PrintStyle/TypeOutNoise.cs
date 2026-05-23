@@ -53,34 +53,54 @@ namespace ModularFramework.Modules.Ink
         {
             Printer.gameObject.SetActive(true);
             bool isTextTag = false;
+            
+            var isCanceled = await UniTask.WaitUntil(() => !Paused, cancellationToken: token).SuppressCancellationThrow();
+            if (isCanceled)
+            {
+                OnCancel(text);
+                return;
+            }
+            
             foreach (var ch in text)
             {
                 if (!isTextTag) isTextTag = ch == '<';
                 if (isTextTag)
                 {
                     Printer.textbox.text += ch;
-                    OnTextChanged?.Invoke();
                     if (ch == '>') isTextTag = false;
                     continue;
                 }
 
+                isCanceled = await UniTask.WaitUntil(() => !Paused, cancellationToken: token).SuppressCancellationThrow();
+                if (isCanceled)
+                {
+                    OnCancel(text);
+                    return;
+                }
+                
                 float t = timeGapBetweenLetters;
                 string txt = Printer.textbox.text;
                 while (t > 0)
                 {
                     Printer.textbox.text = txt + RandomChar();
                     t -= Time.deltaTime;
-                    bool isCanceled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
+                    isCanceled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
                     if (isCanceled)
                     {
-                        Finish(text); // canceled and no new print task
-                        OnPrintComplete?.Invoke();
-                        if (Printer.endIndicator) Printer.endIndicator.SetActive(true);
+                        OnCancel(text);
                         return;
                     }
                 }
-
+                
+                isCanceled = await UniTask.WaitUntil(() => !Paused, cancellationToken: token).SuppressCancellationThrow();
+                if (isCanceled)
+                {
+                    OnCancel(text);
+                    return;
+                }
+                
                 Printer.textbox.text = txt + ch;
+                OnTextChanged?.Invoke();
                 if (ReturnEarly && text.Length - Printer.textbox.text.Length == 2)
                 {
                     OnPrintComplete?.Invoke();
@@ -101,6 +121,13 @@ namespace ModularFramework.Modules.Ink
 
             return c;
 
+        }
+        
+        private void OnCancel(string text)
+        {
+            Finish(text); // canceled and no new print task
+            OnPrintComplete?.Invoke();
+            if (Printer.endIndicator) Printer.endIndicator.SetActive(true);
         }
     }
 }

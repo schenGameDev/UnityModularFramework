@@ -22,6 +22,7 @@ namespace ModularFramework.Modules.Ink
 
         private readonly List<Transform> _cards = new();
         private LineCard _latestLineCard;
+        private ChoiceCard _latestChoiceCard;
         private Action _callback;
         private RectTransform _rectTransform;
         [SavableState(nameof(SaveHistory))] private string _historyStr = "";
@@ -40,6 +41,18 @@ namespace ModularFramework.Modules.Ink
             _cards.Clear();
             _rectTransform = GetComponent<RectTransform>();
         }
+        
+        private void Update()
+        {
+            if (_latestLineCard != null)
+            {
+                _latestLineCard.ExpandHeight();
+            }
+            else if (_latestChoiceCard != null)
+            {
+                _latestChoiceCard.ExpandHeight();
+            }
+        }
 
         private LineCard CreateLineCard(CharacterDatum datum)
         {
@@ -51,13 +64,16 @@ namespace ModularFramework.Modules.Ink
 
         private ChoiceCard CreateChoiceCard()
         {
-            return Instantiate(choicePrefab, transform);
+            var card = Instantiate(choicePrefab, transform);
+            card.ParentQueue = _rectTransform;
+            return card;
         }
 
         private void AddNewCard(LineCard card)
         {
             _cards.Add(card.transform);
             _latestLineCard = card;
+            _latestChoiceCard = null;
             CheckCardLength();
             // LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)transform);
         }
@@ -66,6 +82,7 @@ namespace ModularFramework.Modules.Ink
         {
             _cards.Add(card.transform);
             _latestLineCard = null;
+            _latestChoiceCard = card;
             CheckCardLength();
             LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)transform);
         }
@@ -82,30 +99,17 @@ namespace ModularFramework.Modules.Ink
 
         private void RemoveLastChoiceCard()
         {
-            if (_cards.Count == 0)
+            if (_cards.Count == 0 || _latestChoiceCard == null)
             {
                 return;
             }
-
-            int lastChoiceIndex = -1;
-            for (int i = _cards.Count - 1; i >= 0; i--)
-            {
-                if (_cards[i].TryGetComponent<ChoiceCard>(out _))
-                {
-                    lastChoiceIndex = i;
-                    break;
-                }
-            }
-
-            if (lastChoiceIndex < 0)
-            {
-                return;
-            }
-
-            var card = _cards.RemoveAtAndReturn(lastChoiceIndex);
-            card.gameObject.SetActive(false);
-            Destroy(card.gameObject) ;
+            
+            _cards.Remove(_latestChoiceCard.transform);
+            
+            _latestChoiceCard.gameObject.SetActive(false);
+            Destroy(_latestChoiceCard.gameObject) ;
             _latestLineCard = _cards.Count > 0 && _cards[^1].TryGetComponent<LineCard>(out var lineCard) ? lineCard : null;
+            _latestChoiceCard = null;
         }
 
         private void OnCardComplete()
@@ -197,9 +201,8 @@ namespace ModularFramework.Modules.Ink
             ReturnEarly = false;
             Done = false;
             _latestLineCard = null;
+            _latestChoiceCard = null;
         }
-        
-
         #endregion
         
         #region Choice
@@ -251,6 +254,9 @@ namespace ModularFramework.Modules.Ink
         
                     var card = CreateLineCard(datum);
                     card.textbox.text = arr[1];
+                    card.Done = true;
+                    card.CheckTextHeight();
+                    card.ExpandHeight();
                     _cards.Add(card.transform);
                 });
             }

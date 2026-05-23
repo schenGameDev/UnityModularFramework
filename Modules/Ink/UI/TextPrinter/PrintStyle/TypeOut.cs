@@ -75,6 +75,14 @@ namespace ModularFramework.Modules.Ink
             Printer.gameObject.SetActive(true);
             bool lastCharIsPunctuation = false;
             bool isTextTag = false;
+            
+            var isCanceled = await UniTask.WaitUntil(() => !Paused, cancellationToken: token).SuppressCancellationThrow();
+            if (isCanceled)
+            {
+                OnCancel(text);
+                return;
+            }
+            
             foreach (var ch in text)
             {
                 if (!isTextTag) isTextTag = ch == '<';
@@ -86,6 +94,13 @@ namespace ModularFramework.Modules.Ink
                     continue;
                 }
 
+                isCanceled = await UniTask.WaitUntil(() => !Paused, cancellationToken: token).SuppressCancellationThrow();
+                if (isCanceled)
+                {
+                    OnCancel(text);
+                    return;
+                }
+                
                 bool punctuation = IsPunctuation(ch);
                 bool wait = !lastCharIsPunctuation && punctuation;
                 float t;
@@ -99,16 +114,16 @@ namespace ModularFramework.Modules.Ink
                 }
 
                 lastCharIsPunctuation = punctuation;
-                bool isCanceled = await UniTask.WaitForSeconds(t, cancellationToken: token).SuppressCancellationThrow();
+                isCanceled = await UniTask.WaitForSeconds(t, cancellationToken: token).SuppressCancellationThrow();
                 if (isCanceled)
                 {
-                    Finish(text); // canceled and no new print task
-                    callback?.Invoke();
-                    if (Printer.endIndicator) Printer.endIndicator.SetActive(true);
+                    OnCancel(text);
                     return;
                 }
 
                 Printer.textbox.text += ch;
+                OnTextChanged?.Invoke();
+                
                 if (ReturnEarly && text.Length - Printer.textbox.text.Length == 2)
                 {
                     ReturnedEarly = true;
@@ -135,17 +150,31 @@ namespace ModularFramework.Modules.Ink
             bool printCursor = false;
             float b = blinkTime;
             bool isTextTag = false;
+            
+            var isCanceled = await UniTask.WaitUntil(() => !Paused, cancellationToken: token).SuppressCancellationThrow();
+            if (isCanceled)
+            {
+                OnCancel(text);
+                return;
+            }
+            
             foreach (var ch in text)
             {
                 if (!isTextTag) isTextTag = ch == '<';
                 if (isTextTag)
                 {
                     Printer.textbox.text += ch;
-                    OnTextChanged?.Invoke();
                     if (ch == '>') isTextTag = false;
                     continue;
                 }
 
+                isCanceled = await UniTask.WaitUntil(() => !Paused, cancellationToken: token).SuppressCancellationThrow();
+                if (isCanceled)
+                {
+                    OnCancel(text);
+                    return;
+                }
+                
                 bool punctuation = IsPunctuation(ch);
                 bool wait = !lastCharIsPunctuation && punctuation;
                 lastCharIsPunctuation = punctuation;
@@ -176,17 +205,24 @@ namespace ModularFramework.Modules.Ink
                     else Printer.textbox.text = txt;
 
                     t -= Time.deltaTime;
-                    bool isCanceled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
+                    isCanceled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
                     if (isCanceled)
                     {
-                        Finish(text); // canceled and no new print task
-                        callback?.Invoke();
-                        if (Printer.endIndicator) Printer.endIndicator.SetActive(true);
+                        OnCancel(text);
                         return;
                     }
                 }
+                
+                isCanceled = await UniTask.WaitUntil(() => !Paused, cancellationToken: token).SuppressCancellationThrow();
+                if (isCanceled)
+                {
+                    OnCancel(text);
+                    return;
+                }
 
                 Printer.textbox.text = txt + ch;
+                OnTextChanged?.Invoke();
+                
                 if (ReturnEarly && text.Length - Printer.textbox.text.Length == 2)
                 {
                     ReturnedEarly = true;
@@ -196,6 +232,13 @@ namespace ModularFramework.Modules.Ink
             
             Finish();
             if (!ReturnedEarly) callback?.Invoke();
+            if (Printer.endIndicator) Printer.endIndicator.SetActive(true);
+        }
+        
+        private void OnCancel(string text)
+        {
+            Finish(text); // canceled and no new print task
+            OnPrintComplete?.Invoke();
             if (Printer.endIndicator) Printer.endIndicator.SetActive(true);
         }
 

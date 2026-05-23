@@ -55,8 +55,12 @@ namespace ModularFramework.Modules.Ink
             bool isCancelled = false;
             while (t < fadeInDuration && !isCancelled)
             {
-                Printer.textbox.color = Printer.textbox.color.SetAlpha(math.min(1, t / fadeInDuration));
-                t += Time.deltaTime;
+                if (!Paused)
+                {
+                    Printer.textbox.color = Printer.textbox.color.SetAlpha(math.min(1, t / fadeInDuration));
+                    t += Time.deltaTime;
+                }
+
                 isCancelled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
             }
 
@@ -69,8 +73,12 @@ namespace ModularFramework.Modules.Ink
             t = 0;
             while (t < fadeOutDuration && !isCancelled)
             {
-                Printer.textbox.color = Printer.textbox.color.SetAlpha(math.max(0, 1 - t / fadeOutDuration));
-                t += Time.deltaTime;
+                if (!Paused)
+                {
+                    Printer.textbox.color = Printer.textbox.color.SetAlpha(math.max(0, 1 - t / fadeOutDuration));
+                    t += Time.deltaTime;
+                }
+
                 isCancelled = await UniTask.NextFrame(cancellationToken: token).SuppressCancellationThrow();
             }
 

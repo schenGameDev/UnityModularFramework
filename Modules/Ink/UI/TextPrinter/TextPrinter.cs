@@ -27,7 +27,7 @@ namespace ModularFramework.Modules.Ink
 
         private Action _callback;
 
-        protected void Awake()
+        protected virtual void Awake()
         {
             printStyleInstance =
                 printStyle ? Instantiate(printStyle) : ScriptableObject.CreateInstance<NoPrintStyle>();

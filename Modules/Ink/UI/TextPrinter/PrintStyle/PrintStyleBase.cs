@@ -17,6 +17,8 @@ namespace ModularFramework.Modules.Ink
         protected string cachedText;
         public TextPrinter Printer { get; set; }
 
+        public bool Paused { get; set; }
+        
         public bool ReturnEarly { get; set; }
 
         protected bool ReturnedEarly { get; set; }
