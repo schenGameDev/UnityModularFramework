@@ -40,20 +40,27 @@ namespace ModularFramework.Modules.Ability
         {
             if (!projectile.Started)
             {
-                onComplete?.Invoke();
+                if (target == null)
+                {
+                    // end of life
+                    onComplete?.Invoke();
+                }
                 return false;
             }
-            if (target != null 
-                && ignoreCaster 
-                && target.GetComponent<IDamageable>().Transform == caster)
+
+            bool isPenetrate = false;
+            if (target != null && target.TryGetComponent(out IDamageable damageable))
             {
-                onComplete?.Invoke();
-                return false;
+                if (ignoreCaster && damageable.Transform == caster)
+                {
+                    return false;
+                }
+                isPenetrate = IsPenetrate(damageable);
             }
             // target like ground can be too big,
             // so we use hitPoint to spawn effect, and use target to get IDamageable
-            bool isPenetrate = IsPenetrate(target);
-            if (impactEffectPrefab != null)
+             
+            if (!isPenetrate && impactEffectPrefab != null)
             {
                 var impactEffect = Instantiate(impactEffectPrefab, hitPoint, Quaternion.identity,
                     SingletonRegistry<ProjectileManagerSO>.Instance.effectParent);
@@ -74,9 +81,8 @@ namespace ModularFramework.Modules.Ability
             return !isPenetrate;
         }
 
-        private bool IsPenetrate(Transform target)
+        private bool IsPenetrate(IDamageable damageable)
         {
-            if (!target.TryGetComponent(out IDamageable damageable)) return false;
             return penetrate.HasFlag(damageable.TargetType);
         }
 

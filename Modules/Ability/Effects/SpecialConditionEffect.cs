@@ -49,7 +49,7 @@ namespace ModularFramework.Modules.Ability
         
         public bool IsTargetValid(IDamageable target)
         {
-            return true;
+            return damageTarget.HasFlag(target.TargetType);
         }
         
         public DamageTarget ApplyTarget => damageTarget;
