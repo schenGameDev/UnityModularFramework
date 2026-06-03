@@ -34,11 +34,14 @@ namespace ModularFramework {
 
     #region Runtime
         protected void Awake() {
+            DebugUtil.DebugLog("GameRunner awake.");
+            
             SingletonRegistry<GameRunner>.Replace(this);
             LoadSystemsForDev();
             // 1. boot up systems
             foreach (var sys in Registry<GameSystem>.All)
             {
+                DebugUtil.DebugLog($"SceneAwake: {sys.GetType().Name}");
                 sys.SceneAwake();
             }
             
@@ -48,6 +51,7 @@ namespace ModularFramework {
             // 2. boot up modules
             modules = ValidateModules(modules);
             foreach(var module in modules) {
+                DebugUtil.DebugLog($"SceneAwake: {module.GetType().Name}");
                 module.SceneAwake();
                 if(module is GameModule m) {
                     _modules.Add(m);
@@ -57,11 +61,13 @@ namespace ModularFramework {
                     }
                     
                 }
+                DebugUtil.DebugLog($"Register: {module.GetType().Name}");
                 module.InjectRegistry();
             }
 
             foreach (var m in Registry<PersistentBehaviour>.All)
             {
+                DebugUtil.DebugLog($"PersistentBehaviour LoadScene: {m.name}");
                 m.LoadScene(_builder.Get().NextScene);
             }
             
@@ -75,6 +81,7 @@ namespace ModularFramework {
             {
                 foreach (var module in modules)
                 {
+                    DebugUtil.DebugLog($"Start: {module.GetType().Name}");
                     module.Start();
                 }
             }
@@ -113,18 +120,22 @@ namespace ModularFramework {
 
         private void OnDestroy()
         {
+            DebugUtil.DebugLog("GameRunner destroy.");
             DestroySystemsForDev();
             if (modules != null)
             {
                 foreach (var module in modules)
                 {
+                    DebugUtil.DebugLog($"Destroy: {module.GetType().Name}");
                     module.Destroy();
+                    DebugUtil.DebugLog($"Unregister: {module.GetType().Name}");
                     module.ClearRegistry();
                 }
             }
 
             foreach (var m in Registry<PersistentBehaviour>.All)
             {
+                DebugUtil.DebugLog($"PersistentBehaviour Destroy Scene: {m.name}");
                 m.DestroyScene(_builder.Get().NextScene);
             }
         }

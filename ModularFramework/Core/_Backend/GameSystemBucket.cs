@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ModularFramework.Utility;
 using UnityEngine;
 
 namespace ModularFramework
@@ -19,7 +20,9 @@ namespace ModularFramework
             
             foreach (var sys in systems)
             {
+                DebugUtil.DebugLog($"Register: {sys.GetType().Name}");
                 sys.InjectRegistry();
+                DebugUtil.DebugLog($"Start: {sys.GetType().Name}");
                 sys.Start();
             }
         }
@@ -27,11 +30,15 @@ namespace ModularFramework
         public void UnregisterAll()
         {
             if (systems == null) return;
-            foreach(var sys in systems) {
+            foreach(var sys in systems) 
+            {
+                DebugUtil.DebugLog($"Destroy: {sys.GetType().Name}");
                 sys.Destroy();
+                DebugUtil.DebugLog($"Unregister: {sys.GetType().Name}");
                 sys.ClearRegistry();
             }
             Registry<GameSystem>.Clear();
+            DebugUtil.DebugLog("GameSystem registry cleared.");
         }
         
         public void ForEach(Action<GameSystem> action)

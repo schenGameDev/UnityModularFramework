@@ -14,7 +14,7 @@ namespace ModularFramework.Utility
         }
 
         private static void Print(LogType type, LogLevel level, string message) {
-            bool suppressed = (int)level > DebugLevel;
+            bool suppressed = (int)level > DEBUG_LEVEL;
             if(suppressed) return;
             Debug.unityLogger.Log(type, message);
         }

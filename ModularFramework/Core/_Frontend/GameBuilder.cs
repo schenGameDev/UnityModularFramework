@@ -42,6 +42,7 @@ namespace ModularFramework
         {
             SingletonRegistry<GameBuilder>.TryRegister(this);
             GameStartFromBuilder = true;
+            DebugUtil.DebugLog("GameBuilder awake.");
             if (gameSystems != null)
             {
                 gameSystems.RegisterAll();
@@ -56,6 +57,7 @@ namespace ModularFramework
 
         private void OnDestroy()
         {
+            DebugUtil.DebugLog("GameBuilder destroy.");
             _cts?.Cancel();
             _cts?.Dispose();
             if (gameSystems != null)

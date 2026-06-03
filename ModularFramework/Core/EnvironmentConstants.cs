@@ -3,7 +3,7 @@ namespace ModularFramework {
     /// Other constants need to be put under internal class of this class
     /// </summary>
     public static class EnvironmentConstants {
-        public const int DebugLevel = 1;
+        public const int DEBUG_LEVEL = 1;
 
         public const int MAX_MANUAL_SAVE_SLOT = 20;
         public const int DEFAULT_AUTO_SAVE_SLOT = 0;
