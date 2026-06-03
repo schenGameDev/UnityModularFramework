@@ -4,10 +4,9 @@ namespace ModularFramework
 {
     /// <summary>
     /// Backend system independent of unity lifecycle. <br/>
-    /// If not added to GameBuilder, Start(), Destroy() will not invoke.<br/>
-    /// Start() called on GameBuilder<br/>
+    /// Start() called on GameBuilder or GameRunner<br/>
     /// SceneAwake() called on GameRunner<br/>
-    /// Destroy() called when game exits
+    /// Destroy() called when game exits or scene ends
     /// </summary>
     public abstract class GameSystem<T> : GameSystem where T : GameSystem<T>
     {

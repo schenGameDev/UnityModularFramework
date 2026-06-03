@@ -17,7 +17,7 @@ namespace ModularFramework {
 #if UNITY_EDITOR
         [OnValueChanged(nameof(AddBootUpParameter))] 
 #endif
-        private GameModule[] modules;
+        private GameSystem[] modules;
         [SerializeField,SerializedDictionary("Name","Value")] private SerializedDictionary<string,string> flags = new();
         [SerializeField,SerializedDictionary("Name","Ref Object")] private SerializedDictionary<string,GameObject> references = new();
 
@@ -28,26 +28,36 @@ namespace ModularFramework {
         public bool IsPause = false;
         public Transform Player => references["PLAYER"].transform;
 
-        readonly List<GameModule> _framelyUpdatedModules = new();
-        private Autowire<GameBuilder> _builder = new();
+        private readonly List<GameModule> _framelyUpdatedModules = new();
+        private readonly Autowire<GameBuilder> _builder = new();
+        private readonly List<GameModule> _modules = new();
 
     #region Runtime
         protected void Awake() {
             SingletonRegistry<GameRunner>.Replace(this);
             LoadSystemsForDev();
-            modules = ValidateModules(modules);
-            TranslationUtil.Load(gameObject.scene.name);
-            foreach(var module in modules) {
-                module.SceneAwake();
-                if(!module.centrallyManaged && module.OperateEveryFrame) {
-                    _framelyUpdatedModules.Add(module);
-                }
-                module.InjectRegistry();
-            }
-
+            // 1. boot up systems
             foreach (var sys in Registry<GameSystem>.All)
             {
                 sys.SceneAwake();
+            }
+            
+            // 2. translation layer
+            TranslationUtil.Load(gameObject.scene.name);
+            
+            // 2. boot up modules
+            modules = ValidateModules(modules);
+            foreach(var module in modules) {
+                module.SceneAwake();
+                if(module is GameModule m) {
+                    _modules.Add(m);
+                    if (!m.centrallyManaged && m.OperateEveryFrame)
+                    {
+                        _framelyUpdatedModules.Add(m);
+                    }
+                    
+                }
+                module.InjectRegistry();
             }
 
             foreach (var m in Registry<PersistentBehaviour>.All)
@@ -118,14 +128,15 @@ namespace ModularFramework {
                 m.DestroyScene(_builder.Get().NextScene);
             }
         }
-
+#if UNITY_EDITOR
         private void OnDrawGizmos()
         {
-            if (!Application.isPlaying || modules == null) return;
-            foreach(var module in modules) {
+            if (!Application.isPlaying || _modules == null) return;
+            foreach(var module in _modules) {
                 module.Draw();
             }
         }
+#endif
         
         public void EndGame() {
             #if UNITY_EDITOR
@@ -146,28 +157,28 @@ namespace ModularFramework {
     #endregion
     
     #region System
-        private static GameModule[] ValidateModules(GameModule[] modules)
+        private static GameSystem[] ValidateModules(GameSystem[] modules)
         {
             if (modules == null || modules.Length == 0) return modules;
             var moduleTypes = new HashSet<Type>();
-            var newModules = new List<GameModule>();
+            var newModules = new List<GameSystem>();
             var systemTypes = new HashSet<Type>();
             foreach (var sys in Registry<GameSystem>.All)
             {
                 systemTypes.Add(sys.GetType());
             }
             
-            foreach (var m in modules)
+            foreach (var sys in modules)
             {
-                if (m == null) continue;
-                Type moduleType = m.GetType();
+                if (sys == null) continue;
+                Type moduleType = sys.GetType();
                 if (systemTypes.Contains(moduleType) || 
-                    (!m.AllowMultipleModules && !moduleTypes.Add(moduleType)))
+                    (sys is GameModule { AllowMultipleModules: false } m && !moduleTypes.Add(moduleType)))
                 {
                     Debug.LogError($"Remove duplicate module: {moduleType.Name}.");
                     continue;
                 }
-                newModules.Add(m);
+                newModules.Add(sys);
             }
             return newModules.ToArray();
         }
