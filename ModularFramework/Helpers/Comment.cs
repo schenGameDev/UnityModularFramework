@@ -212,11 +212,7 @@ public sealed class Comment : MonoBehaviour
     [PostProcessScene]
     static void RemoveCommentsFromScene()
     {
-#if UNITY_2023_1_OR_NEWER
-        foreach (var comment in FindObjectsByType<Comment>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-#else
-        foreach (var comment in FindObjectsOfType<Comment>(includeInactive: true))
-#endif
+        foreach (var comment in FindObjectsByType<Comment>(FindObjectsInactive.Include))
             DestroyImmediate(comment);
     }
 

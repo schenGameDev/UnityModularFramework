@@ -720,7 +720,7 @@ namespace ModularFramework.Modules.Ink
         {
             //SaveUtil.SaveState(InkConstants.KEY_CURRENT_SCENE_HISTORY,  JsonUtility.ToJson(_taskHistory));
             Dictionary<string, Dictionary<string, AnyValue>> history = new();
-            FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+            FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include)
                 .SelectMany(mono => mono.GetComponents<ISavable>())
                 .ForEach(iSavable => history.Add(iSavable.Id, iSavable.GetState()));
             SaveUtil.SaveState(InkConstants.KEY_CURRENT_SCENE_HISTORY, JsonUtility.ToJson(history));
@@ -739,7 +739,7 @@ namespace ModularFramework.Modules.Ink
                     //     RunTask(th.Item1, th.Item2, th.Item3);
                     // } 
                     var history = JsonUtility.FromJson<Dictionary<string, Dictionary<string, AnyValue>>>(states);
-                    FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                    FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include)
                         .SelectMany(mono => mono.GetComponents<ISavable>())
                         .ForEach(savable => history.Get(savable.Id)
                             .Do(dict =>
@@ -755,7 +755,7 @@ namespace ModularFramework.Modules.Ink
         {
             HashSet<string> savableIds = new();
             List<string> warnings = new();
-            FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+            FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include)
                 .SelectMany(mono => mono.GetComponents<ISavable>())
                 .Where(iSavable => !savableIds.Add(iSavable.Id))
                 .ForEach(iSavable => warnings.Add($"{iSavable.Id} is duplicated"));
