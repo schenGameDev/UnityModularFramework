@@ -9,20 +9,30 @@ namespace ModularFramework
         private void RecenterToLocalOrigin()
         {
             Renderer rendererComponent = GetComponent<Renderer>();
-            if (rendererComponent == null)
-            {
-                Debug.LogWarning("No renderer component attached");
-            }
-            else if (!transform.parent)
+            BoxCollider colliderComponent = GetComponent<BoxCollider>();
+
+            if (!transform.parent)
             {
                 Debug.LogWarning("transform doesn't have a parent transform");
+                return;
             }
-            else
+            
+            if (rendererComponent != null)
             {
                 // Move the object so that its bounds are centered at the local origin
                 Vector3 offset = rendererComponent.bounds.center - transform.parent.transform.position;
                 transform.localPosition -= offset;
+                return;
             }
+
+            if (colliderComponent != null)
+            {
+                Vector3 offset = colliderComponent.bounds.center - transform.parent.transform.position;
+                transform.localPosition -= offset;
+                return;
+            }
+
+            Debug.LogWarning("No renderer or box collider component attached");
         }
         
         [Button]
@@ -32,6 +42,12 @@ namespace ModularFramework
             if (rendererComponent != null)
             {
                 Debug.Log(rendererComponent.bounds.extents);
+                return;
+            }
+            Collider colliderComponent = GetComponent<BoxCollider>();
+            if (colliderComponent != null)
+            {
+                Debug.Log(colliderComponent.bounds.extents);
             }
         }
         
