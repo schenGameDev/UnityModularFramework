@@ -20,10 +20,13 @@ namespace ModularFramework.Modules.Ability
         [RuntimeObject] private readonly List<Projectile> _activeProjectiles = new();
         [RuntimeObject] private readonly List<Projectile> _projectilesToReturn = new();
         [RuntimeObject] private int _spherecastCount = 0, _boxcastCount = 0, _capsulecastCount = 0;
+        [RuntimeObject] private readonly List<Projectile> _externalReturnProjectileCache = new();
+        [RuntimeObject] private readonly List<Projectile> _externalReturnUnmanagedProjectileCache = new();
 
         private TransformAccessArray _projTransforms;
         private NativeArray<ProjectileMoveResult> _moveResults;
         private NativeArray<ProjectileStatus> _projectileStatuses;
+        
 
         [RuntimeObject(noInitialize: true)] private RaycastBatchProcessor _raycastBatchProcessor;
 
@@ -60,7 +63,7 @@ namespace ModularFramework.Modules.Ability
                         {
                             projectile.effect.Arrive(null, projectile.transform.position);
                         }
-                        ReturnProjectile(projectile);
+                        ReturnProjectile_internal(projectile, true);
                         continue;
                     }
 
@@ -97,6 +100,8 @@ namespace ModularFramework.Modules.Ability
                     HandleCollisions();
                 }
             }
+
+            ReturnExternalProjectiles();
         }
 
         protected override void OnLateUpdate()
@@ -282,7 +287,7 @@ namespace ModularFramework.Modules.Ability
             {
                 if (hitResults[i])
                 {
-                    ReturnProjectile(_activeProjectiles[i]);
+                    ReturnProjectile_internal(_activeProjectiles[i], true);
                 }
             }
         }
@@ -327,9 +332,35 @@ namespace ModularFramework.Modules.Ability
             return projectile;
         }
         
-        public void ReturnProjectileUnmanaged(Projectile projectile) {
-            _projectilesToReturn.Add( projectile);
-            _activeProjectiles.Remove( projectile);
+        public void ReturnProjectile(Projectile projectile, bool isManaged) {
+            if (isManaged) _externalReturnProjectileCache.Add(projectile);
+            else _externalReturnUnmanagedProjectileCache.Add(projectile);
+        }
+        
+        private void ReturnExternalProjectiles()
+        {
+            foreach (var projectile in _externalReturnProjectileCache)
+            {
+                ReturnProjectile_internal(projectile, true);
+            }
+            foreach (var projectile in _externalReturnUnmanagedProjectileCache)
+            {
+                ReturnProjectile_internal(projectile, false);
+            }
+            _externalReturnProjectileCache.Clear();
+            _externalReturnUnmanagedProjectileCache.Clear();
+        }
+        
+        private void ReturnProjectile_internal(Projectile projectile, bool isManaged)
+        {
+            _projectilesToReturn.Add(projectile);
+            _activeProjectiles.Remove(projectile);
+            
+            if (!isManaged) return;
+            
+            if (projectile.collisionDetection == CastType.SPHERECAST) _spherecastCount--;
+            else if (projectile.collisionDetection == CastType.BOXCAST) _boxcastCount--;
+            else if (projectile.collisionDetection == CastType.CAPSULECAST) _capsulecastCount--;
         }
         
         private Projectile CreateProjectile(uint assetId)
@@ -360,15 +391,6 @@ namespace ModularFramework.Modules.Ability
             uint assetId = prefab.GetComponent<AssetIdentity>().assetId;
             _nonPoolingProjectiles.TryAdd(assetId, prefab);
             return assetId;
-        }
-
-        private void ReturnProjectile(Projectile projectile)
-        {
-            _projectilesToReturn.Add(projectile);
-            _activeProjectiles.Remove(projectile);
-            if (projectile.collisionDetection == CastType.SPHERECAST) _spherecastCount--;
-            else if (projectile.collisionDetection == CastType.BOXCAST) _boxcastCount--;
-            else if (projectile.collisionDetection == CastType.CAPSULECAST) _capsulecastCount--;
         }
     }
 }
