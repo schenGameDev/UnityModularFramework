@@ -8,7 +8,7 @@ namespace ModularFramework.Modules.Targeting
     [Serializable]
     public class TagFilter : ITransformTargetFilter
     {
-        [SerializeReference] private List<TagFieldWrapper> tags;
+        [SerializeField] private List<TagFieldWrapper> tags;
 
         private HashSet<string> tagNames;
 
