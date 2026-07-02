@@ -12,14 +12,14 @@ namespace ModularFramework.Modules.BehaviorTree
         [SerializeField, OnValueChanged(nameof(RenameComponent))]
         protected string interactName;
 
-        [SerializeField] private string animFlag;
+        [SerializeField] private AnimationConfig animConfig;
 
         [Header("Runtime")] [ShowInInspector, ReadOnly]
         private bool _isInteracting;
 
         protected Transform target;
         private Action<bool> _interactCallback;
-        [SerializeField, Self] private BTRunner runner;
+        [SerializeField, Self] private BTAnimation animation;
 
 #if UNITY_EDITOR
         private void OnValidate() => this.ValidateRefs();
@@ -33,17 +33,23 @@ namespace ModularFramework.Modules.BehaviorTree
             if (_isInteracting) return;
             _isInteracting = true;
             _interactCallback = callback;
-            runner.PlayAnim(animFlag, Stop);
+            animation.SetFlag(animConfig, () => Stop(false));
         }
 
         protected abstract void InteractResult();
 
-        public virtual void Stop()
+        public void Interrupt()
+        {
+            Stop(true);
+        }
+
+        protected virtual void Stop(bool isInterrupt)
         {
             if (!_isInteracting) return;
             _isInteracting = false;
             InteractResult();
             _interactCallback?.Invoke(true);
+            animation.ReverseFlag(animConfig, isInterrupt);
         }
 
         public string UniqueId => interactName;

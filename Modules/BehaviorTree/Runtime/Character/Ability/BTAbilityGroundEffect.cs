@@ -10,9 +10,11 @@ namespace ModularFramework.Modules.BehaviorTree
     {
         [SerializeField, DrawHandle]
         private Vector3 spawnEffectOffset;
+        
         [SerializeField,Tooltip("if targets move out of range at time of release, they will not be targeted")]
         private bool verifyRangeAtDamageTime = true;
         protected override bool VerifyRangeAtDamageTime => verifyRangeAtDamageTime;
+        protected override Vector3 SpawnEffectOffset => spawnEffectOffset;
         
         private GroundEffectAbilitySO _groundEffectAbility;
         private ImpactEffect _impactEffect;
@@ -25,7 +27,6 @@ namespace ModularFramework.Modules.BehaviorTree
             {
                 _impactEffect = _groundEffectAbility.impactEffectPrefab;
             }
-            ability.emitOffset = spawnEffectOffset;
         }
 
         protected override void WindUp()

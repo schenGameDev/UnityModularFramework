@@ -8,6 +8,7 @@ namespace ModularFramework.Modules.BehaviorTree
     public class BTAbilityInstant : BTAbility
     {
         protected override bool VerifyRangeAtDamageTime => false;
+        protected override Vector3 SpawnEffectOffset => Vector3.zero;
         
         #region Editor
         protected override ValidationCheck ValidateAbility()

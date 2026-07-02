@@ -17,7 +17,6 @@ namespace ModularFramework.Modules.Ability
         public GameObject[] releaseVfx;
 
         [Min(0)] public float cooldown;
-        [HideInInspector] public Vector3 emitOffset; // set externally
 
         public abstract AimType AimMethod();
         public abstract float AimRange();
@@ -25,27 +24,32 @@ namespace ModularFramework.Modules.Ability
         [SerializeField, Tooltip("If true, i will stay in this state until end or interrupted")]
         public bool continuousCasting;
 
-        public void Release(Transform me, List<IDamageable> targets, Action<AbilitySO> onComplete)
+        public void Release(Transform me, Vector3 rotatedOffset, Quaternion rotation, 
+            List<IDamageable> targets, Action<AbilitySO> onComplete)
         {
             PlayVisualSoundEffects(me, targets, null, null);
-            Apply(me, targets, continuousCasting && onComplete!=null? () => onComplete(this) : null);
+            Apply(me, rotatedOffset, rotation, targets, 
+                continuousCasting && onComplete!=null? () => onComplete(this) : null);
             if (!continuousCasting && onComplete != null)
             {
                 onComplete(this);
             }
         }
         
-        public virtual void ReleaseDirection(Transform me, Vector3 direction, Action<AbilitySO> onComplete)
+        public virtual void ReleaseDirection(Transform me, Vector3 rotatedOffset, Quaternion rotation,
+            Vector3 direction, Action<AbilitySO> onComplete)
         {
             onComplete?.Invoke(this);
         }
 
-        public virtual void ReleasePosition(Transform me, Vector3 position, Action<AbilitySO> onComplete)
+        public virtual void ReleasePosition(Transform me, Vector3 rotatedOffset, Quaternion rotation,
+            Vector3 targetPos, Action<AbilitySO> onComplete)
         {
             onComplete?.Invoke(this);
         }
 
-        protected abstract void Apply(Transform me, List<IDamageable> targets, Action onComplete);
+        protected abstract void Apply(Transform me, Vector3 rotatedOffset, Quaternion rotation, 
+            List<IDamageable> targets, Action onComplete);
 
         protected virtual void PlayVisualSoundEffects(Transform me, List<IDamageable> targets,
             List<Vector3> tarPositions, List<Vector3> directions)

@@ -9,7 +9,7 @@ namespace ModularFramework.Modules.BehaviorTree
     public class Npc : Character, IDamageable
     {
         public int maxHealth = 500;
-
+        [SerializeField] private float deathDelay = 1;
         [Header("Runtime")] public bool isStunned;
         public bool isFallen;
         public Transform tauntedBy;
@@ -132,13 +132,19 @@ namespace ModularFramework.Modules.BehaviorTree
 
         public EffectResolver EffectResolver => _effectResolver;
 
+        private bool _dead;
         private void Die()
         {
+            if (_dead)
+            {
+                Debug.LogWarning("NPC is already dead, cannot die again.");
+                return;
+            }
             Debug.Log("NPC has died.");
-
+            _dead = true;
             _effectResolver.ResetState();
             _effectResolver.onSpecialConditionChanged -= ShowSpecialCondition;
-            Destroy(gameObject);
+            Destroy(gameObject, deathDelay);
         }
     }
 }

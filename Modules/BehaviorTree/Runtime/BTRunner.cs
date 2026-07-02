@@ -1,4 +1,3 @@
-using System;
 using EditorAttributes;
 using KBCore.Refs;
 using UnityEngine;
@@ -10,9 +9,10 @@ namespace ModularFramework.Modules.BehaviorTree
     {
         [Required] public BehaviorTreeSO tree;
         [Suffix("s"), SerializeField] private float interval = 0.2f;
+        
+        public float turnSpeed = 60;
+        
         public bool Live { get; set; }
-        private Action _onAnimKeyEvent;
-        [SerializeField, Self(Flag.Optional)] Animator animator;
         private float _btTimer = 0f;
 
 #if UNITY_EDITOR
@@ -38,40 +38,6 @@ namespace ModularFramework.Modules.BehaviorTree
 
             UpdateFaceDirection();
         }
-
-        #region Animation
-
-        public void PlayAnim(string flag, Action onKeyEvent = null)
-        {
-            _onAnimKeyEvent = onKeyEvent;
-        
-            if (string.IsNullOrEmpty(flag))
-            {
-                Invoke(nameof(AnimKeyEvent), 0.5f);
-                return;
-            }
-            animator?.SetBool(flag, true);
-            Debug.Log($"Playing animation with flags: {flag}");
-        }
-        
-        public void Wait(float seconds, Action onKeyEvent)
-        {
-            _onAnimKeyEvent = onKeyEvent;
-            Invoke(nameof(AnimKeyEvent), seconds);
-        }
-
-        public void AnimKeyEvent() => _onAnimKeyEvent?.Invoke();
-
-        public void StopAnim(string flag)
-        {
-            if (string.IsNullOrEmpty(flag)) return;
-            animator?.SetBool(flag, false);
-            Debug.Log($"Stopping animation with flags: {flag}");
-            _onAnimKeyEvent = null;
-        }
-
-        #endregion
-
 
         #region Face Direction
 
@@ -123,7 +89,7 @@ namespace ModularFramework.Modules.BehaviorTree
                 {
                     Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
                     transform.rotation =
-                        Quaternion.RotateTowards(transform.rotation, targetRotation, 180f * Time.deltaTime);
+                        Quaternion.RotateTowards(transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
                 }
             }
         }

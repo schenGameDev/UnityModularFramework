@@ -15,6 +15,7 @@ namespace ModularFramework.Modules.BehaviorTree
         [SerializeField, ShowField(nameof(showAimArea))]
         private uint trajectoryAssetId;
         protected override bool VerifyRangeAtDamageTime => verifyRangeAtDamageTime;
+        protected override Vector3 SpawnEffectOffset => spawnEffectOffset;
         
         private ProjectileAbilitySO _projectileAbility;
         private ImpactEffect _impactEffect;
@@ -29,7 +30,6 @@ namespace ModularFramework.Modules.BehaviorTree
             if ( _projectileAbility != null)
             {
                 _projectileAbility.RegisterProjectile();
-                ability.emitOffset = spawnEffectOffset;
                 var pe = _projectileAbility.projectilePrefab.GetComponent<ProjectileEffect>();
                 if (pe.impactEffectPrefab != null) _impactEffect = pe.impactEffectPrefab;
                 _projectile = _projectileAbility.projectilePrefab;

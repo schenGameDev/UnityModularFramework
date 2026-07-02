@@ -20,7 +20,8 @@ namespace ModularFramework.Modules.Ability
         public override AimType AimMethod() => AimType.Transform;
         public override float AimRange() => maxRange;
         
-        protected override void Apply(Transform me, List<IDamageable> targets, Action onComplete)
+        protected override void Apply(Transform me, Vector3 rotatedOffset, Quaternion rotation,
+            List<IDamageable> targets, Action onComplete)
         {
             Execute(targets, me, onComplete);
         }

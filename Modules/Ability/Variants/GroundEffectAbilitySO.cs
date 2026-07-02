@@ -30,10 +30,11 @@ namespace ModularFramework.Modules.Ability
         public override AimType AimMethod() => targetSelf ? AimType.Self : AimType.Position;
         public override float AimRange() => targetSelf? 0 : maxRange;
         
-        protected override void Apply(Transform me, List<IDamageable> targets, Action onComplete)
+        protected override void Apply(Transform me, Vector3 rotatedOffset, Quaternion rotation,
+            List<IDamageable> targets, Action onComplete)
         {
-            Vector3 rotatedOffset = me.rotation * emitOffset;
-            Quaternion rotatedRotation = matchCasterRotation ? me.rotation : Quaternion.identity;
+
+            Quaternion rotatedRotation = matchCasterRotation ? rotation : Quaternion.identity;
 
             if (targetSelf)
             {
@@ -61,7 +62,8 @@ namespace ModularFramework.Modules.Ability
             }
         }
 
-        public override void ReleasePosition(Transform me, Vector3 targetPos, Action<AbilitySO> onComplete)
+        public override void ReleasePosition(Transform me, Vector3 rotatedOffset, Quaternion rotation,
+            Vector3 targetPos, Action<AbilitySO> onComplete)
         {
             PlayVisualSoundEffects(me, null,new List<Vector3>() {targetPos}, null);
             if (!continuousCasting)
@@ -69,9 +71,8 @@ namespace ModularFramework.Modules.Ability
                 onComplete?.Invoke(this);
                 onComplete = null;
             }
-
-            Vector3 rotatedOffset = me.rotation * emitOffset;
-            Quaternion rotatedRotation = matchCasterRotation ? me.rotation : Quaternion.identity;
+            
+            Quaternion rotatedRotation = matchCasterRotation ? rotation : Quaternion.identity;
 
             if (targetSelf)
             {

@@ -14,7 +14,8 @@ namespace ModularFramework.Modules.BehaviorTree
         private List<IDamageable> _damagedTargets = new List<IDamageable>(); // prevent hit one object twice
         
         protected override bool VerifyRangeAtDamageTime => false;
-
+        protected override Vector3 SpawnEffectOffset => Vector3.zero;
+        
         protected override void Release()
         {
             var useHitBox = TurnOnHitBox(true);
@@ -23,7 +24,7 @@ namespace ModularFramework.Modules.BehaviorTree
                 base.Release();
                 return;
             }
-            runner.PlayAnim(releaseAnimation, () => CastComplete(ability));
+            animation.SetFlag(releaseAnimConfig, () => CastComplete(ability));
         
         }
         
@@ -53,7 +54,8 @@ namespace ModularFramework.Modules.BehaviorTree
             var damageable = hit.GetComponent<IDamageable>();
             if (damageable == null || _damagedTargets.Contains(damageable)) return;
             _damagedTargets.Add(damageable);
-            ability.Release(transform, new () {damageable}, null);
+            ability.Release(transform, default, default, 
+                new () {damageable}, null);
         }
 
         #region Editor

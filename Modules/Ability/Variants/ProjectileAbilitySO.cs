@@ -32,7 +32,8 @@ namespace ModularFramework.Modules.Ability
         public override AimType AimMethod() => projectilePrefab.aimType;
         private uint _projectileId;
 
-        protected override void Apply(Transform me, List<IDamageable> targets, Action onComplete)
+        protected override void Apply(Transform me, Vector3 rotatedOffset, Quaternion rotation,
+            List<IDamageable> targets, Action onComplete)
         {
             if (!SingletonRegistry<ProjectileManagerSO>.TryGet(out var projectileManager))
             {
@@ -40,9 +41,8 @@ namespace ModularFramework.Modules.Ability
                 onComplete?.Invoke();
                 return;
             }
-
-            Vector3 rotatedOffset = me.rotation * emitOffset;
-            Quaternion rotatedRotation = matchCasterRotation ? me.rotation : Quaternion.identity;
+            
+            Quaternion rotatedRotation = matchCasterRotation ? rotation : Quaternion.identity;
             if (AimMethod() == AimType.Self)
             {
                 var projectile = GetProjectile(projectileManager,
@@ -75,7 +75,8 @@ namespace ModularFramework.Modules.Ability
 
         }
 
-        public override void ReleaseDirection(Transform me, Vector3 direction, Action<AbilitySO> onComplete)
+        public override void ReleaseDirection(Transform me, Vector3 rotatedOffset, Quaternion rotation,
+            Vector3 direction, Action<AbilitySO> onComplete)
         {
             if (!SingletonRegistry<ProjectileManagerSO>.TryGet(out var projectileManager))
             {
@@ -89,9 +90,8 @@ namespace ModularFramework.Modules.Ability
                 onComplete?.Invoke(this);
                 onComplete = null;
             }
-        
-            Vector3 rotatedOffset = me.rotation * emitOffset;
-            Quaternion rotatedRotation = matchCasterRotation? me.rotation : Quaternion.identity;
+            
+            Quaternion rotatedRotation = matchCasterRotation? rotation : Quaternion.identity;
             Projectile projectile;
             if (AimMethod() == AimType.Self)
             {
@@ -110,7 +110,8 @@ namespace ModularFramework.Modules.Ability
             projectile.effect.onComplete = () => onComplete?.Invoke(this);
         }
         
-        public override void ReleasePosition(Transform me, Vector3 targetPos,Action<AbilitySO> onComplete)
+        public override void ReleasePosition(Transform me, Vector3 rotatedOffset, Quaternion rotation,
+            Vector3 targetPos, Action<AbilitySO> onComplete)
         {
             if (!SingletonRegistry<ProjectileManagerSO>.TryGet(out var projectileManager))
             {
@@ -124,9 +125,8 @@ namespace ModularFramework.Modules.Ability
                 onComplete?.Invoke(this);
                 onComplete = null;
             }
-
-            Vector3 rotatedOffset = me.rotation * emitOffset;
-            Quaternion rotatedRotation = matchCasterRotation ? me.rotation : Quaternion.identity;
+            
+            Quaternion rotatedRotation = matchCasterRotation ? rotation : Quaternion.identity;
 
             Projectile projectile;
             if (AimMethod() == AimType.Self)

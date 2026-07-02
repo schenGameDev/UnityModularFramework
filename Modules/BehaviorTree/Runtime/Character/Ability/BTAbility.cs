@@ -28,8 +28,10 @@ namespace ModularFramework.Modules.BehaviorTree
         [Required, SerializeField, OnValueChanged(nameof(RenameComponent)),Validate(nameof(ValidateAbility))]
         protected AbilitySO ability;
 
-        [SerializeField] protected string windUpAnimation;
-        [SerializeField] protected string releaseAnimation;
+        [Header("Animation")]
+        [SerializeField] protected AnimationConfig windUpAnimConfig;
+        [SerializeField] protected AnimationConfig releaseAnimConfig;
+        [Self, SerializeField] protected BTAnimation animation;
         
         [Header("Runtime")] 
         [ShowInInspector, ReadOnly]
@@ -46,6 +48,7 @@ namespace ModularFramework.Modules.BehaviorTree
         private CountdownTimer _cooldownTimer;
         protected Vector3 initialAimPosition;
         protected abstract bool VerifyRangeAtDamageTime { get; }
+        protected abstract Vector3 SpawnEffectOffset { get; }
 
 #if UNITY_EDITOR
         [SerializeField, ToggleGroup("Gizmos", nameof(gizmosColor))]
@@ -109,7 +112,15 @@ namespace ModularFramework.Modules.BehaviorTree
 
         protected virtual void WindUp()
         {
-            runner.PlayAnim(windUpAnimation, Release);
+            // skippable state
+            if (windUpAnimConfig.type == AnimationConfigType.NONE)
+            {
+                Release();
+                return;
+            }
+            animation.SetFlag(windUpAnimConfig, Release);
+            // _enemy.AddStatus(MonsterStatus.ATTACK_WINDUP);
+            
             AimAtTargets();
             if (showAimArea)
             {
@@ -119,6 +130,10 @@ namespace ModularFramework.Modules.BehaviorTree
 
         protected virtual void Release()
         {
+            // _enemy.AddStatus(MonsterStatus.ATTACK_RELEASE);
+            animation.ReverseFlag(windUpAnimConfig, false);
+            animation.SetFlag(releaseAnimConfig, null);
+            
             targets = VerifyRangeAtDamageTime
                 ? targets.Where(t =>
                 {
@@ -134,11 +149,13 @@ namespace ModularFramework.Modules.BehaviorTree
             if (targets.Count == 0)
             {
                 Debug.LogWarning($"{AbilityName} Missed, targets not within range");
-                ability.ReleasePosition(transform, initialAimPosition, CastComplete);
+                ability.ReleasePosition(transform, transform.rotation * SpawnEffectOffset, transform.rotation,
+                    initialAimPosition, CastComplete);
                 return;
             }
 
-            ability.Release(transform, targets, CastComplete);
+            ability.Release(transform, transform.rotation * SpawnEffectOffset, transform.rotation,
+                targets, CastComplete);
         }
 
         /// <summary>
@@ -150,7 +167,7 @@ namespace ModularFramework.Modules.BehaviorTree
             {
                 worldUI?.HideImpactAreaLocal();
             }
-            runner.StopAnim(releaseAnimation);
+            animation.ReverseFlag(releaseAnimConfig, false);
             _abilityReleaseCallback?.Invoke(true);
             AimAtTargets(false);
             isCastingAbility = false;
@@ -163,14 +180,14 @@ namespace ModularFramework.Modules.BehaviorTree
         public void Interrupt()
         {
             if (!isCastingAbility) return;
-            runner.StopAnim(windUpAnimation);
+            animation.ReverseFlag(windUpAnimConfig, true);
             if (showAimArea)
             {
                 worldUI?.HideImpactAreaLocal();
                 worldUI?.HideImpactAreaWorld();
                 worldUI?.HideTrajectory();
             }
-            runner.StopAnim(releaseAnimation);
+            animation.ReverseFlag(releaseAnimConfig, true);
             _abilityReleaseCallback?.Invoke(false);
             AimAtTargets(false);
             isCastingAbility = false;
