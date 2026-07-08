@@ -122,12 +122,21 @@ namespace ModularFramework.Modules.BehaviorTree
             {
                 foreach (var flagConfig in animationConfig.flags)
                 {
-                    if (flagConfig.flagType != AnimationFlagType.BOOL) continue;
                     if (isInterrupt && !flagConfig.reverseAtInterrupt) continue;
                     if (!isInterrupt && !flagConfig.reverseAtEnd) continue;
-                    bool reverse = !bool.Parse(flagConfig.value);
-                    animator.SetBool(flagConfig.flag, reverse);
-                    Debug.Log($"Enemy Animation flag: {flagConfig.flag} = {reverse}");
+                    if (flagConfig.flagType == AnimationFlagType.BOOL)
+                    {
+                        bool reverse = !bool.Parse(flagConfig.value);
+                        animator.SetBool(flagConfig.flag, reverse);
+                        Debug.Log($"Enemy Animation flag: {flagConfig.flag} = {reverse}");
+                    }
+                    else if (flagConfig.flagType == AnimationFlagType.INT)
+                    {
+                        int reverse = 0;
+                        animator.SetInteger(flagConfig.flag, reverse);
+                        Debug.Log($"Enemy Animation flag: {flagConfig.flag} = {reverse}");
+                    }
+                    
                 }
             }
             

@@ -27,7 +27,7 @@ namespace ModularFramework.Modules.BehaviorTree
         public string flag;
         public string value;
         
-        [ShowField(nameof(flagType), AnimationFlagType.BOOL), HideLabel, SerializeField]
+        [HideLabel, SerializeField]
         private ReverseType reverse;
         
         public bool reverseAtEnd => (reverse & ReverseType.REVERSE_END) != 0;
