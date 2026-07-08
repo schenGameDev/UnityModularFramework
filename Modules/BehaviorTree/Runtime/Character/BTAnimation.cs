@@ -80,13 +80,13 @@ namespace ModularFramework.Modules.BehaviorTree
                         if (flagConfig.flagType == AnimationFlagType.BOOL)
                         {
                             bool value = bool.Parse(flagConfig.value);
-                            animator.SetBool(flagConfig.flag, value);
+                            animator.SetBool(flagConfig.hashedFlag, value);
                             Debug.Log($"Enemy Animation flag: {flagConfig.flag} = {flagConfig.value}");
                         } 
                         else if (flagConfig.flagType == AnimationFlagType.INT)
                         {
                             int value = int.Parse(flagConfig.value);
-                            animator.SetInteger(flagConfig.flag, value);
+                            animator.SetInteger(flagConfig.hashedFlag, value);
                             Debug.Log($"Enemy Animation flag: {flagConfig.flag} = {flagConfig.value}");
                         }
                     }
@@ -122,12 +122,21 @@ namespace ModularFramework.Modules.BehaviorTree
             {
                 foreach (var flagConfig in animationConfig.flags)
                 {
-                    if (flagConfig.flagType != AnimationFlagType.BOOL) continue;
                     if (isInterrupt && !flagConfig.reverseAtInterrupt) continue;
                     if (!isInterrupt && !flagConfig.reverseAtEnd) continue;
-                    bool reverse = !bool.Parse(flagConfig.value);
-                    animator.SetBool(flagConfig.flag, reverse);
-                    Debug.Log($"Enemy Animation flag: {flagConfig.flag} = {reverse}");
+                    if (flagConfig.flagType == AnimationFlagType.BOOL)
+                    {
+                        bool reverse = !bool.Parse(flagConfig.value);
+                        animator.SetBool(flagConfig.hashedFlag, reverse);
+                        Debug.Log($"Enemy Animation flag: {flagConfig.flag} = {reverse}");
+                    }
+                    else if (flagConfig.flagType == AnimationFlagType.INT)
+                    {
+                        int reverse = 0;
+                        animator.SetInteger(flagConfig.hashedFlag, reverse);
+                        Debug.Log($"Enemy Animation flag: {flagConfig.flag} = {reverse}");
+                    }
+                    
                 }
             }
             

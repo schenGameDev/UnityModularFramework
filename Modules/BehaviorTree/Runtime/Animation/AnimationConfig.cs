@@ -24,14 +24,20 @@ namespace ModularFramework.Modules.BehaviorTree
     public class AnimationFlagConfig
     {
         public AnimationFlagType flagType;
-        public string flag;
+        [OnValueChanged(nameof(OnFlagChanged))] public string flag;
+        [ReadOnly] public int hashedFlag;
         public string value;
         
-        [ShowField(nameof(flagType), AnimationFlagType.BOOL), HideLabel, SerializeField]
+        [HideLabel, SerializeField]
         private ReverseType reverse;
         
         public bool reverseAtEnd => (reverse & ReverseType.REVERSE_END) != 0;
         public bool reverseAtInterrupt => (reverse & ReverseType.REVERSE_INTERRUPT) != 0;
+        
+        private void OnFlagChanged()
+        {
+            hashedFlag = Animator.StringToHash(flag);
+        }
     }
 
     public enum AnimationConfigType
