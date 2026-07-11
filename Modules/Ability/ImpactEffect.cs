@@ -26,30 +26,44 @@ namespace ModularFramework.Modules.Ability
         [ShowField(nameof(impactOverTime)), SerializeField, Min(0)]
         private int ticks;
         
-        [SerializeField,Tooltip("the impact area is relative to caster")] 
-        private bool moveWithCaster;
+        [SerializeField] private MoveWith moveWith = MoveWith.Static;
+        [Tooltip("the caster will be spared when applying effects")]
         public bool ignoreCaster;
+        
+        enum MoveWith {Static, Caster, Target}
+        
+        // Beam
+        [ToggleGroup("Beam", nameof(beamMaxRange), nameof(extendable), nameof(beamRadius))]
+        [SerializeField] private bool isBeam;
+        
+        [ReadOnly,HideProperty] public float beamMaxRange = 0;
+        [SerializeField, Tooltip("Only applicable to straight beam"), HideProperty]
+        private bool extendable;
+        [SerializeField, HideProperty] private float beamRadius;
 
-        [HelpBox("Filter ignored in beam")] 
+        [HideField(nameof(isBeam)),HelpBox("Filter ignored in beam")] 
         public RangeFilter rangeFilter;
+        
         [SerializeField] private bool showImpactZone = true;
         [SerializeReference, SubclassSelector] public List<IEffectFactory<IDamageable>> effects = new();
         public Action onComplete;
-
-        private Timer _timer;
+        
+        private Timer _effectTimer;
         private HashSet<DamageTarget> _affectedTargets; // singular types
         
         // beam : ProjectileEffect
-        private float _beamRadius;
         private uint _beamId;
         private Vector3[] _beamPoints;
-        private LineRenderer _beam;
+        private Beam _beam;
+        
+        
         private ImpactZoneIndicator _indicator;
         private LayerMask _layerMask;
         
         private IDamageable _caster; 
-        private Quaternion _rotationRelatedToCaster;
-        private Vector3 _positionRelatedToCaster;
+        private Transform _target;
+        private Quaternion _relativeRotation;
+        private Vector3 _relativePosition;
 
         private void Awake()
         {
@@ -60,31 +74,30 @@ namespace ModularFramework.Modules.Ability
         private void Start()
         {
             _affectedTargets = GetAllTargetTypes();
+            
+            if (moveWith != MoveWith.Static || isBeam)
+            {
+                TimerManager.Tick += UpdatePositionAndRotation;
+            }
+            
             if (impactOverTime)
             {
-                _timer = new LimitedRepeatTimer(tickInterval, ticks);
-                if (moveWithCaster)
-                {
-                    _timer.OnTick += MatchCasterPositionAndRotation;
-                }
-                _timer.OnTick += ApplyEffects;
-                _timer.OnTimerStop = OnStop;
-                if(delayBeforeStart) _timer.DelayStart(delay);
-                else _timer.Start();
+                _effectTimer = new LimitedRepeatTimer(tickInterval, ticks);
+                
+                _effectTimer.OnTick += ApplyEffects;
+                _effectTimer.OnTimerStop = OnStop;
+                if(delayBeforeStart) _effectTimer.DelayStart(delay);
+                else _effectTimer.Start();
             }
             else
             {
                 if (waitBeforeDestroy > 0)
                 {
-                    _timer = new CountdownTimer(waitBeforeDestroy);
-                    _timer.OnTimerStart = ApplyEffects;
-                    if (moveWithCaster)
-                    {
-                        _timer.OnTick = MatchCasterPositionAndRotation;
-                    }
-                    _timer.OnTimerStop = OnStop;
-                    if(delayBeforeStart) _timer.DelayStart(delay);
-                    else _timer.Start();
+                    _effectTimer = new CountdownTimer(waitBeforeDestroy);
+                    _effectTimer.OnTimerStart = ApplyEffects;
+                    _effectTimer.OnTimerStop = OnStop;
+                    if(delayBeforeStart) _effectTimer.DelayStart(delay);
+                    else _effectTimer.Start();
                 }
                 else
                 {
@@ -95,16 +108,12 @@ namespace ModularFramework.Modules.Ability
             if(showImpactZone) ShowImpactZone();
         }
 
-        public void SetBeam(LineRenderer beam, uint beamId)
+        public void SetBeam(Beam beam, uint beamId)
         {
             _beam = beam;
             _beamId = beamId;
-            _beamRadius = _beam.startWidth / 2;
-            _beamPoints = new Vector3[_beam.positionCount];
-            _beam.GetPositions(_beamPoints);
+            _beamPoints = _beam.Positions;
         }
-
-        private bool IsBeam => _beamPoints is { Length: > 1 };
         
         private HashSet<DamageTarget> GetAllTargetTypes()
         {
@@ -161,13 +170,14 @@ namespace ModularFramework.Modules.Ability
                 onComplete = null;
             }
 
+            _effectTimer = null;
             //NetworkServer.
             Destroy(gameObject);
         }
         
         private void ShowImpactZone()
         {
-            if(IsBeam) return;
+            if(isBeam) return;
             if (_indicator == null)
             {
                 _indicator = PrefabPool<ImpactZoneIndicator>.Get();
@@ -189,7 +199,7 @@ namespace ModularFramework.Modules.Ability
         private IEnumerable<IDamageable> GetTargetsInRangeByDamageType(DamageTarget damageTarget)
         {
             List<IDamageable> targetsInRange = new ();
-            if (IsBeam)
+            if (isBeam)
             {
                 for (int i = 0; i < _beamPoints.Length - 1; i++)
                 {
@@ -197,7 +207,7 @@ namespace ModularFramework.Modules.Ability
                     Vector3 end = _beamPoints[i + 1];
                     Vector3 direction = (end - start).normalized;
                     float distance = Vector3.Distance(start, end);
-                    int hitCount = Physics.SphereCastNonAlloc(start, _beamRadius, direction, _hits, distance,_layerMask);
+                    int hitCount = Physics.SphereCastNonAlloc(start, beamRadius, direction, _hits, distance,_layerMask);
                     for (int j = 0; j < hitCount; j++)
                     {
                         var hitCollider = _hits[j].collider;
@@ -259,38 +269,110 @@ namespace ModularFramework.Modules.Ability
 
         }
         
-        public void SetCaster(Transform caster)
+        public void SetCasterAndTargets(Transform caster, Transform target)
         {
             if (caster == null)
             {
                 _caster = null;
-                return;
+            }
+            else
+            {
+                _caster = caster.GetComponent<IDamageable>();
+                if (moveWith == MoveWith.Caster && _caster != null)
+                {
+                    _relativeRotation = Quaternion.Inverse(caster.rotation) * transform.rotation;
+                    _relativePosition = transform.position -  caster.position;
+                }
+            }
+
+            if (target != null && moveWith == MoveWith.Target)
+            {
+                _target = target;
+                _relativeRotation = Quaternion.Inverse(target.rotation) * transform.rotation;
+                _relativePosition = transform.position -  target.position;
             }
             
-            _caster = caster.GetComponent<IDamageable>();
-            if (moveWithCaster)
-            {
-                _rotationRelatedToCaster = Quaternion.Inverse(caster.rotation) * transform.rotation;
-                _positionRelatedToCaster = transform.position -  caster.position;
-            }
         }
 
-        private void MatchCasterPositionAndRotation()
+        private void UpdatePositionAndRotation(float deltaTime)
         {
-            if (_caster == null) return;
-            transform.rotation = _caster.Transform.rotation * _rotationRelatedToCaster;
-            transform.position = _caster.Transform.position + _positionRelatedToCaster;
+            if (moveWith != MoveWith.Static)
+            {
+                var anchor = _caster != null && moveWith == MoveWith.Caster 
+                    ? _caster.Transform 
+                    : _target != null && moveWith == MoveWith.Target? _target : null;
+                if (anchor != null)
+                {
+                    var targetRot = anchor.rotation * _relativeRotation;
+                    var targetPos = anchor.position + _relativePosition;
+                    // update beam points
+                    if (_beamPoints != null)
+                    {
+                        var deltaRot = targetRot * Quaternion.Inverse(transform.rotation);
+                        var deltaPos = targetPos - transform.position;
+                        for (int i = 0; i < _beamPoints.Length; i++)
+                        {
+                            _beamPoints[i] = deltaRot * (_beamPoints[i] - transform.position) + transform.position + deltaPos;
+                        }
+                    }
+        
+                    transform.rotation = targetRot;
+                    transform.position = targetPos;
+                }
+                
+            }
+
+            if (_beam != null)
+            {
+                UpdateBeam();
+            }
+            
         }
+
+        #region Beam
+        private void UpdateBeam()
+        {
+            if (isBeam && _beam != null)
+            {
+                if (_beamPoints.Length < 2) return;
+                if (extendable)
+                {
+                    ExtendBeam();
+                    _beam.SetPositions(_beamPoints);
+                }
+            }
+        
+        }
+        
+        private void ExtendBeam()
+        {
+            var direction = _beamPoints[^1] - _beamPoints[0];
+
+            if (Physics.Raycast(_beamPoints[0], direction, out var hit, beamMaxRange, _layerMask))
+            {
+
+                var newEnd = hit.point + direction.normalized * 0.1f;// prevent z-fighting
+                _beamPoints = new [] {_beamPoints[0], newEnd}; 
+            }
+            else
+            {
+                _beamPoints = new [] {_beamPoints[0], direction.normalized * beamMaxRange + _beamPoints[0]};
+            }
+        }
+        
+
+        #endregion
 
         private void CleanUp()
         {
-            _timer?.Stop();
+            _effectTimer?.Stop();
+            TimerManager.Tick -= UpdatePositionAndRotation;
             if (_beam != null)
             {
-                PrefabPool<LineRenderer>.Release(_beam, _beamId);
+                PrefabPool<Beam>.Release(_beam, _beamId);
                 _beam = null;
             }
-
+            _beamId = 0;
             if (_indicator != null)
             {
                 PrefabPool<ImpactZoneIndicator>.Release(_indicator);

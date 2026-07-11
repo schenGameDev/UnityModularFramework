@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using EditorAttributes;
 using KBCore.Refs;
 using UnityEngine;
-using UnityEngine.Pool;
 
 namespace ModularFramework.Modules.Ability
 {
@@ -15,14 +14,17 @@ namespace ModularFramework.Modules.Ability
         [SerializeReference, SubclassSelector, HideField(nameof(impactEffectPrefab))]
         public List<IEffectFactory<IDamageable>> effects = new();
         [SerializeField] private DamageTarget penetrate;
-        public bool isBeam;
-        [ShowField(nameof(isBeam)),HelpBox("must have assetIdentity")] 
-        public LineRenderer beamPrefab;
+        
+        
+        public Beam beamPrefab;
+        public bool IsBeam => beamPrefab != null;
+        private uint _beamId;
         
         public bool ignoreCaster;
         [HideInInspector] public Transform caster; 
         
         [SerializeField, Self] private Projectile projectile;
+        [SerializeField, Child(Flag.Optional)] private TrailRenderer[] trailRenderers;
         
         public Action onComplete;
 
@@ -31,6 +33,14 @@ namespace ModularFramework.Modules.Ability
 #endif
 
         private void Awake()
+        {
+            if (beamPrefab != null)
+            {
+                _beamId = beamPrefab.GetComponent<AssetIdentity>().assetId;
+            }
+        }
+        
+        private void OnEnable()
         {
             CreateBeam();
         }
@@ -64,13 +74,13 @@ namespace ModularFramework.Modules.Ability
             {
                 var impactEffect = Instantiate(impactEffectPrefab, hitPoint, Quaternion.identity,
                     SingletonRegistry<ProjectileManagerSO>.Instance.effectParent);
-                if (isBeam)
+                if (IsBeam)
                 {
                     UpdateBeam(true);
                     impactEffect.SetBeam(_beam, _beamId);
                     _beam = null;
                 }
-                impactEffect.SetCaster(caster);
+                impactEffect.SetCasterAndTargets(caster, target);
                 impactEffect.onComplete = onComplete;
             }
             else
@@ -104,66 +114,36 @@ namespace ModularFramework.Modules.Ability
         #endregion
         #region Beam
 
-        private LineRenderer _beam;
-        private uint _beamId;
+        private Beam _beam;
         private void CreateBeam()
         {
-            if (!isBeam || _beam != null)
+            if (!IsBeam || _beam != null)
             {
                 return;
             }
             
-            _beamId = beamPrefab.GetComponent<AssetIdentity>().assetId;
-            if (!PrefabPool<LineRenderer>.TryGet(_beamId, out var beam))
+            if (PrefabPool<Beam>.TryGet(_beamId, out var beam))
             {
-                PrefabPool<LineRenderer>.Register(beamPrefab, CreateBeamPool);
+                var points = projectile.GetTrajectory();
+                beam.SetPositions(points);
+                _beam = beam;
             }
-    
-            if(beam == null) return;
-            var points = projectile.GetTrajectory();
-            beam.positionCount = points.Length;
-            beam.SetPositions(points);
-            _beam = beam;
-        }
-        
-        private ObjectPool<LineRenderer> CreateBeamPool(uint assetId, LineRenderer prefab)
-        {
-            return new ObjectPool<LineRenderer>(
-                createFunc: () =>
-                {
-                    var beam = Instantiate(prefab,Vector3.zero, Quaternion.identity,
-                        SingletonRegistry<ProjectileManagerSO>.Instance.effectParent);
-                    beam.gameObject.SetActive(false);
-                    return beam;
-                },
-                actionOnGet: beam => beam.gameObject.SetActive(true),
-                actionOnRelease: beam => beam.gameObject.SetActive(false),
-                actionOnDestroy: beam => Destroy(beam.gameObject),
-                collectionCheck: false,
-                defaultCapacity: 10,
-                maxSize: 50
-            );
-        }
-        
-        private void RemoveBeam()
-        {
-            if (_beam != null)
+            else
             {
-                PrefabPool<LineRenderer>.Release(_beam, _beamId);
-                _beam = null;
+                Debug.LogWarning($"Beam prefab with id {_beamId} not found in pool. Make sure to register the prefab to the pool before using it.");
             }
+           
         }
 
         private void UpdateBeam(bool arrived)
         {
-            if (!isBeam || _beam == null) return;
+            if (!IsBeam || _beam == null) return;
             var points = projectile.GetTrajectory();
             if (points.Length < 2) return;
             if (arrived)
             {
                 points[^1] += transform.forward * 0.1f; // prevent z-fighting
             }
-            _beam.positionCount = points.Length;
             _beam.SetPositions(points);
         }
     
@@ -171,16 +151,35 @@ namespace ModularFramework.Modules.Ability
         {
             UpdateBeam(false);
         }
+        #endregion
+        
+        private void CleanUp()
+        {
+            if (_beam != null)
+            {
+                PrefabPool<Beam>.Release(_beam, _beamId);
+                _beam = null;
+            }
 
+            caster = null;
+            
+            if (trailRenderers != null)
+            {
+                foreach (var trailRenderer in trailRenderers)
+                {
+                    trailRenderer.Clear();
+                }
+            }
+        }
+        
         private void OnDisable()
         {
-            RemoveBeam();
+            CleanUp();
         }
 
         private void OnDestroy()
         {
-            RemoveBeam();
+            CleanUp();
         }
-        #endregion
     }
 }

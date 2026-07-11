@@ -11,6 +11,7 @@ namespace ModularFramework.Modules.Ability
     public class ProjectileManagerSO : GameModule<ProjectileManagerSO>
     {
         [SerializeField] private int maxBulletCount = 500;
+        [SerializeField] private Projectile[] projectilePrefabs;
         [SceneRef("PROJECTILE_PARENT")] private Transform _projectileParent;
         [SceneRef("EFFECT_PARENT")] public Transform effectParent;
         public LayerMask collisionMask;
@@ -32,6 +33,10 @@ namespace ModularFramework.Modules.Ability
 
         protected override void OnAwake()
         {
+            foreach (var projectilePrefab in projectilePrefabs)
+            {
+                RegisterProjectile(projectilePrefab);
+            }
         }
 
         protected override void OnStart()

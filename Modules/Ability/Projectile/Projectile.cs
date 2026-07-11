@@ -4,6 +4,9 @@ using EditorAttributes;
 using KBCore.Refs;
 using Sisus.ComponentNames;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace ModularFramework.Modules.Ability
 {
@@ -434,15 +437,27 @@ namespace ModularFramework.Modules.Ability
         
         public void CalculateLifetime(float maxRange)
         {
-            if (maxRange > 0  && aimType == AimType.Direction)
+            if (maxRange < 0)
+            {
+                return;
+            }
+            if (aimType == AimType.Direction)
             {
                 lifetime = constantGroundSpeed? maxRange / speed : CalculateTime(speed, acceleration, maxRange);
+            }
+            
+            var pe = GetComponent<ProjectileEffect>();
+            if (pe != null && pe.impactEffectPrefab != null) 
+            {
+                pe.impactEffectPrefab.beamMaxRange = maxRange;
+                EditorUtility.SetDirty(pe.impactEffectPrefab);
             }
         }
     
         [Button]
         public void Validate()
         {
+            EditorUtility.SetDirty(this);
             if(collisionDetection != CastType.SPHERECAST && collisionDetection != CastType.CAPSULECAST) radius = -1f;
             if(collisionDetection != CastType.BOXCAST) halfExtents = Vector3.one * -1f;
             constantGroundSpeed = constantGroundSpeed || Mathf.Approximately(speed, endSpeed);

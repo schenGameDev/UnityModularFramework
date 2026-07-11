@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -11,8 +12,9 @@ namespace ModularFramework
     /// If not, the pool will support only one prefab of type T
     /// </summary>
     /// <typeparam name="T">Unity Component</typeparam>
-    public static class PrefabPool<T> where T : Component 
+    public static partial class PrefabPool<T> where T : Component 
     {
+        [AutoStaticsCleanup]
         private static readonly Dictionary<uint,ObjectPool<T>> POOL = new();
         /// <summary>
         /// Get an instance from the pool associated with the given assetId.
@@ -82,6 +84,7 @@ namespace ModularFramework
         
         public static void Clear()
         {
+            if (POOL.Count == 0) return;
             foreach (var pool in POOL.Values)
             {
                 try

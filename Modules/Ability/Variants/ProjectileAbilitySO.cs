@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using EditorAttributes;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace ModularFramework.Modules.Ability
 {
@@ -19,6 +22,8 @@ namespace ModularFramework.Modules.Ability
         }
 
         [Required,PropertyDropdown] public Projectile projectilePrefab;
+        [SerializeField,ReadOnly] private uint projectileId;
+        
         [SerializeField,Tooltip("use max range instead of lifetime to limit projectile life")] 
         private float maxRange = -1;
         
@@ -30,7 +35,6 @@ namespace ModularFramework.Modules.Ability
 
         public override float AimRange() => maxRange;
         public override AimType AimMethod() => projectilePrefab.aimType;
-        private uint _projectileId;
 
         protected override void Apply(Transform me, Vector3 rotatedOffset, Quaternion rotation,
             List<IDamageable> targets, Action onComplete)
@@ -65,7 +69,7 @@ namespace ModularFramework.Modules.Ability
             {
                 foreach (var target in targets)
                 {
-                    var projectile = projectileManager.SpawnProjectile(_projectileId,
+                    var projectile = projectileManager.SpawnProjectile(projectileId,
                         me.position + rotatedOffset,
                         rotatedRotation,
                         target.Transform, null, null, me);
@@ -151,17 +155,12 @@ namespace ModularFramework.Modules.Ability
             }
             if (projectile.effect != null) projectile.effect.onComplete = () => onComplete?.Invoke(this);
         }
-
-        public void RegisterProjectile()
-        {
-            if (!SingletonRegistry<ProjectileManagerSO>.TryGet(out var projectileManager)) return;
-            _projectileId = projectileManager.RegisterProjectile(projectilePrefab);
-        }
+        
         
         protected virtual Projectile GetProjectile(ProjectileManagerSO projectileManager, Vector3 startPos, 
             Quaternion rotatedRotation, Transform targetTf, Vector3? targetPos, Vector3? direction, Transform me)
         {
-            return projectileManager.SpawnProjectile(_projectileId, startPos, 
+            return projectileManager.SpawnProjectile(projectileId, startPos, 
                 rotatedRotation, targetTf, targetPos, direction,me);
         }
         
@@ -172,6 +171,8 @@ namespace ModularFramework.Modules.Ability
             if (projectilePrefab == null) return;
             projectilePrefab.Validate();
             projectilePrefab.CalculateLifetime(maxRange);
+            EditorUtility.SetDirty(this);
+            projectileId = projectilePrefab.GetComponent<AssetIdentity>().assetId;
         }
 #endif
     }

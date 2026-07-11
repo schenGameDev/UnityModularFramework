@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Unity.Scripting.LifecycleManagement;
 
 namespace ModularFramework
 {
@@ -9,8 +10,9 @@ namespace ModularFramework
     /// </summary>
     /// <typeparam name="TKey">The type of keys in the registry.</typeparam>
     /// <typeparam name="TValue">The type of values in the registry (must be a reference type).</typeparam>
-    public static class DictRegistry<TKey,TValue> where TValue : class
+    public static partial class DictRegistry<TKey,TValue> where TValue : class
     {
+        [AutoStaticsCleanup]
         private static readonly Dictionary<TKey,TValue> ITEMS = new();
         /// <summary>
         /// This method will not add the item if the key already exists, and return false. Otherwise, it will add the item and return true.

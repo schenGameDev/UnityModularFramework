@@ -2,6 +2,9 @@ using EditorAttributes;
 using ModularFramework.Modules.Ability;
 using ModularFramework.Modules.Targeting;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace ModularFramework.Modules.BehaviorTree
 {
@@ -13,7 +16,8 @@ namespace ModularFramework.Modules.BehaviorTree
         [SerializeField,Tooltip("if targets move out of range at time of release, they will not be targeted")]
         private bool verifyRangeAtDamageTime = true;
         [SerializeField, ShowField(nameof(showAimArea))]
-        private uint trajectoryAssetId;
+        private Beam trajectoryPrefab;
+        [ReadOnly,ShowInInspector] private uint _trajectoryAssetId;
         protected override bool VerifyRangeAtDamageTime => verifyRangeAtDamageTime;
         protected override Vector3 SpawnEffectOffset => spawnEffectOffset;
         
@@ -21,20 +25,28 @@ namespace ModularFramework.Modules.BehaviorTree
         private ImpactEffect _impactEffect;
         private Projectile _projectile;
         
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (trajectoryPrefab != null)
+            {
+                Undo.RecordObject(this, "Assign Trajectory Prefab Id");
+                _trajectoryAssetId = trajectoryPrefab.GetComponent<AssetIdentity>().assetId;
+            }
+            
+        }
+#endif
 
         private void Awake()
         {
             _projectileAbility = ability as ProjectileAbilitySO;
             
-            
             if ( _projectileAbility != null)
             {
-                _projectileAbility.RegisterProjectile();
                 var pe = _projectileAbility.projectilePrefab.GetComponent<ProjectileEffect>();
                 if (pe.impactEffectPrefab != null) _impactEffect = pe.impactEffectPrefab;
                 _projectile = _projectileAbility.projectilePrefab;
             } 
-            
         }
 
         protected override void Update()
@@ -56,7 +68,7 @@ namespace ModularFramework.Modules.BehaviorTree
                 {
                     worldUI?.ShowImpactAreaWorld(initialAimPosition, rangeFilter, true);
                 }
-                worldUI?.ShowTrajectory(trajectoryAssetId, 
+                worldUI?.ShowTrajectory(_trajectoryAssetId, 
                     _projectile.PredictTrajectory(transform.position + transform.rotation * spawnEffectOffset, 
                         initialAimPosition));
             }

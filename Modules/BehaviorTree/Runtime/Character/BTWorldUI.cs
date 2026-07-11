@@ -1,49 +1,18 @@
 using ModularFramework.Modules.Ability;
 using ModularFramework.Modules.Targeting;
 using UnityEngine;
-using UnityEngine.Pool;
 
 namespace ModularFramework.Modules.BehaviorTree
 {
     public class BTWorldUI : MonoBehaviour
     {
-        [SerializeField] private LineRenderer[] trajectoryLinePrefabs;
-        
         private ImpactZoneIndicator _localIndicator;
         private ImpactZoneIndicator _worldIndicator;
-        private LineRenderer _lineIndicator;
+        private Beam _lineIndicator;
         private bool _isUpdateWorldIndicator;
 
         private uint _lineId;
         
-        private void Start()
-        {
-            if (trajectoryLinePrefabs != null || trajectoryLinePrefabs.Length > 0)
-            {
-                foreach (var linePrefab in trajectoryLinePrefabs)
-                {
-                    PrefabPool<LineRenderer>.Register(linePrefab, CreateLinePool);
-                }
-            }
-        }
-        
-        private ObjectPool<LineRenderer> CreateLinePool(uint assetId, LineRenderer prefab)
-        {
-            return new ObjectPool<LineRenderer>(
-                createFunc: () =>
-                {
-                    var line = Instantiate(prefab,Vector3.zero, Quaternion.identity);
-                    line.gameObject.SetActive(false);
-                    return line;
-                },
-                actionOnGet: line => line.gameObject.SetActive(true),
-                actionOnRelease: line => line.gameObject.SetActive(false),
-                actionOnDestroy: line => Destroy(line.gameObject),
-                collectionCheck: false,
-                defaultCapacity: 10,
-                maxSize: 50
-            );
-        }
 
         public void ShowImpactAreaLocal(RangeFilter rangeFilter)
         {
@@ -83,25 +52,23 @@ namespace ModularFramework.Modules.BehaviorTree
             if (lineAssetId == 0) return;
             if (_lineIndicator == null)
             {
-                _lineIndicator = PrefabPool<LineRenderer>.Get(lineAssetId);
+                _lineIndicator = PrefabPool<Beam>.Get(lineAssetId);
                 _lineId = lineAssetId;
             }
             
-            _lineIndicator.positionCount = points.Length;
             _lineIndicator.SetPositions(points);
         }
         
         public void UpdateTrajectory(Vector3[] points)
         {
             if (_lineIndicator == null) return;
-            _lineIndicator.positionCount = points.Length;
             _lineIndicator.SetPositions(points);
         }
         
         public void HideTrajectory()
         {
             if (_lineIndicator == null) return;
-            PrefabPool<LineRenderer>.Release(_lineIndicator, _lineId);
+            PrefabPool<Beam>.Release(_lineIndicator, _lineId);
         }
 
         private void Update()

@@ -1,4 +1,5 @@
 using ModularFramework.Commons;
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 
 namespace ModularFramework
@@ -7,8 +8,9 @@ namespace ModularFramework
     /// A static generic singleton registry that ensures only one instance exists, with automatic duplicate destruction for MonoBehaviour types.
     /// </summary>
     /// <typeparam name="T">The type of singleton instance (must be a reference type).</typeparam>
-    public static class SingletonRegistry<T> where T : class
+    public static partial class SingletonRegistry<T> where T : class
     {
+        [AutoStaticsCleanup]
         private static T _instance;
 
         public static bool TryRegister(T instance)

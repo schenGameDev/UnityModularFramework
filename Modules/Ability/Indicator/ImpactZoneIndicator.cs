@@ -2,12 +2,14 @@ using System;
 using EditorAttributes;
 using ModularFramework.Modules.Targeting;
 using UnityEngine;
+using UnityEngine.Pool;
 using UnityEngine.Rendering.Universal;
 using UnityTimer;
 
 namespace ModularFramework.Modules.Ability
 {
-    public class ImpactZoneIndicator : MonoBehaviour
+    [DisallowMultipleComponent, RequireComponent(typeof(AssetIdentity))]
+    public class ImpactZoneIndicator : MonoBehaviour, IPrefabPoolEntry
     {
         // in Universal Renderer Data, Add Decal, Technique: Screen Space
         // decal projector is rotated 90 deg by default, be careful when instantiating
@@ -265,5 +267,35 @@ namespace ModularFramework.Modules.Ability
         {
             TimerManager.Tick -= Move;
         }
+
+
+        #region Pool Entry
+
+        public void RegisterPrefabToPool()
+        {
+            PrefabPool<ImpactZoneIndicator>.Register(this, CreatePool);
+        }
+
+        public void ClearPool()
+        {
+            PrefabPool<ImpactZoneIndicator>.Clear();
+        }
+        
+        private ObjectPool<ImpactZoneIndicator> CreatePool(ImpactZoneIndicator indicatorPrefab)
+        {
+            return new ObjectPool<ImpactZoneIndicator>(
+                createFunc: () =>
+                {
+                    var indicator = Instantiate(indicatorPrefab,Vector3.zero, Quaternion.identity);
+                    return indicator;
+                },
+                actionOnRelease: indicator => indicator.Hide(),
+                actionOnDestroy: indicator => Destroy(indicator.gameObject),
+                collectionCheck: false,
+                defaultCapacity: 10,
+                maxSize: 50
+            );
+        }
+        #endregion
     }
 }

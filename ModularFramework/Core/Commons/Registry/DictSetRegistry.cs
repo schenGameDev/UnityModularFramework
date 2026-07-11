@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Unity.Scripting.LifecycleManagement;
 
 namespace ModularFramework
 {
@@ -10,8 +11,9 @@ namespace ModularFramework
     /// </summary>
     /// <typeparam name="TKey">The type of keys in the registry.</typeparam>
     /// <typeparam name="TValue">The type of values in the registry (must be a reference type).</typeparam>
-    public static class DictSetRegistry<TKey,TValue> where TValue : class
+    public static partial class DictSetRegistry<TKey,TValue> where TValue : class
     {
+        [AutoStaticsCleanup]
         private static readonly Dictionary<TKey,HashSet<TValue>> ITEMS = new();
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

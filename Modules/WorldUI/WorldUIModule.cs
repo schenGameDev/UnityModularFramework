@@ -1,6 +1,5 @@
 using ModularFramework;
 using UnityEngine;
-using UnityEngine.Pool;
 
 namespace UnityModularFramework.Modules.WorldUI
 {
@@ -15,7 +14,6 @@ namespace UnityModularFramework.Modules.WorldUI
         #region Game Module Lifecycle
         protected override void OnAwake()
         {
-            RegisterProgressBar();
         }
 
         protected override void OnStart()
@@ -43,12 +41,7 @@ namespace UnityModularFramework.Modules.WorldUI
         #endregion
 
         #region Progress Bar
-
-        private void RegisterProgressBar()
-        {
-            if (progressBarPrefab == null) return;
-            PrefabPool<WorldUIProgressBar>.Register(progressBarPrefab, CreateProgressBarPool);
-        }
+        
 
         private void UnregisterProgressBar()
         {
@@ -56,21 +49,7 @@ namespace UnityModularFramework.Modules.WorldUI
             PrefabPool<WorldUIProgressBar>.Clear();
         }
         
-        private ObjectPool<WorldUIProgressBar> CreateProgressBarPool(WorldUIProgressBar prefab)
-        {
-            return new ObjectPool<WorldUIProgressBar>(
-                createFunc: () => Instantiate(prefab, Vector3.zero, Quaternion.identity, parent),
-                actionOnGet: bar => bar.Enable(),
-                actionOnRelease: bar => bar.CleanUp(),
-                actionOnDestroy: bar =>
-                {
-                    if (bar != null) Destroy(bar.gameObject);
-                },
-                collectionCheck: false,
-                defaultCapacity: 10,
-                maxSize: 50
-            );
-        }
+        
         
         public static WorldUIProgressBar Get(Vector3 position)
         {

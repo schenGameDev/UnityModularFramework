@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using ModularFramework.Commons;
+using Unity.Scripting.LifecycleManagement;
 
 namespace ModularFramework
 {
@@ -10,8 +11,9 @@ namespace ModularFramework
     /// A static generic registry that stores unique items in a hash set with filtering and selection strategy support.
     /// </summary>
     /// <typeparam name="T">The type of items in the registry (must be a reference type).</typeparam>
-    public static class Registry<T> where T : class
+    public static partial class Registry<T> where T : class
     {
+        [AutoStaticsCleanup]
         private static readonly HashSet<T> ITEMS = new();
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

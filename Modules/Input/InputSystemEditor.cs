@@ -4,6 +4,9 @@ using System.Linq;
 using EditorAttributes;
 using UnityEngine;
 using UnityEngine.InputSystem;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace ModularFramework.Modules.Input
 {
@@ -95,6 +98,7 @@ namespace ModularFramework.Modules.Input
         {
             if (inputs != null)
             {
+                Undo.RecordObject(this, "Assign inputAsset");
                 foreach (var i in inputs)
                 {
                     i.inputAsset = inputAsset;

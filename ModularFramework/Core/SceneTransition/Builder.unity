@@ -457,7 +457,7 @@ MonoBehaviour:
   defaultTransition: {fileID: 0}
   customTransitions:
     _serializedList: []
-  systems: []
+  gameSystems: {fileID: 0}
 --- !u!114 &1761000522
 MonoBehaviour:
   m_ObjectHideFlags: 0

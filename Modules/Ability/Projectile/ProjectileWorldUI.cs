@@ -20,7 +20,7 @@ namespace ModularFramework.Modules.Ability
         
         private void Start()
         {
-            if (projectileEffect.isBeam)
+            if (projectileEffect.IsBeam)
             {
                 return;
                
