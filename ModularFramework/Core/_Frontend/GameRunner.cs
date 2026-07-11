@@ -21,9 +21,6 @@ namespace ModularFramework {
         [SerializeField,SerializedDictionary("Name","Value")] private SerializedDictionary<string,string> flags = new();
         [SerializeField,SerializedDictionary("Name","Ref Object")] private SerializedDictionary<string,GameObject> references = new();
 
-        [Header("Prefab Pool")] 
-        [SerializeField, Tooltip("Register before module initialization")] private AssetBucket prefabPoolEntries;
-        
         [Header("Event System")]
         [SerializeField,SerializedDictionary("Channel","Live"),HideLabel,ReadOnly]
         private SerializedDictionary<ScriptableObject,bool> eventChannels = new();
@@ -50,11 +47,8 @@ namespace ModularFramework {
             
             // 2. translation layer
             TranslationUtil.Load(gameObject.scene.name);
-            
-            // 3. register prefab pool
-            RegisterPrefabPool();
-            
-            // 4. boot up modules
+
+            // 3. boot up modules
             modules = ValidateModules(modules);
             foreach(var module in modules) {
                 DebugUtil.DebugLog($"SceneAwake: {module.GetType().Name}");
@@ -78,24 +72,6 @@ namespace ModularFramework {
             }
             
             Time.timeScale = 1;
-        }
-
-        private void RegisterPrefabPool()
-        {
-            if (prefabPoolEntries != null)
-            {
-                prefabPoolEntries.ForEach(asset =>
-                {
-                    if (asset.TryGetComponent<IPrefabPoolEntry>(out var poolEntry))
-                    {
-                        poolEntry.RegisterPrefabToPool();
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Prefab {asset.name} does not implement IPrefabPoolEntry, cannot register to pool.");
-                    }
-                });
-            }
         }
 
         private void Start()
@@ -156,27 +132,13 @@ namespace ModularFramework {
                     module.ClearRegistry();
                 }
             }
-            UnregisterPrefabPool();
+
             foreach (var m in Registry<PersistentBehaviour>.All)
             {
                 DebugUtil.DebugLog($"PersistentBehaviour Destroy Scene: {m.name}");
                 m.DestroyScene(_builder.Get().NextScene);
             }
             
-        }
-        
-        private void UnregisterPrefabPool()
-        {
-            if (prefabPoolEntries != null)
-            {
-                prefabPoolEntries.ForEach(asset =>
-                {
-                    if (asset.TryGetComponent<IPrefabPoolEntry>(out var poolEntry))
-                    {
-                        poolEntry.ClearPool();
-                    }
-                });
-            }
         }
         
 #if UNITY_EDITOR
