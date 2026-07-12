@@ -100,7 +100,7 @@ namespace ModularFramework.Modules.Camera
                 {
                     focusPoint.rotation =
                         Quaternion.RotateTowards(focusPoint.rotation, LastFocusRot, rollSpeed * Time.deltaTime);
-                    if (focusPoint.rotation != LastCamRot)
+                    if (focusPoint.rotation != LastCamPose.rotation)
                     {
                         RollAccelerate();
                     }

@@ -26,7 +26,7 @@ namespace ModularFramework.Modules.Input
             [Dropdown(nameof(InputKeys))] public string input;
             public ActionTiming timing;
 
-            [EditorAttributes.TypeFilter(typeof(EventChannel<ActionTiming>), typeof(EventChannel<bool>),
+            [TypeFilter(typeof(EventChannel<ActionTiming>), typeof(EventChannel<bool>),
                 typeof(EventChannel), typeof(EventChannel<Vector3>), typeof(EventChannel<Vector2>),
                 typeof(EventChannel<(ActionTiming,Vector3)>),typeof(EventChannel<(ActionTiming,Vector2)>))]
             public ScriptableObject channel;

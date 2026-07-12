@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -63,6 +64,21 @@ namespace ModularFramework
             }
             Poll();
             return source.Awaitable;
+        }
+
+        public static async Awaitable<T> RunOnBackgroundThread<T>(this Func<T> work, CancellationToken token = default)
+        {
+            if (work == null) throw new ArgumentNullException(nameof(work));
+
+            await Awaitable.BackgroundThreadAsync();
+            token.ThrowIfCancellationRequested();
+            
+            var result = work();
+            
+            await Awaitable.MainThreadAsync();
+            token.ThrowIfCancellationRequested();
+            
+            return result;
         }
         
         // get off main thread to avoid blocking

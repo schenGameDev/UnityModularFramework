@@ -76,8 +76,7 @@ namespace ModularFramework.Modules.Camera
 
         #region Last State
 
-        public Vector3 LastCamPos { get; private set; }
-        public Quaternion LastCamRot { get; private set; }
+        public Pose LastCamPose { get; private set; }
         public Quaternion LastFocusRot { get; private set; }
         public float POV { get; private set; }
         private float _pov;
@@ -85,10 +84,9 @@ namespace ModularFramework.Modules.Camera
 
         public void SaveCurrentPosAndRot()
         {
-            LastCamPos = transform.position;
-            LastCamRot = transform.rotation;
+            LastCamPose = transform.GetPose();
             if (focusPoint) LastFocusRot = focusPoint.rotation;
-            else LastFocusRot = LastCamRot;
+            else LastFocusRot = LastCamPose.rotation;
         }
 
         #endregion
@@ -101,8 +99,8 @@ namespace ModularFramework.Modules.Camera
             var prevCam = cameraManager.Get().PrevCamera.GetComponent<CameraBase>();
             if (prevCam.focusPoint && focusPoint)
             {
-                var t = FindFocusPointPositionAndFwdDirectionByCamera(prevCam.LastCamPos, prevCam.LastCamRot);
-                focusPoint.SetPositionAndRotation(t.Item1, t.Item2);
+                var pose = FindFocusPointPositionAndFwdDirectionByCamera(prevCam.LastCamPose);
+                focusPoint.SetPose(pose);
                 RestrainMomentum(prevCam.Momentum);
             }
 
@@ -110,14 +108,13 @@ namespace ModularFramework.Modules.Camera
             vc.Lens.FieldOfView = POV;
         }
 
-        private Tuple<Vector3, Quaternion> FindFocusPointPositionAndFwdDirectionByCamera(Vector3 camPos,
-            Quaternion camRot)
+        private Pose FindFocusPointPositionAndFwdDirectionByCamera(Pose camPose)
         {
-            Quaternion focusRot = camRot * Quaternion.Inverse(Quaternion.FromToRotation(Vector3.forward, -Offset));
-            Vector3 focusPos = camPos - focusRot * Offset;
+            Quaternion focusRot = camPose.rotation * Quaternion.Inverse(Quaternion.FromToRotation(Vector3.forward, -Offset));
+            Vector3 focusPos = camPose.position - focusRot * Offset;
             // var camFwd = camRot * Vector3.forward;
             // Vector3 focusPos = Offset.magnitude * camFwd + camPos;
-            return new(focusPos, focusRot);
+            return new Pose(focusPos, focusRot);
         }
 
         protected virtual void RestrainMomentum(Vector3 inheritedMomentum)
