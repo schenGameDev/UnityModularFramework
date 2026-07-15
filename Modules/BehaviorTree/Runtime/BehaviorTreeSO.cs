@@ -231,6 +231,11 @@ namespace ModularFramework.Modules.BehaviorTree
                     }
                 }
             }
+            // reorder sequence node
+            foreach (var sequenceNode in nodes.OfType<SequenceNode>())
+            {
+                sequenceNode.SortChildren();
+            }
 
             AssetDatabase.SaveAssets();
         }

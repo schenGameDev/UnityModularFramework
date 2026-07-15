@@ -34,12 +34,10 @@ namespace ModularFramework.Modules.BehaviorTree
         [Self, SerializeField] protected BTAnimation animation;
         
         [Header("Runtime")] 
-        [ShowInInspector, ReadOnly]
-        protected bool isCastingAbility;
+        [ShowInInspector, ReadOnly] protected AbilityStage abilityStage = AbilityStage.READY;
+        public bool Ready => abilityStage == AbilityStage.READY;
+        protected bool isCastingAbility => abilityStage is AbilityStage.WINDING_UP or AbilityStage.RELEASING;
 
-        [ReadOnly, ShowInInspector] private bool _isReady = true;
-
-        public bool Ready => _isReady;
 
         protected List<IDamageable> targets;
         private Action<bool> _abilityReleaseCallback;
@@ -73,8 +71,12 @@ namespace ModularFramework.Modules.BehaviorTree
             if (ability.cooldown > 0)
             {
                 _cooldownTimer = new CountdownTimer(ability.cooldown);
-                _cooldownTimer.OnTimerStart += () => _isReady = false;
-                _cooldownTimer.OnTimerStop += () => _isReady = true;
+                _cooldownTimer.OnTimerStart += () => abilityStage = AbilityStage.COOLING_DOWN;
+                _cooldownTimer.OnTimerStop += () => abilityStage = AbilityStage.READY;
+            }
+            else
+            {
+                _cooldownTimer = null;
             }
         }
 
@@ -87,7 +89,7 @@ namespace ModularFramework.Modules.BehaviorTree
                 return;
             }
 
-            if (!_isReady)
+            if (!Ready)
             {
                 Debug.LogWarning($"Ability {AbilityName} is not ready yet (on cooldown)");
                 callback(false);
@@ -104,14 +106,14 @@ namespace ModularFramework.Modules.BehaviorTree
                 callback(false);
                 return;
             }
-
-            isCastingAbility = true;
+            
             _abilityReleaseCallback = callback;
             WindUp();
         }
 
         protected virtual void WindUp()
         {
+            abilityStage = AbilityStage.WINDING_UP;
             // skippable state
             if (windUpAnimConfig.type == AnimationConfigType.NONE)
             {
@@ -130,6 +132,7 @@ namespace ModularFramework.Modules.BehaviorTree
 
         protected virtual void Release()
         {
+            abilityStage = AbilityStage.RELEASING;
             // _enemy.AddStatus(MonsterStatus.ATTACK_RELEASE);
             animation.ReverseFlag(windUpAnimConfig, false);
             animation.SetFlag(releaseAnimConfig, null);
@@ -170,7 +173,6 @@ namespace ModularFramework.Modules.BehaviorTree
             animation.ReverseFlag(releaseAnimConfig, false);
             _abilityReleaseCallback?.Invoke(true);
             AimAtTargets(false);
-            isCastingAbility = false;
             _abilityReleaseCallback = null;
             _cooldownTimer?.Start();
         }
@@ -190,7 +192,6 @@ namespace ModularFramework.Modules.BehaviorTree
             animation.ReverseFlag(releaseAnimConfig, true);
             _abilityReleaseCallback?.Invoke(false);
             AimAtTargets(false);
-            isCastingAbility = false;
             _abilityReleaseCallback = null;
             _cooldownTimer?.Restart();
         }
@@ -262,5 +263,10 @@ namespace ModularFramework.Modules.BehaviorTree
                 : ability.name;
 
         public string UniqueId => AbilityName;
+    }
+    
+    public enum AbilityStage
+    {
+        READY, COOLING_DOWN, WINDING_UP, RELEASING
     }
 }

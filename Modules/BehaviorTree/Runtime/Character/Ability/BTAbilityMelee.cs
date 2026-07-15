@@ -24,6 +24,8 @@ namespace ModularFramework.Modules.BehaviorTree
                 base.Release();
                 return;
             }
+
+            abilityStage = AbilityStage.RELEASING;
             animation.SetFlag(releaseAnimConfig, () => CastComplete(ability));
         
         }
