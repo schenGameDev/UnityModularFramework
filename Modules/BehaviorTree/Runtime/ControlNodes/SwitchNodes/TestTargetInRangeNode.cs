@@ -31,9 +31,24 @@ namespace ModularFramework.Modules.BehaviorTree
         private bool IsTargetInRange()
         {
             var targets = tree.blackboard.Get<Transform>(BTBlackboard.KEYWORD_TARGET);
-            if (targets == null) return false;
-            targets = ITransformTargetFilter.Filter(targets, tree.Me, _btRange.targetFilters)?.ToList();
-            return targets?.Count > 0;
+            if (targets == null || targets.Count == 0)
+            {
+                LogCondition($"No targets in blackboard for testing {rangeName}.", false);
+                return false;
+            }
+            var targetsInRange = ITransformTargetFilter.Filter(targets, tree.Me, _btRange.targetFilters)?.ToList();
+            var isTargetInRange = targetsInRange?.Count > 0;
+            
+            if (isTargetInRange)
+            {
+                LogCondition($"{string.Join(", ", targetsInRange.Where(t => t != null).Select(t => t.name))} in {rangeName} range.", true);
+            }
+            else
+            {
+                LogCondition($"{string.Join(", ", targets.Where(t => t != null).Select(t => t.name))} not in {rangeName} range.", false);
+            }
+            targets = targetsInRange;
+            return isTargetInRange;
         }
 
         public override BTNode Clone()

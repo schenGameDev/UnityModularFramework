@@ -9,6 +9,7 @@ namespace ModularFramework.Modules.BehaviorTree
     {
         [Required] public BehaviorTreeSO tree;
         [Suffix("s"), SerializeField] private float interval = 0.2f;
+        [field: SerializeField] public bool Debug { get; private set; }
         
         public float turnSpeed = 60;
         
@@ -22,7 +23,7 @@ namespace ModularFramework.Modules.BehaviorTree
         private void Start()
         {
             tree = tree.Clone();
-            tree.Initialize(transform);
+            tree.Initialize(transform, Debug);
         }
 
         private void Update()

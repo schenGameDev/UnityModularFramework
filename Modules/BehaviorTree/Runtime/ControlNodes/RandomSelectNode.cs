@@ -62,6 +62,7 @@ namespace ModularFramework.Modules.BehaviorTree
             }
 
             currentRunningChild = ReadyChildren[_index];
+            tree.Log($"Random pick node: {currentRunningChild.title}.");
             picked.Add(currentRunningChild);
         }
 

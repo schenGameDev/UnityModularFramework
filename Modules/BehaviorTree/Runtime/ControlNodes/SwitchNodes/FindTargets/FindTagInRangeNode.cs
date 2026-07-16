@@ -19,6 +19,7 @@ namespace ModularFramework.Modules.BehaviorTree
             if (_targets is { Count: > 0 })
             {
                 tree.blackboard.Add(BTBlackboard.KEYWORD_TARGET, _targets);
+                tree.Log($"Assign {string.Join(",", _targets.Select(t => t.name))} to {BTBlackboard.KEYWORD_TARGET}");
             }
         }
 
@@ -28,7 +29,15 @@ namespace ModularFramework.Modules.BehaviorTree
             var tfWithTag = GameObject.FindGameObjectsWithTag(tag).Select(go => go.transform);
             var filteredTargets = ITransformTargetFilter.Filter(tfWithTag, tree.Me, btRange.targetFilters);
             _targets = btRange.targetSelector.GetStrategy(tree.Me)(filteredTargets).ToList();
-            return _targets is { Count: > 0 };
+            var isTagInRange = _targets is { Count: > 0 };
+            if (isTagInRange)
+            {
+                LogCondition($"{tag} target found: " + string.Join(",", _targets.Select(t => t.name)), true);
+                return true;
+            }
+            
+            LogCondition($"{tag} target not found.", false);
+            return false;
         }
 
 

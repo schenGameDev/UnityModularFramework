@@ -17,6 +17,7 @@ namespace ModularFramework.Modules.BehaviorTree
         public static readonly string TARGET_ANGLE_NAME = "TargetAngle";
         
         [SerializeField, Self(Flag.Optional)] Animator animator;
+        [SerializeField] private bool debug;
         
 #if UNITY_EDITOR
         private void OnValidate() => this.ValidateRefs();
@@ -70,7 +71,7 @@ namespace ModularFramework.Modules.BehaviorTree
                 {
                     float waitTime = float.Parse(animationConfig.waitTime);
                     Invoke(nameof(AnimKeyEvent), waitTime);
-                    Debug.Log($"Enemy Animation wait {animationConfig.waitTime}");
+                    Log($"Animation wait {animationConfig.waitTime}");
                     break;
                 }
                 case AnimationConfigType.FLAG:
@@ -81,13 +82,13 @@ namespace ModularFramework.Modules.BehaviorTree
                         {
                             bool value = bool.Parse(flagConfig.value);
                             animator.SetBool(flagConfig.hashedFlag, value);
-                            Debug.Log($"Enemy Animation flag: {flagConfig.flag} = {flagConfig.value}");
+                            Log($"Animation flag: {flagConfig.flag} = {flagConfig.value}");
                         } 
                         else if (flagConfig.flagType == AnimationFlagType.INT)
                         {
                             int value = int.Parse(flagConfig.value);
                             animator.SetInteger(flagConfig.hashedFlag, value);
-                            Debug.Log($"Enemy Animation flag: {flagConfig.flag} = {flagConfig.value}");
+                            Log($"Animation flag: {flagConfig.flag} = {flagConfig.value}");
                         }
                     }
                     
@@ -116,7 +117,7 @@ namespace ModularFramework.Modules.BehaviorTree
         {
             if (animationConfig.type == AnimationConfigType.WAIT)
             {
-                Debug.Log("Enemy Animation wait stopped");
+                Log("Animation wait stopped");
             }
             else if (animationConfig is { type: AnimationConfigType.FLAG, flags: not null })
             {
@@ -128,13 +129,13 @@ namespace ModularFramework.Modules.BehaviorTree
                     {
                         bool reverse = !bool.Parse(flagConfig.value);
                         animator.SetBool(flagConfig.hashedFlag, reverse);
-                        Debug.Log($"Enemy Animation flag: {flagConfig.flag} = {reverse}");
+                        Log($"Animation flag: {flagConfig.flag} = {reverse}");
                     }
                     else if (flagConfig.flagType == AnimationFlagType.INT)
                     {
                         int reverse = 0;
                         animator.SetInteger(flagConfig.hashedFlag, reverse);
-                        Debug.Log($"Enemy Animation flag: {flagConfig.flag} = {reverse}");
+                        Log($"Animation flag: {flagConfig.flag} = {reverse}");
                     }
                     
                 }
@@ -142,6 +143,11 @@ namespace ModularFramework.Modules.BehaviorTree
             
             _onAnimKeyEvent = null;
             
+        }
+        
+        private void Log(string msg)
+        {
+            if (debug) Debug.Log($"<color=#FF0090>${name}$ {msg}</color>");
         }
     }
 }

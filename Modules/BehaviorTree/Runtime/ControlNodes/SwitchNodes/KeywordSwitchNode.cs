@@ -31,13 +31,28 @@ namespace ModularFramework.Modules.BehaviorTree
             if (isTransform)
             {
                 var tf = tree.blackboard.Get<Transform>(keyword);
-                return tf is not null && tf.Count > 0;
+                var found = tf is not null && tf.Count > 0;
+                if (found)
+                {
+                    LogCondition($"{keyword} transform exists in blackboard.", true);
+                }
+                else
+                {
+                    LogCondition($"{keyword} transform doesn't exist.", false);
+                }
+                return found;
             }
 
             var v = tree.blackboard.Get(keyword);
-            if (v == null) return !notFoundIsN;
-
-            return _yesEvaluator.Evaluate(v, dataType);
+            if (v == null)
+            {
+                LogCondition($"{keyword} doesn't exist and condition yield {!notFoundIsN}.", !notFoundIsN);
+                return !notFoundIsN;
+            }
+            var cond = _yesEvaluator.Evaluate(v, dataType);
+        
+            LogCondition($"{keyword} condition yield {cond}.", cond);
+            return cond;
         }
 
 

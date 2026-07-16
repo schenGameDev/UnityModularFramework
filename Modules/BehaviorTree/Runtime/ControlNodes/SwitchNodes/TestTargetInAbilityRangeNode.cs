@@ -40,8 +40,24 @@ namespace ModularFramework.Modules.BehaviorTree
         private bool IsTargetInRange()
         {
             targets = tree.blackboard.Get<Transform>(BTBlackboard.KEYWORD_TARGET);
-            if (targets == null) return false;
-            targets = ITransformTargetFilter.Filter(targets, tree.Me, _btAbility.rangeFilter)?.ToList();
+            if (targets == null || targets.Count == 0)
+            {
+                LogCondition($"No targets in blackboard for testing {abilityName}.", false);
+                return false;
+            }
+            var targetsInRange = ITransformTargetFilter.Filter(targets, tree.Me, _btAbility.rangeFilter)?.ToList();
+            bool isTargetInRange = targetsInRange?.Count > 0;
+            if (isTargetInRange)
+            {
+                LogCondition($"{string.Join(", ", targetsInRange.Where(t => t != null).Select(t => t.name))} in {abilityName} range.", true);
+            }
+            else
+            {
+                LogCondition($"{string.Join(", ", targets.Where(t => t != null).Select(t => t.name))} not in {abilityName} range.", false);
+            }
+            
+            targets = targetsInRange;
+            
             return targets?.Count > 0;
         }
 

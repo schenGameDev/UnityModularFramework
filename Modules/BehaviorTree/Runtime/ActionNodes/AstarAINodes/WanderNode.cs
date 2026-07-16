@@ -13,6 +13,7 @@ namespace ModularFramework.Modules.BehaviorTree
             Vector3 movePos = GetNewDestination();
             tree.AI.SetNewTarget(movePos, BtMove.speed, true);
             BtMove.Move();
+            tree.Log($"Wandering towards {movePos}.");
         }
 
         private Vector3 GetNewDestination()

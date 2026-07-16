@@ -27,12 +27,25 @@ namespace ModularFramework.Modules.BehaviorTree
 
         private bool IsTargetInRightRange()
         {
-            if (_targetTf == null || _centerTf == null) return false;
+            if (_targetTf == null)
+            {
+                LogCondition($"{targetName} not found in blackboard for testing {title}.", false);
+                return false;
+            }
+
+            if (_centerTf == null)
+            {
+                LogCondition($"{centerName} not found in blackboard for testing {title}.", false);
+                return false;
+            }
 
             var sqrDist = (_targetTf.position - _centerTf.position).sqrMagnitude;
 
             bool inRange = _minSqr <= sqrDist && sqrDist <= _maxSqr;
-            return (!reverse && inRange) || (reverse && !inRange);
+            var isInRightRange = (!reverse && inRange) || (reverse && !inRange);
+            LogCondition($"{targetName} in right range relative to {centerName}.", isInRightRange);
+
+            return isInRightRange;
         }
 
         public override BTNode Clone()

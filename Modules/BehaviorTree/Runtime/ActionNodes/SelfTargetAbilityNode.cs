@@ -34,11 +34,13 @@ namespace ModularFramework.Modules.BehaviorTree
         private void CastAbility()
         {
             _btAbility.Cast(null, OnCastComplete);
+            tree.Log($"{abilityName} started on self.");
         }
 
         private void OnCastComplete(bool success)
         {
             _abilityEndState = success ? State.Success : State.Failure;
+            tree.Log($"{abilityName} {(success ? "succeeded" : "failed")}.");
         }
 
         public override BTNode Clone()

@@ -31,6 +31,7 @@ namespace ModularFramework.Modules.BehaviorTree
             if (targets is { Count: > 0 })
             {
                 tree.blackboard.Add(BTBlackboard.KEYWORD_TARGET, targets);
+                tree.Log($"Assign {string.Join(",", targets.Select(t => t.name))} to {BTBlackboard.KEYWORD_TARGET}");
             }
         }
 
@@ -61,10 +62,13 @@ namespace ModularFramework.Modules.BehaviorTree
             targets = Registry<TTarget>.Get(
                 _btAbility.targetSelector.GetStrategy<TTarget>(tree.Me, _btAbility.targetNumber),
                 ((ITransformTargetFilter)_btAbility.rangeFilter).GetStrategy<TTarget>(tree.Me)).ToList();
-            if (targets == null || targets.Count == 0) return false;
+            if (targets == null || targets.Count == 0)
+            {
+                LogCondition($"{abilityName} no target found.", false);
+                return false;
+            }
 
-            if (!started) Debug.Log("Target: " + string.Join(",", targets.Select(t => t.name)));
-
+            LogCondition($"{abilityName} target found: " + string.Join(",",targets.Select(t => t.name)), true);
             return true;
         }
 

@@ -15,6 +15,7 @@ namespace ModularFramework.Modules.BehaviorTree
         {
             _current = 0;
             currentRunningChild = Children[_current];
+            tree.Log($"Sequence first node: {currentRunningChild.title}.");
         }
 
 
@@ -26,11 +27,17 @@ namespace ModularFramework.Modules.BehaviorTree
                 if (currentRunningChild is not ReadyNode rn || rn.Ready)
                     break;
 
+                tree.Log($"{currentRunningChild.title} is not ready.");
+                
                 // if ignoring failure, move to next child
                 if (++_current == Children.Count)
+                {
+                    tree.Log("Sequence finished.");
                     return State.Failure;
+                }
 
                 currentRunningChild = Children[_current];
+                tree.Log($"Sequence next node: {currentRunningChild.title}.");
             }
 
             switch (currentRunningChild.Run())
@@ -41,11 +48,13 @@ namespace ModularFramework.Modules.BehaviorTree
                     _current++;
                     if (_current == Children.Count) return State.Success;
                     currentRunningChild = Children[_current];
+                    tree.Log($"Sequence next node: {currentRunningChild.title}.");
                     break;
                 case State.Success:
                     _current++;
                     if (_current == Children.Count || returnOnSuccess && ignoreFailure) return State.Success;
                     currentRunningChild = Children[_current];
+                    tree.Log($"Sequence next node: {currentRunningChild.title}.");
                     break;
                 case State.Failure:
                     return State.Failure;

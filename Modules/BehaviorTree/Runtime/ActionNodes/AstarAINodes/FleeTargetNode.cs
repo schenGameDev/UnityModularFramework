@@ -16,6 +16,7 @@ namespace ModularFramework.Modules.BehaviorTree
             {
                 tree.AI.SetNewTargetUnFixed(GetFleeTarget(_target.position), BtMove.speed, true);
                 BtMove.Move();
+                tree.Log($"Fleeing from {_target.name}");
             }
         }
 

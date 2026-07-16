@@ -17,6 +17,7 @@ namespace ModularFramework.Modules.BehaviorTree
         public Transform Me { get; set; }
         public AstarAI AI { get; private set; }
         public List<BTNode> nodes = new();
+        private bool _debug;
 
 #if UNITY_EDITOR
 
@@ -258,11 +259,12 @@ namespace ModularFramework.Modules.BehaviorTree
 
 #endif
 
-        public void Initialize(Transform me)
+        public void Initialize(Transform me, bool debug)
         {
             Me = me;
             AI = Me.GetComponent<AstarAI>();
             runner = Me.GetComponent<BTRunner>();
+            _debug = debug;
             foreach (var n in nodes)
             {
                 n.Prepare();
@@ -336,6 +338,10 @@ namespace ModularFramework.Modules.BehaviorTree
         {
             root.Run();
             blackboard.changed = false;
+        }
+        
+        public void Log(string msg) {
+            if(_debug) Debug.Log( $"<color=#305CDE>${name}$ {msg}</color>");
         }
     }
 }

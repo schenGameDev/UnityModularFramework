@@ -13,10 +13,10 @@ namespace ModularFramework.Modules.BehaviorTree
             if (targets is { Count: > 0 })
             {
                 tree.blackboard.Add(BTBlackboard.KEYWORD_TARGET, targets);
-                Debug.Log("Target: " + string.Join(",", targets.Select(t => t.name)));
+                LogCondition($"Assign {keyword} to {BTBlackboard.KEYWORD_TARGET}: " + string.Join(",", targets.Select(t => t.name)), true);
                 return true;
             }
-
+            LogCondition($"{keyword} transform doesn't exist.", false);
             return false;
         }
 

@@ -22,6 +22,7 @@ namespace ModularFramework.Modules.BehaviorTree
         }
 
         protected bool enterConditionState;
+        private bool _conditionStateLastFrame;
 
         protected override void OnEnter()
         {
@@ -83,6 +84,17 @@ namespace ModularFramework.Modules.BehaviorTree
         public override Color HeaderColor => new Color32(106, 64, 255, 255);
 
         protected override int MaxChildrenNum() => 2;
-
+        
+        protected void LogCondition(string message, bool newState)
+        {
+            if (!started // enter
+                || !verifyEachFrame
+                || _conditionStateLastFrame != newState
+               )
+            {
+                tree.Log(message);
+                _conditionStateLastFrame = newState;
+            }
+        }
     }
 }

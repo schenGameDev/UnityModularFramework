@@ -13,13 +13,14 @@ namespace ModularFramework.Modules.BehaviorTree
         {
             base.OnEnter();
             var targets = tree.blackboard.Get<Transform>(BTBlackboard.KEYWORD_TARGET);
-            if (targets != null && targets.Count > 0)
+            if (targets is { Count: > 0 })
             {
                 _target = targets[0];
                 tree.AI.SetNewTarget(_target, BtMove.speed, true);
 
                 HighlightTarget(true);
                 BtMove.Move();
+                tree.Log($"Following {_target.name}");
             }
             else
             {
@@ -38,6 +39,7 @@ namespace ModularFramework.Modules.BehaviorTree
         protected override void OnExit()
         {
             HighlightTarget(false);
+            if (_target != null) tree.Log($"Stop following {_target.name}");
             base.OnExit();
 
         }

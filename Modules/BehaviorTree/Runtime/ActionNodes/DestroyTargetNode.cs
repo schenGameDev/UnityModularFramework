@@ -7,6 +7,7 @@ namespace ModularFramework.Modules.BehaviorTree
         protected override void TriggerMethodOnTargets(Transform t)
         {
             Bounds bounds = new Bounds(t.position, new Vector3(10, 10, 10));
+            tree.Log($"Destroy {t.name}.");
             Destroy(t.gameObject);
             AstarPath.active.UpdateGraphs(bounds);
         }

@@ -46,7 +46,7 @@ namespace ModularFramework.Modules.BehaviorTree
         {
             if (!tf.TryGetComponent<BTRunner>(out var marker)) return;
             var tree = marker.tree.Clone();
-            tree.Initialize(tf);
+            tree.Initialize(tf, marker.Debug);
             marker.tree = tree;
             _btDict.Add(tf, marker);
         }

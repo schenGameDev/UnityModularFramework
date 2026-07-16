@@ -45,11 +45,15 @@ namespace ModularFramework.Modules.BehaviorTree
         {
             var targets = tree.blackboard.Get<Transform>(BTBlackboard.KEYWORD_TARGET);
             _btAbility.Cast(targets?.Select(t => t.GetComponent<IDamageable>()).ToList(), OnCastComplete);
+            string targetNames = targets is { Count: > 0 } 
+                ? string.Join(", ", targets.Select(t => t.name)) : "no targets";
+            tree.Log($"{_abilityName} started on {targetNames}.");
         }
 
         private void OnCastComplete(bool success)
         {
             _abilityEndState = success ? State.Success : State.Failure;
+            tree.Log($"{_abilityName} {(success ? "succeeded" : "failed")}.");
         }
 
         public override string ToString()
