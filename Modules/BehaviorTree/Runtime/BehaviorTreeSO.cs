@@ -276,22 +276,27 @@ namespace ModularFramework.Modules.BehaviorTree
             var clone = Instantiate(this);
             clone.root = root.Clone();
             clone.nodes = new List<BTNode>();
-            Traverse(clone.root, (n) =>
-            {
-                n.tree = clone;
-                clone.nodes.Add(n);
-            });
-            foreach (var subroot in CloneSubTree(nodes, clone.nodes))
-            {
-                Traverse(subroot, (n) =>
-                {
-                    n.tree = clone;
-                    clone.nodes.Add(n);
-                });
-            }
+            
+            var subroots = nodes.OfType<SubTreeRootNode>()
+                .ToDictionary(sr => sr.title, sr => (SubTreeRootNode) sr.Clone());
+            
+            TraverseTree(clone.root, clone, subroots, new HashSet<string>());
 
             if (blackboard) clone.blackboard = Instantiate(blackboard);
             return clone;
+        }
+        
+        private void TraverseTree(BTNode root, BehaviorTreeSO tree, Dictionary<string,SubTreeRootNode> subroots, HashSet<string> visited)
+        {
+            if (!visited.Add(root.guid)) return; // already visited in another outlet
+            Traverse(root, (n) => {
+                n.tree = tree;
+                tree.nodes.Add(n);
+            } );
+            foreach (var subroot in FindSubTree(subroots, tree.nodes))
+            {
+                TraverseTree(subroot, tree, subroots, visited);
+            }
         }
 
         private void Traverse(BTNode node, Action<BTNode> visitor)
@@ -303,24 +308,21 @@ namespace ModularFramework.Modules.BehaviorTree
             }
         }
 
-        private IEnumerable<BTNode> CloneSubTree(List<BTNode> nodes, List<BTNode> clonedNodes)
+        private IEnumerable<BTNode> FindSubTree(Dictionary<string,SubTreeRootNode> subroots, List<BTNode> clonedNodes)
         {
-            Dictionary<string, BTNode> visited = new();
+            Dictionary<string,BTNode> visited = new ();
             try
             {
-                var subroots = nodes.OfType<SubTreeRootNode>()
-                    .ToDictionary(sr => sr.title, sr => sr);
                 clonedNodes.OfType<SubTreeOutletNode>().ForEach(outlet =>
                 {
                     if (subroots.TryGetValue(outlet.title, out var subroot))
                     {
-                        if (!visited.TryGetValue(subroot.guid, out BTNode node))
-                        {
-                            node = (SubTreeRootNode)subroot.Clone();
-                            visited.Add(subroot.guid, node);
-                        }
-
-                        outlet.subTreeRootNode = (SubTreeRootNode)node;
+                        outlet.subTreeRootNode = subroot;
+                        visited[subroot.guid] = subroot;
+                    }
+                    else
+                    {
+                        Debug.LogError($"Subtree {outlet.title} not found.");
                     }
                 });
             }

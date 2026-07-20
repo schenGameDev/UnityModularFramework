@@ -174,7 +174,7 @@ namespace ModularFramework.Modules.BehaviorTree
             _abilityReleaseCallback?.Invoke(true);
             AimAtTargets(false);
             _abilityReleaseCallback = null;
-            _cooldownTimer?.Start();
+           Cooldown();
         }
 
 
@@ -193,7 +193,7 @@ namespace ModularFramework.Modules.BehaviorTree
             _abilityReleaseCallback?.Invoke(false);
             AimAtTargets(false);
             _abilityReleaseCallback = null;
-            _cooldownTimer?.Restart();
+            Cooldown();
         }
 
         private void AimAtTargets(bool on = true)
@@ -217,6 +217,17 @@ namespace ModularFramework.Modules.BehaviorTree
             GetAimPosition();
         }
         
+        private void Cooldown()
+        {
+            if (_cooldownTimer != null)
+            {
+                _cooldownTimer.Restart();
+            }
+            else
+            {
+                abilityStage = AbilityStage.READY;
+            }
+        }
 
 #if UNITY_EDITOR 
         private void OnDrawGizmos()
