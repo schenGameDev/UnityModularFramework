@@ -2,9 +2,9 @@
     "name": "Steamworks",
     "rootNamespace": "ModularFramework.Modules.Steamworks",
     "references": [
-        "GUID:68bd7fdb68ef2684e982e8a9825b18a5",
-        "GUID:be281b7992e9e1840851a78ba9db107c",
-        "GUID:add39933988c64884972442c66f4f932"
+        "com.rlabrecque.steamworks.net",
+        "com.rlabrecque.steamworks.net.editor",
+        "Schen.ModularFramework.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

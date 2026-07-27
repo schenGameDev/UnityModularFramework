@@ -2,9 +2,9 @@
     "name": "Schen.ModularFramework.Input",
     "rootNamespace": "ModularFramework.Modules.Input",
     "references": [
-        "GUID:add39933988c64884972442c66f4f932",
-        "GUID:febaf25a60dafbd44941357b21678606",
-        "GUID:75469ad4d38634e559750d17036d5f7c"
+        "Schen.ModularFramework.Core",
+        "EditorAttributes",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

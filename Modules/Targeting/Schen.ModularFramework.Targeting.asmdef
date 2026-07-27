@@ -2,9 +2,9 @@
     "name": "Schen.ModularFramework.Targeting",
     "rootNamespace": "ModularFramework.Modules.Targeting",
     "references": [
-        "GUID:add39933988c64884972442c66f4f932",
-        "GUID:febaf25a60dafbd44941357b21678606",
-        "GUID:a42c64b2b45190347903076a017fce90"
+        "Schen.ModularFramework.Core",
+        "EditorAttributes",
+        "EditorAttributes.Editor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
