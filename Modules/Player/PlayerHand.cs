@@ -1,3 +1,5 @@
+namespace UnityModularFramework.Modules.Player
+{
 // using System.Linq;
 // using EditorAttributes;
 // using ModularFramework;
@@ -196,3 +198,4 @@
 //         reloadBar.fillAmount = _reloadTime / _weapon.reloadTime;
 //     }
 // }
+}

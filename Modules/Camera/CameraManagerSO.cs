@@ -8,6 +8,7 @@ using ModularFramework.Modules.Input;
 using ModularFramework.Utility;
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityModularFramework.Modules.Player;
 
 namespace ModularFramework.Modules.Camera
 {
