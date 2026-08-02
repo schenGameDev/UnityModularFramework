@@ -7,33 +7,33 @@ namespace ModularFramework.Modules.Camera
 {
     public class FollowPlayerCamera : MovingCameraBase
     {
-        [SerializeField] Transform _player;
+        [SerializeField] private Transform player;
 
         [MinMaxSlider(-90.0f, 90.0f), SerializeField]
-        private Vector2 _minMaxCameraAngle = new Vector2(-10, 30);
+        private Vector2 minMaxCameraAngle = new Vector2(-10, 30);
 
-        [FoldoutGroup("Controller", nameof(_deadZone))] [SerializeField]
+        [FoldoutGroup("Controller", nameof(deadZone))] [SerializeField]
         private Void controllerGroup;
 
-        [HideInInspector, SerializeField] private Vector2 _deadZone = new(0.01f, 0.3f);
+        [HideInInspector, SerializeField] private Vector2 deadZone = new(0.01f, 0.3f);
 
 
-        [FoldoutGroup("Camera Height", nameof(_camHeight))] [SerializeField]
+        [FoldoutGroup("Camera Height", nameof(camHeight))] [SerializeField]
         private Void cameraHeightGroup;
 
-        [FoldoutGroup("Default View", nameof(_defaultTarget), nameof(_defaultAngle))] [SerializeField]
+        [FoldoutGroup("Default View", nameof(defaultTarget), nameof(defaultAngle))] [SerializeField]
         private Void defaultGroup;
 
 
         [HideInInspector, SerializeField, Rename("Camera Height"), Suffix("m")]
-        private float _camHeight = 0;
+        private float camHeight = 0;
 
         [HideInInspector, SerializeField, Rename("Target")]
-        private GameObject _defaultTarget;
+        private GameObject defaultTarget;
 
         [HideInInspector, SerializeField, Rename("Angles"),
          HelpBox("Angles are inactive if Target is set", MessageMode.None)]
-        private Vector3 _defaultAngle;
+        private Vector3 defaultAngle;
 
         private Vector2 _lookDeltaMovement;
 
@@ -49,14 +49,14 @@ namespace ModularFramework.Modules.Camera
         {
             base.Start();
 
-            focusPoint.position = _player.position + new Vector3(0, _camHeight, 0);
-            if (_defaultTarget != null)
+            focusPoint.position = player.position + new Vector3(0, camHeight, 0);
+            if (defaultTarget != null)
             {
-                focusPoint.LookAt(_defaultTarget.transform.position);
+                focusPoint.LookAt(defaultTarget.transform.position);
             }
             else
             {
-                focusPoint.eulerAngles = _defaultAngle;
+                focusPoint.eulerAngles = defaultAngle;
             }
         }
 
@@ -69,7 +69,7 @@ namespace ModularFramework.Modules.Camera
 
         private void MoveCamera()
         {
-            var targetPos = _player.position + new Vector3(0, _camHeight, 0);
+            var targetPos = player.position + new Vector3(0, camHeight, 0);
             if (Vector3.SqrMagnitude(focusPoint.position - targetPos) <= 0.001f)
             {
                 FocusPointDecelerate();
@@ -118,8 +118,8 @@ namespace ModularFramework.Modules.Camera
                 return;
             }
 
-            Vector2 rollDir = new(math.abs(_lookDeltaMovement.x) > _deadZone.x ? _lookDeltaMovement.x : 0,
-                math.abs(_lookDeltaMovement.y) > _deadZone.y ? _lookDeltaMovement.y : 0);
+            Vector2 rollDir = new(math.abs(_lookDeltaMovement.x) > deadZone.x ? _lookDeltaMovement.x : 0,
+                math.abs(_lookDeltaMovement.y) > deadZone.y ? _lookDeltaMovement.y : 0);
             isStop = rollDir.sqrMagnitude < 0.1f;
             if (isStop)
             {
@@ -137,7 +137,7 @@ namespace ModularFramework.Modules.Camera
 
             float x = (focusPoint.eulerAngles.x > 180 ? focusPoint.eulerAngles.x - 360 : focusPoint.eulerAngles.x) +
                       deltaXAxis;
-            x = Mathf.Clamp(x, _minMaxCameraAngle.x, _minMaxCameraAngle.y);
+            x = Mathf.Clamp(x, minMaxCameraAngle.x, minMaxCameraAngle.y);
 
             float y = focusPoint.eulerAngles.y + deltaYAxis;
 
@@ -164,12 +164,12 @@ namespace ModularFramework.Modules.Camera
 
         }
 
-        protected override Transform CameraFocusSpawnPoint() => _player;
+        protected override Transform CameraFocusSpawnPoint() => player;
         public override bool Ready => true;
 
         public void TempChangeMaxAngle(Vector2 minMaxAngle)
         {
-            _minMaxCameraAngle = minMaxAngle;
+            minMaxCameraAngle = minMaxAngle;
         }
 
     }

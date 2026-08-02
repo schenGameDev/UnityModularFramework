@@ -6,6 +6,7 @@ using UnityEngine;
 namespace ModularFramework
 {
     
+    [CreateAssetMenu(fileName = "GameSystemBucket_SO", menuName = "Bucket/Game System Bucket")]
     public class GameSystemBucket : ScriptableObject
     {
         [SerializeField] private GameSystem[] systems;

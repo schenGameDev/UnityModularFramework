@@ -12,21 +12,29 @@ using Void = EditorAttributes.Void;
 public class PlayerMoveView : MonoBehaviour
 {
     
-    [FoldoutGroup("Move", nameof(maxSpeed), nameof(maxSprintSpd), nameof(acceleration), nameof(deceleration))]
+    [FoldoutGroup("Move", nameof(maxSpeed), nameof(acceleration), nameof(deceleration))]
     [SerializeField] private Void moveGroupHolder;
     
     [SerializeField, HideInInspector, Min(0)] private float maxSpeed = 10;
-    [SerializeField, HideInInspector, Min(0)] private float maxSprintSpd = 15;
     [SerializeField, HideInInspector, Min(0)] private float acceleration = 3;
     [SerializeField, HideInInspector, Min(0)] private float deceleration = 6;
     
-    [SerializeReference, SubclassSelector] 
-    private JumpProcessor jumpProcessor;
+    [FoldoutGroup("Sprint", nameof(maxSprintSpd), nameof(sprintConsumption), nameof(isSprinting))]
+    [SerializeField] private Void sprintGroupHolder;
+    [SerializeField, HideInInspector, Min(0)] private float maxSprintSpd = 15;
+    [SerializeField, HideProperty] private Player.StatusConsumptionDef sprintConsumption;
+    [HideInInspector] public bool isSprinting;
+    
+    
+    [FoldoutGroup("Jump", nameof(jumpConsumption), nameof(jumpProcessor))]
+    [SerializeField] private Void jumpGroupHolder;
+    [SerializeField, HideProperty] private Player.StatusConsumptionDef jumpConsumption;
+    [SerializeReference, SubclassSelector, HideProperty] private JumpProcessor jumpProcessor;
     
     [ToggleGroup("Fall calculated separately", nameof(fallProcessor))]
     [SerializeField,Tooltip("Distinguish landing of a jump and an uncontrollable fall")] 
     private bool useFallProcessor;
-    [SerializeReference, HideInInspector] private Fall fallProcessor;
+    [SerializeReference, HideProperty] private Fall fallProcessor;
     
     [SerializeField] private bool isFallDamage;
 
@@ -38,8 +46,8 @@ public class PlayerMoveView : MonoBehaviour
     [ReadOnly] public JumpState jumpState = JumpState.GROUNDED; // may be changed by game events
     
     [Header("Event Channel")]
-    [SerializeField] private EventChannel<bool> jumpChannel;
-    [SerializeField] private EventChannel<Vector2> moveChannel, viewChannel;
+    [SerializeField] private BoolEventChannelSO jumpChannel, sprintChannel;
+    [SerializeField] private Vector2EventChannelSO moveChannel, viewChannel;
     
     [SerializeField,Self] private CharacterController characterController;
     [SerializeField,Self] private Player player;
@@ -48,7 +56,7 @@ public class PlayerMoveView : MonoBehaviour
     private Vector3 _velocity;
     private Vector3 _moveDirection;
     private float _fallHeight;
-    public bool isSprinting;
+    
     private Autowire<InputSystemSO> _inputSystem = new();
     private FallHeightProcessor _fallHeightProcessor;
     private float _knockBackTimer;
@@ -86,7 +94,8 @@ public class PlayerMoveView : MonoBehaviour
     }
     
     private void FixedUpdate() {
-        Move();
+        Move(Time.fixedDeltaTime);
+        MonitorStatusConsumption(Time.fixedDeltaTime);
         ShowShadow();
     }
 
@@ -103,9 +112,9 @@ public class PlayerMoveView : MonoBehaviour
 
     }
     
-    private Vector3 Move()
+    private Vector3 Move(float dt)
     {
-        var displacement = GetGroundVelocity();
+        var displacement = GetGroundVelocity(dt);
         bool isGrounded = characterController.isGrounded;
         if (jumpProcessor != null)
         {
@@ -188,11 +197,11 @@ public class PlayerMoveView : MonoBehaviour
     }
     
     
-    private Vector3 GetGroundVelocity()
+    private Vector3 GetGroundVelocity(float dt)
     {
         if (IsKnockBacking)
         {
-            return _knockBackVelocity * Time.fixedDeltaTime;
+            return _knockBackVelocity * dt;
         }
         
         bool isIdle = _moveDirection == Vector3.zero;
@@ -200,21 +209,21 @@ public class PlayerMoveView : MonoBehaviour
         Vector3 oldVelocity = _velocity;
         if (isIdle || isTurnBack)
         {
-            _velocity = Vector3.MoveTowards(_velocity, Vector3.zero, GroundDeceleration() * Time.fixedDeltaTime);
+            _velocity = Vector3.MoveTowards(_velocity, Vector3.zero, GroundDeceleration() * dt);
         }
         else
         {
             var maxGroundSpeed = GetMaxSpeed();
             var targetDirVec = Vector3.Project(_velocity, _moveDirection);
             var targetDirVelocity = targetDirVec.sqrMagnitude < maxGroundSpeed * maxGroundSpeed? 
-                targetDirVec + GroundAcceleration() * Time.fixedDeltaTime * _moveDirection : targetDirVec;
+                targetDirVec + GroundAcceleration() * dt * _moveDirection : targetDirVec;
             
             var normVec = _velocity - targetDirVec;
             var normDirVelocity = normVec == Vector3.zero? Vector3.zero : 
-                Vector3.MoveTowards(normVec, Vector3.zero, GroundDeceleration() * Time.fixedDeltaTime);
+                Vector3.MoveTowards(normVec, Vector3.zero, GroundDeceleration() * dt);
             _velocity = Vector3.ClampMagnitude(targetDirVelocity + normDirVelocity, maxGroundSpeed);
         }
-        return 0.5f * Time.fixedDeltaTime * (oldVelocity + _velocity);
+        return 0.5f * dt * (oldVelocity + _velocity);
         // _velocity * Time.fixedDeltaTime  + (maxSpdReached? 0 : 0.5f * acceleration * Time.fixedDeltaTime * Time.fixedDeltaTime)
     }
     
@@ -268,6 +277,7 @@ public class PlayerMoveView : MonoBehaviour
         moveChannel?.AddListener(OnMove);
         viewChannel?.AddListener(OnView);
         jumpChannel?.AddListener(OnJump);
+        sprintChannel?.AddListener(OnSprint);
     }
     
     private void UnlinkEventChannels()
@@ -275,6 +285,7 @@ public class PlayerMoveView : MonoBehaviour
         moveChannel?.RemoveListener(OnMove);
         viewChannel?.RemoveListener(OnView);
         jumpChannel?.RemoveListener(OnJump);
+        sprintChannel?.RemoveListener(OnSprint);
     }
 
     private void CleanUp()
@@ -297,6 +308,11 @@ public class PlayerMoveView : MonoBehaviour
 
     private void OnJump(bool isJumping) // button down or up
     {
+        if (isJumping && !player.IsStatusEnough(jumpConsumption.key, jumpConsumption.startAmount))
+        {
+            return;
+        }
+        
         jumpProcessor?.StartJump(isJumping);
     }
     
@@ -308,6 +324,32 @@ public class PlayerMoveView : MonoBehaviour
     private void OnView(Vector2 input)
     {
         _viewDirection = _inputSystem.Get().GetViewWorldDirection(input);
+    }
+    
+    private void OnSprint(bool sprinting)  // button down or up
+    {
+        if (sprinting && !player.IsStatusEnough(sprintConsumption.key, sprintConsumption.startAmount))
+        {
+            return;
+        }
+        isSprinting = sprinting;
+    }
+
+    private void MonitorStatusConsumption(float dt)
+    {
+        if (isSprinting 
+            && sprintConsumption.NeedSustain
+            && player.ConsumeStatus(sprintConsumption.key, sprintConsumption.sustainAmount * dt) <= 0)
+        {
+            OnSprint(false);
+        }
+        
+        if (jumpState is JumpState.JUMPING 
+            && jumpConsumption.NeedSustain
+            && player.ConsumeStatus(jumpConsumption.key, jumpConsumption.sustainAmount * dt) <= 0)
+        {
+            jumpProcessor?.StartJump(false);
+        }
     }
 #if UNITY_EDITOR
     private void OnValidate() => this.ValidateRefs();

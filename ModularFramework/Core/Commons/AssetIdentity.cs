@@ -38,7 +38,7 @@ namespace ModularFramework
                 // for new prefabs,        it will set from 0 to N.
                 // for duplicated prefabs, it will set from N to M.
                 // either way, it's always set to a valid GUID.
-                assetId = value;
+                _assetId = value;
             }
         }
         

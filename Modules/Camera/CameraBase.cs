@@ -15,15 +15,15 @@ namespace ModularFramework.Modules.Camera
     {
 
         [Header("Config")] [SerializeField, HideInChildren(typeof(EmptyCamera))]
-        Transform _cameraFocusPointGroup;
+        private Transform cameraFocusPointGroup;
 
         [SerializeField, HideInChildren(typeof(EmptyCamera))]
         protected Transform focusPoint;
 
         [SerializeField] protected Color gizmosColor = Color.blue;
-        public bool IsDefaultCamera;
+        public bool isDefaultCamera;
 
-        protected Autowire<CameraManagerSO> cameraManager = new();
+        protected readonly Autowire<CameraManagerSO> cameraManager = new();
 
         [ReadOnly] public CameraType type;
 
@@ -36,7 +36,7 @@ namespace ModularFramework.Modules.Camera
         [SerializeField, Rename("POV Change Speed During Transition")]
         float povDelta = 20;
 
-        [ReadOnly] public Vector3 Momentum;
+        [ReadOnly] public Vector3 momentum;
 
 #if UNITY_EDITOR
         private void OnValidate() => this.ValidateRefs();
@@ -101,7 +101,7 @@ namespace ModularFramework.Modules.Camera
             {
                 var pose = FindFocusPointPositionAndFwdDirectionByCamera(prevCam.LastCamPose);
                 focusPoint.SetPose(pose);
-                RestrainMomentum(prevCam.Momentum);
+                RestrainMomentum(prevCam.momentum);
             }
 
             POV = prevCam.POV;
@@ -119,7 +119,7 @@ namespace ModularFramework.Modules.Camera
 
         protected virtual void RestrainMomentum(Vector3 inheritedMomentum)
         {
-            Momentum = inheritedMomentum;
+            momentum = inheritedMomentum;
         }
 
         protected void UpdatePOV()
@@ -224,7 +224,7 @@ namespace ModularFramework.Modules.Camera
             focusPoint.position = CameraFocusSpawnPoint() == null ? Vector3.zero : CameraFocusSpawnPoint().position;
             focusPoint.rotation =
                 CameraFocusSpawnPoint() == null ? Quaternion.identity : CameraFocusSpawnPoint().rotation;
-            if (_cameraFocusPointGroup != null) focusPoint.parent = _cameraFocusPointGroup;
+            if (cameraFocusPointGroup != null) focusPoint.parent = cameraFocusPointGroup;
 
             var core = new GameObject(gameObject.name + "Core").transform;
             core.parent = focusPoint;

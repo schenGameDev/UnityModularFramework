@@ -15,9 +15,10 @@ namespace ModularFramework {
         [Header("Game Modules")]
         [SerializeField,HideLabel,HelpBox("In boot-up order", MessageMode.None)]
 #if UNITY_EDITOR
-        [OnValueChanged(nameof(AddBootUpParameter))] 
-#endif
+        [OnValueChanged(nameof(AddBootUpParameter))] private GameSystem[] modules;
+#else
         private GameSystem[] modules;
+#endif
         [SerializeField,SerializedDictionary("Name","Value")] private SerializedDictionary<string,string> flags = new();
         [SerializeField,SerializedDictionary("Name","Ref Object")] private SerializedDictionary<string,GameObject> references = new();
 

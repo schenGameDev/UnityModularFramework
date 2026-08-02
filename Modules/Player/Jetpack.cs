@@ -62,7 +62,7 @@ public class Jetpack : JumpProcessor
 
     public override Vector3 GetVerticalVelocity(float yValue, bool isGrounded)
     {
-        if (!IsJumping) return Vector3.zero;
+        // if (!IsJumping) return Vector3.zero;
         
         if (_lastGroundHeight == UNINITIALIZED_GROUND_HEIGHT)
         {

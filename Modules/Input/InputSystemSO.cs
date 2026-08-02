@@ -40,6 +40,7 @@ namespace ModularFramework.Modules.Input
 
         protected override void OnStart()
         {
+            Live = true;
             foreach (var actionChannel in inputs)
             {
                 if (actionChannel.input == NONE_ACTION)

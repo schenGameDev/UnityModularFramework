@@ -20,7 +20,7 @@ namespace ModularFramework.Modules.Camera
         [SerializeField] Vector2 positionShakeStrength = new(0.03f, 0.03f);
         [SerializeField] float rotationShakeStrength = 0.05f;
         [SerializeField] float shakeTime = 0.3f;
-        [SerializeField] EventChannel<Vector2> pointerPositionChannel;
+        [SerializeField] Vector2EventChannelSO pointerPositionChannel;
 
 
         [Header("Runtime")] [SerializeField, ReadOnly, RuntimeObject]
@@ -99,7 +99,7 @@ namespace ModularFramework.Modules.Camera
             }
 
             _activeCamerasInScene.Add(name, new(type, transform));
-            if (cb.IsDefaultCamera)
+            if (cb.isDefaultCamera)
             {
                 if (_isDefaultSet)
                 {

@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace ModularFramework
 {
+    [CreateAssetMenu(fileName = "PrefabRegistry_SO", menuName = "Game Module/Prefab Registry")]
     public class PrefabPoolRegistrySO : GameModule<PrefabPoolRegistrySO>
     {
         [SerializeField] private AssetIdentity[] assets;

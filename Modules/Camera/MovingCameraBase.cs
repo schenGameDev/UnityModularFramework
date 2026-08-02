@@ -167,14 +167,14 @@ namespace ModularFramework.Modules.Camera
             FocusPointDecelerate(friction);
 
             Vector3 force = acceleration * Time.deltaTime * diff.normalized;
-            Momentum += force;
-            float sqrDist = Momentum.sqrMagnitude;
-            Vector3 maxDelta = Time.deltaTime * maxSpeed * Momentum.normalized;
+            momentum += force;
+            float sqrDist = momentum.sqrMagnitude;
+            Vector3 maxDelta = Time.deltaTime * maxSpeed * momentum.normalized;
             float sqrMax = maxDelta.sqrMagnitude;
 
             if (sqrDist > sqrMax)
             {
-                Momentum = maxDelta;
+                momentum = maxDelta;
                 sqrDist = sqrMax;
             }
 
@@ -185,24 +185,24 @@ namespace ModularFramework.Modules.Camera
                 return true;
             }
 
-            focusPoint.position += Momentum;
+            focusPoint.position += momentum;
             return false;
         }
 
         protected void FocusPointDecelerate(float deceleration)
         {
-            if (Momentum == Vector3.zero) return;
+            if (momentum == Vector3.zero) return;
 
-            Vector3 dir = Momentum.normalized;
+            Vector3 dir = momentum.normalized;
             Vector3 force = deceleration * Time.deltaTime * dir;
-            bool isArrive = Momentum.sqrMagnitude <= force.sqrMagnitude;
+            bool isArrive = momentum.sqrMagnitude <= force.sqrMagnitude;
             if (isArrive)
             {
-                Momentum = Vector3.zero;
+                momentum = Vector3.zero;
                 return;
             }
 
-            Momentum -= force;
+            momentum -= force;
         }
 
         protected bool FocusPointChase(Vector3 target) => FocusPointChase(target, followAcceleration, followMaxSpeed);
@@ -233,8 +233,8 @@ namespace ModularFramework.Modules.Camera
         {
             var maxSpeedDelta = followMaxSpeed * Time.deltaTime;
             if (inheritedMomentum.sqrMagnitude > maxSpeedDelta * maxSpeedDelta)
-                Momentum = maxSpeedDelta * inheritedMomentum.normalized;
-            else Momentum = inheritedMomentum;
+                momentum = maxSpeedDelta * inheritedMomentum.normalized;
+            else momentum = inheritedMomentum;
         }
     }
 }

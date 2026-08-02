@@ -8,6 +8,7 @@ using UnityEngine.Pool;
 
 namespace ModularFramework.Modules.Ability
 {
+    [CreateAssetMenu(fileName = "ProjectileManager_SO", menuName = "Game Module/Projectile")]
     public class ProjectileManagerSO : GameModule<ProjectileManagerSO>
     {
         [SerializeField] private int maxBulletCount = 500;

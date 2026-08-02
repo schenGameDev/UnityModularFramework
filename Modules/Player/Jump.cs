@@ -66,7 +66,7 @@ public class Jump : JumpProcessor
     {
         RecordGrounded(isGrounded);
         
-        if (!IsJumping) return Vector3.zero;
+        // if (!IsJumping) return Vector3.zero;
         
         var g = GetGravity();
         
