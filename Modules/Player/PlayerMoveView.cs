@@ -27,10 +27,11 @@ namespace UnityModularFramework.Modules.Player
         [HideInInspector] public bool isSprinting;
         
         
-        [FoldoutGroup("Jump", nameof(jumpConsumption), nameof(jumpProcessor))]
+        [FoldoutGroup("Jump", nameof(jumpConsumption), nameof(jumpProcessor), nameof(jumpState))]
         [SerializeField] private Void jumpGroupHolder;
         [SerializeField, HideProperty] private Player.StatusConsumptionDef jumpConsumption;
         [SerializeReference, SubclassSelector, HideProperty] private JumpProcessor jumpProcessor;
+        [ReadOnly,HideProperty] public JumpState jumpState = JumpState.GROUNDED; // may be changed by game events
         
         [ToggleGroup("Fall calculated separately", nameof(fallProcessor))]
         [SerializeField,Tooltip("Distinguish landing of a jump and an uncontrollable fall")] 
@@ -44,10 +45,11 @@ namespace UnityModularFramework.Modules.Player
         [SerializeField, ShowField(nameof(isFallDamage))] 
         private float fallDamageModifier = 0.1f;
         
-        [ReadOnly] public JumpState jumpState = JumpState.GROUNDED; // may be changed by game events
+        [SerializeField] private bool rotateWithView = true;
         
         [Header("Event Channel")]
-        [SerializeField] private BoolEventChannelSO jumpChannel, sprintChannel;
+        [SerializeField] private BoolEventChannelSO jumpChannel;
+        [SerializeField] private BoolEventChannelSO sprintChannel;
         [SerializeField] private Vector2EventChannelSO moveChannel, viewChannel;
         
         [SerializeField,Self] private CharacterController characterController;
@@ -108,6 +110,7 @@ namespace UnityModularFramework.Modules.Player
         public void Stop() => _moveDirection = Vector3.zero;
         
         private void Look() {
+            if (!rotateWithView) return;
             if(_viewDirection == Vector3.zero) return;
             transform.rotation = Quaternion.LookRotation(_viewDirection, Vector3.up);
 
