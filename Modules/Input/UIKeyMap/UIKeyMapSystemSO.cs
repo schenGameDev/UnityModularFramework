@@ -102,6 +102,7 @@ namespace ModularFramework.Modules.Input
 
                 Action<InputAction.CallbackContext> a = context => Raise(context, actionKeyPair.key);
                 i.started += a;
+                i.canceled += a;
                 _actionCache.Add((i, a));
             });
 
@@ -132,7 +133,7 @@ namespace ModularFramework.Modules.Input
                 listeners.RemoveWhere(l =>
                 {
                     if (!l) return true;
-                    l.Raise();
+                    l.Raise(context.canceled);
                     return false;
                 });
             });

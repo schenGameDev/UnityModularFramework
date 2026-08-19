@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using EditorAttributes;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityTimer;
 
 namespace ModularFramework.Modules.Input
 {
@@ -12,10 +14,52 @@ namespace ModularFramework.Modules.Input
 
         [SerializeField] private Button button;
         [SerializeField] private Image icon;
+        [SerializeField] private Image progressBar;
+        [SerializeField, ShowField(nameof(progressBar))] private float holdTime;
+        
+        private CountdownTimer _holdTimer;
 
-        public void Raise()
+        private void Awake()
         {
-            button.onClick.Invoke();
+            if (progressBar && holdTime > 0)
+            {
+                _holdTimer = new CountdownTimer(holdTime);
+                _holdTimer.OnTick += () => progressBar.fillAmount = _holdTimer.Progress;
+                _holdTimer.OnTimerStart += () => progressBar.fillAmount = 0f;
+                
+            }
+        }
+
+        private void OnDestroy()
+        {
+            _holdTimer?.Dispose();
+        }
+
+        public void Raise(bool pressFinished)
+        {
+            if (!gameObject.activeSelf || !button.interactable)
+            {
+                // inactive
+                if (_holdTimer is { IsRunning: true })
+                {
+                    _holdTimer.Stop();
+                }
+                return;
+            }
+            if (pressFinished)
+            {
+                if (_holdTimer == null || _holdTimer.IsFinished)
+                {
+                    button.onClick.Invoke();
+                }
+                
+                _holdTimer?.Stop();
+                progressBar.fillAmount = 0f;
+            }
+            else
+            {
+                _holdTimer.Start();
+            }
         }
 
         public void SetIcon(Sprite keyIcon)

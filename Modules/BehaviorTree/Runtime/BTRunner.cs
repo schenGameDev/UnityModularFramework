@@ -10,7 +10,7 @@ namespace ModularFramework.Modules.BehaviorTree
         [Required] public BehaviorTreeSO tree;
         [Suffix("s"), SerializeField] private float interval = 0.2f;
         [field: SerializeField] public bool Debug { get; private set; }
-        
+        [SerializeField] private bool lockRotation;
         public float turnSpeed = 60;
         
         public bool Live { get; set; }
@@ -83,7 +83,7 @@ namespace ModularFramework.Modules.BehaviorTree
                 TargetFacingDirection = _faceTarget.position - transform.position;
             }
 
-            if (TargetFacingDirection != Vector3.zero)
+            if (!lockRotation && TargetFacingDirection != Vector3.zero)
             {
                 Vector3 targetDirection = new Vector3(TargetFacingDirection.x, 0f, TargetFacingDirection.z);
                 if (targetDirection != Vector3.zero)

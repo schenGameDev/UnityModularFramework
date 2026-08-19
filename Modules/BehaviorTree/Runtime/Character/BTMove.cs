@@ -19,7 +19,7 @@ namespace ModularFramework.Modules.BehaviorTree
         [SerializeField] private string pathName;
 
         private CountdownTimer _cooldownTimer;
-        [SerializeField, Self] private BTAnimation animation;
+        [SerializeField] private BTAnimation animation;
         [SerializeField, Self(Flag.Optional)] private WaypointCollection waypointCollection;
         [ShowInInspector, ReadOnly] private bool _running;
         [ReadOnly, ShowInInspector] protected bool isReady = true;
@@ -39,14 +39,14 @@ namespace ModularFramework.Modules.BehaviorTree
         public void Move()
         {
             if (_running) return;
-            animation.SetFlag(animConfig, null);
+            animation?.SetFlag(animConfig, null);
             _running = true;
         }
 
         public void Stop()
         {
             if (!_running) return;
-            animation.ReverseFlag(animConfig, false);
+            animation?.ReverseFlag(animConfig, false);
             _running = false;
         }
     }
