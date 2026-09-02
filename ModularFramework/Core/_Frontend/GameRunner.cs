@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AYellowpaper.SerializedCollections;
 using EditorAttributes;
 using ModularFramework.Utility;
 using UnityEditor;
@@ -19,12 +18,14 @@ namespace ModularFramework {
 #else
         private GameSystem[] modules;
 #endif
-        [SerializeField,SerializedDictionary("Name","Value")] private SerializedDictionary<string,string> flags = new();
-        [SerializeField,SerializedDictionary("Name","Ref Object")] private SerializedDictionary<string,GameObject> references = new();
+        [SerializeField,DictionaryDisplay(keyLabel = "Name", valueLabel = "Value")] 
+        private Dictionary<string,string> flags = new();
+        [SerializeField,DictionaryDisplay(keyLabel = "Name", valueLabel = "Ref Object")] 
+        private Dictionary<string,GameObject> references = new();
 
         [Header("Event System")]
-        [SerializeField,SerializedDictionary("Channel","Live"),HideLabel,ReadOnly]
-        private SerializedDictionary<ScriptableObject,bool> eventChannels = new();
+        [SerializeField,DictionaryDisplay(keyLabel = "Channel", valueLabel = "Live"),HideLabel,ReadOnly]
+        private Dictionary<ScriptableObject,bool> eventChannels = new();
         [Header("Runtime")]
         public bool IsPause = false;
         public Transform Player => references["PLAYER"].transform;

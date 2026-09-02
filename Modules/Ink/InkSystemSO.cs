@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using AYellowpaper.SerializedCollections;
 using EditorAttributes;
 using Ink;
 using Ink.Runtime;
@@ -52,8 +51,8 @@ namespace ModularFramework.Modules.Ink
         [RuntimeObject] private readonly Dictionary<string, string> _characterDialogBox = new();
 
 #if UNITY_EDITOR
-        [ReadOnly, SerializeField, SerializedDictionary, RuntimeObject]
-        private SerializedDictionary<string, string> stats;
+        [ReadOnly, SerializeField, RuntimeObject, DictionaryDisplay(keyColumnFraction = 0.3f)]
+        private Dictionary<string, string> stats = new();
 #endif
         // variable first save to story, then populate keeper through delegate, then alert unity through event channel
         [RuntimeObject] private readonly Dictionary<string, Keeper> _keeperDict = new();

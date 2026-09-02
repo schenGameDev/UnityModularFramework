@@ -1,17 +1,19 @@
-using AYellowpaper.SerializedCollections;
+using System;
+using System.Collections.Generic;
 using EditorAttributes;
+using ModularFramework.Commons;
+using ModularFramework.Utility;
 using UnityEngine;
 
 namespace ModularFramework {
-    using System;
-    using Commons;
-    using Utility;
     /// <summary>
     /// The bucket keeps a &lt;string,T> dictionary, where T can be fetched by the key
     /// </summary>
     public abstract class CustomTypeBucket<T> : ScriptableObject {
-        [SerializeField,SerializedDictionary("Key","Value"),HideLabel]
-        protected SerializedDictionary<string,T> dictionary = new();
+#pragma warning disable UAC1016
+        [SerializeField,DictionaryDisplay(keyLabel = "Key", valueLabel = "Value"),HideLabel]
+        protected Dictionary<string,T> dictionary = new();
+#pragma warning restore UAC1016
 
         public Optional<T> Get (string key) {
             if(dictionary.TryGetValue(key, out T value)) {

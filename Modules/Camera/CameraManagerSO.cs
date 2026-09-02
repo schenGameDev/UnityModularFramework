@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AYellowpaper.SerializedCollections;
 using EditorAttributes;
 using ModularFramework.Commons;
 using ModularFramework.Modules.Input;
@@ -15,8 +14,9 @@ namespace ModularFramework.Modules.Camera
     [CreateAssetMenu(fileName = "CameraManager_SO", menuName = "Game Module/Camera")]
     public class CameraManagerSO : GameModule<CameraManagerSO>, IRegistrySO
     {
-        [Header("Config")] [SerializedDictionary("Transition", "Acceleration")]
-        public SerializedDictionary<Vector<string>, float> transitionAcceleration;
+        [Header("Config")] 
+        [SerializeField,DictionaryDisplay(keyLabel = "Transition", valueLabel = "Acceleration", layout = DictionaryLayout.OneColumnWithValueVisible)]
+        public Dictionary<Vector<string>, float> transitionAcceleration;
 
         [SerializeField] Vector2 positionShakeStrength = new(0.03f, 0.03f);
         [SerializeField] float rotationShakeStrength = 0.05f;

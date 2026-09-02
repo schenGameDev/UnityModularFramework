@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using AYellowpaper.SerializedCollections;
 using EditorAttributes;
 using UnityEngine;
 
@@ -11,11 +10,13 @@ namespace ModularFramework.Modules.BehaviorTree
         public const string KEYWORD_TARGET = "Target";
         public const string KEYWORD_ABILITY_NAME = "AbilityName";
 
-        [ReadOnly] [SerializeField, SerializedDictionary(keyName: "key", valueName: "value")]
-        private SerializedDictionary<string, string> parameters = new();
+        [ReadOnly] 
+        [SerializeField, DictionaryDisplay(keyLabel = "key", valueLabel = "value", keyColumnFraction = 0.3f)]
+        private Dictionary<string, string> parameters = new();
 
-        [ReadOnly] [SerializeField, SerializedDictionary(keyName: "key", valueName: "transform")]
-        private SerializedDictionary<string, List<Transform>> inSceneObjects = new();
+        [ReadOnly] 
+        [SerializeField, DictionaryDisplay(keyLabel = "key", valueLabel = "transform", keyColumnFraction = 0.3f)]
+        private Dictionary<string, List<Transform>> inSceneObjects = new();
 
         [ReadOnly] public bool changed = false;
 

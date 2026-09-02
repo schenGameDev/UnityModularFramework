@@ -1,5 +1,5 @@
+using System.Collections.Generic;
 using System.IO;
-using AYellowpaper.SerializedCollections;
 using EditorAttributes;
 using UnityEngine;
 
@@ -8,8 +8,8 @@ namespace ModularFramework.Utility
     // [CreateAssetMenu(fileName = "TranslationBank_SO", menuName = "Game Module/Translation/Bank")]
     public class TranslationBank : ScriptableObject
     {
-        [SerializeField,SerializedDictionary("Key","Value"),HideLabel]
-        protected SerializedDictionary<uint,string> dictionary = new();
+        [SerializeField, DictionaryDisplay(keyLabel = "Key", valueLabel = "Value"),HideLabel]
+        protected Dictionary<uint,string> dictionary = new();
         public void Put(uint id, string text)
         {
             if (id == 0)

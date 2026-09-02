@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using AYellowpaper.SerializedCollections;
 using ModularFramework.Commons;
 using ModularFramework.Utility;
 using UnityEngine;
@@ -29,8 +28,8 @@ namespace ModularFramework
         
         public RawImage transitionImage;
         [SerializeField] private SceneTransitionSO defaultTransition;
-        [SerializeField,SerializedDictionary("from-to scenes","transition")] 
-        private SerializedDictionary<Vector<string>, SceneTransitionSO> customTransitions = new();
+        [SerializeField, DictionaryDisplay(keyLabel = "from-to scenes", valueLabel = "transition", layout = DictionaryLayout.OneColumnWithValueVisible)] 
+        private Dictionary<Vector<string>, SceneTransitionSO> customTransitions = new();
         
         [SerializeField] private GameSystemBucket gameSystems;
         

@@ -1,6 +1,7 @@
 using System;
 
 namespace ModularFramework.Commons {
+    [Serializable]
     public struct Vector<T> : IEquatable<Vector<T>> where T : class {
         public T From;
         public T To;
